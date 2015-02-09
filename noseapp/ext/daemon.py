@@ -123,7 +123,10 @@ class PidFileObject(object):
 
     def remove(self):
         if self.exist:
-            os.unlink(self.file_path)
+            try:
+                os.unlink(self.file_path)
+            except OSError:
+                pass
 
     def __repr__(self):
         return '<PidFile {}>'.format(self.file_path)

@@ -1,0 +1,5 @@
+*.pyc
+.idea/
+build/
+dist/
+noseapp.egg-info/

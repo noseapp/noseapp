@@ -16,7 +16,12 @@ class Suite(object):
         :param require: необходимые расширениия
         """
         self._name = name
-        self._require = require
+
+        if hasattr(self, 'DEFAULT_REQUIRE'):
+            self._require = self.DEFAULT_REQUIRE + (require or [])
+        else:
+            self._require = require
+
         self._mediator = self.mediator_class(require=require)
 
     @property

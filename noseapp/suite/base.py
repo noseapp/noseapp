@@ -22,7 +22,7 @@ class Suite(object):
         else:
             self._require = require
 
-        self._mediator = self.mediator_class(require=require)
+        self._mediator = self.mediator_class(require=self._require)
 
     @property
     def name(self):

@@ -200,10 +200,8 @@ def make_run_test(steps):
     """
 
     def run_test(self):
-        """
-        Функция реализует последовательный запуск
-        методов подисанных step декоратором
-        """
+        run_test.__doc__ = self.__doc__
+
         if self.PARAMETRIZE and hasattr(self.PARAMETRIZE, '__iter__'):
 
             for params in self.PARAMETRIZE:

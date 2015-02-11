@@ -2,17 +2,21 @@
 
 import re
 from copy import copy
+from functools import wraps
 
 from noseapp.ext.selenium_ex import QueryProcessor
-from noseapp.ext.selenium_ex.tools import Container
 
 
-def page_object_property(cls):
+def page_object_property(f):
     """
-    Привязать любой класс к объекту PageObject
-    который принимает на вход driver
+    Декоратор. Ожидается, что метод который
+    станет свойством будет возвращать объект
+    принимающий на вход инстанс WebDriver или WebElement
     """
-    return Container(cls)
+    @wraps(f)
+    def wrapper(self):
+        return f(self)(self._driver)
+    return property(wrapper)
 
 
 class PageObject(object):
@@ -23,11 +27,6 @@ class PageObject(object):
     def __init__(self, driver):
         self._driver = driver
         self._query = QueryProcessor(driver)
-
-        for atr in dir(self):
-            val = getattr(self, atr, None)
-            if isinstance(val, Container):
-                setattr(self, atr, val(driver))
 
     def __call__(self):
         """

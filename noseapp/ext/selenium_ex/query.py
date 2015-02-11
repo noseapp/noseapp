@@ -50,7 +50,11 @@ def _execute(driver, query, get_all):
 
     if get_all:
         return driver.find_elements_by_css_selector(query)
-    return driver.find_element_by_css_selector(query)
+    try:
+        return driver.find_element_by_css_selector(query)
+    except NoSuchElementException as e:
+        e.message += u'QueryProcessor(From: {}, Query: {})'.format(repr(driver), query)
+        raise
 
 
 def _replace_attribute(atr_name):

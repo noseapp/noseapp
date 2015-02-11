@@ -4,12 +4,14 @@ from noseapp.ext.selenium_ex import drivers
 from noseapp.ext.selenium_ex.base import SeleniumEx
 from noseapp.ext.selenium_ex.query import QueryProcessor
 from noseapp.ext.selenium_ex.page_object import PageObject
+from noseapp.ext.selenium_ex.page_object import PageRouter
 from noseapp.ext.selenium_ex.page_object import page_object_property
 
 
 __all__ = (
     SeleniumEx,
     PageObject,
+    PageRouter,
     QueryProcessor,
     page_object_property,
 )
@@ -60,7 +62,6 @@ class Config(dict):
         self['REMOTE_WEBDRIVER']['options'].update(options or {})
         self['REMOTE_WEBDRIVER']['capabilities'].update(capabilities or {})
 
-
     def ie_configure(self, **options):
         """
         Сконфигурировать ie driver
@@ -68,7 +69,6 @@ class Config(dict):
         :param options: опции которые будут переданы в инициализатор класса
         """
         self['IE_WEBDRIVER'].update(options)
-
 
     def chrome_configure(self, **options):
         """
@@ -78,7 +78,6 @@ class Config(dict):
         """
         self['CHROME_WEBDRIVER'].update(options)
 
-
     def firefox_configure(self, **options):
         """
         Сконфигурировать firefox driver
@@ -87,7 +86,6 @@ class Config(dict):
         """
         self['FIREFOX_WEBDRIVER'].update(options)
 
-
     def phantomjs_configure(self, **options):
         """
         Сконфигурировать phantomjs driver
@@ -95,7 +93,6 @@ class Config(dict):
         :param options: опции которые будут переданы в инициализатор класса
         """
         self['PHANTOMJS_WEBDRIVER'].update(options)
-
 
     def opera_configure(self, **options):
         """

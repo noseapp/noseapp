@@ -28,7 +28,7 @@ REPLACE_TAGS = {
 }
 
 DEFAULT_SLEEP = 0.01
-DEFAULT_WAIT_TIMEOUT = 10
+DEFAULT_WAIT_TIMEOUT = 30
 
 
 class QueryError(BaseException):

@@ -52,8 +52,12 @@ def _execute(driver, query, get_all):
         return driver.find_elements_by_css_selector(query)
     try:
         return driver.find_element_by_css_selector(query)
-    except NoSuchElementException as e:
-        e.message += u'QueryProcessor(From: {}, Query: {})'.format(repr(driver), query)
+    except Exception as e:
+        e.message += u'{}QueryProcessor(From: {}, Query: {})'.format(
+            u' ' if e.message else u'',
+            repr(driver),
+            query,
+        )
         raise
 
 

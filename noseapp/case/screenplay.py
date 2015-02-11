@@ -48,9 +48,6 @@ DOC_ATTRIBUTE_NAME = '__DOC__'
 WEIGHT_ATTRIBUTE_NAME = '__WEIGHT__'
 SCREENPLAY_ATTRIBUTE_NAME = '__SCREENPLAY__'
 
-USE_PROMPT_ATTRIBUTE_NAME = 'USE_PROMPT'
-PARAMETRIZE_ATTRIBUTE_NAME = 'PARAMETRIZE'
-
 STEP_INFO_PATTERN = u'<{}.{}> Step {} "{}"'
 ERROR_INFO_PATTERN = u'<{}.{}> ({}: "{}") Step {} "{}"\nWith params: {}'
 
@@ -157,7 +154,7 @@ def run_step(case, method, params=None):
         case_name, method_name, weight, doc,
     )
 
-    if getattr(case, USE_PROMPT_ATTRIBUTE_NAME, False):
+    if case.USE_PROMPT:
         perform_prompt(case_name, method_name)
 
     logger.info(step_info)
@@ -207,11 +204,9 @@ def make_run_test(steps):
         Функция реализует последовательный запуск
         методов подисанных step декоратором
         """
-        parametrize = getattr(self, PARAMETRIZE_ATTRIBUTE_NAME, None)
+        if self.PARAMETRIZE and hasattr(self.PARAMETRIZE, '__iter__'):
 
-        if parametrize and hasattr(parametrize, '__iter__'):
-
-            for params in parametrize:
+            for params in self.PARAMETRIZE:
                 for step_method in steps:
                     run_step(self, step_method, params=params)
 

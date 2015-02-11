@@ -228,4 +228,4 @@ class ModelCRUD(object):
         return '<{}>'.format(self.__class__.__name__)
 
 
-BaseModel = declarative_base(cls=(ModelCRUD,))
+BaseModel = declarative_base(cls=ModelCRUD)

@@ -7,6 +7,8 @@
 
 import logging
 
+from selenium.common.exceptions import WebDriverException
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.common.exceptions import NoSuchElementException
 
 from noseapp.utils.common import waiting_for
@@ -52,12 +54,22 @@ def _execute(driver, query, get_all):
         return driver.find_elements_by_css_selector(query)
     try:
         return driver.find_element_by_css_selector(query)
-    except Exception as e:
-        e.message += u'{}QueryProcessor(From: {}, Query: {})'.format(
-            u' ' if e.message else u'',
-            repr(driver),
-            query,
-        )
+    except WebDriverException as e:
+        pre = u' ' if e.message else u''
+
+        if isinstance(driver, WebElement):
+            e.message += u'{}QueryProcessor(From: {}, Query: {})\n\n--\nWrapper HTML: {}\n--\n\n'.format(
+                pre,
+                repr(driver),
+                query,
+                driver.get_attribute('innerHTML'),
+            )
+        else:
+            e.message += u'{}QueryProcessor(From: {}, Query: {})'.format(
+                pre,
+                repr(driver),
+                query,
+            )
         raise
 
 

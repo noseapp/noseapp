@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import re
+from copy import copy
 
 from noseapp.ext.selenium_ex import QueryProcessor
 from noseapp.ext.selenium_ex.tools import Container
@@ -27,6 +28,12 @@ class PageObject(object):
             val = getattr(self, atr, None)
             if isinstance(val, Container):
                 setattr(self, atr, val(driver))
+
+    def __call__(self):
+        """
+        При вызове объекта отдать его копию
+        """
+        return copy(self)
 
     @property
     def text(self):

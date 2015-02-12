@@ -70,6 +70,7 @@ def _execute(driver, query, get_all):
                 repr(driver),
                 query,
             )
+
         raise
 
 

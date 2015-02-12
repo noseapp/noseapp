@@ -202,6 +202,9 @@ def make_run_test(steps):
     def run_test(self):
         run_test.__doc__ = self.__doc__
 
+        begin = getattr(self, 'begin', lambda: None)
+        begin()
+
         if self.PARAMETRIZE and hasattr(self.PARAMETRIZE, '__iter__'):
 
             for params in self.PARAMETRIZE:
@@ -212,6 +215,9 @@ def make_run_test(steps):
 
             for step_method in steps:
                 run_step(self, step_method)
+
+        finalize = getattr(self, 'finalize', lambda: None)
+        finalize()
 
     return run_test
 

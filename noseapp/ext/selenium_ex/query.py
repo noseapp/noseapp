@@ -58,7 +58,7 @@ def _execute(driver, query, get_all):
         pre = u' ' if e.message else u''
 
         if isinstance(driver, WebElement):
-            e.message += u'{}QueryProcessor(From: {}, Query: {})\n\n--\nSEARCH AREA: {}\n--\n\n'.format(
+            e.message += u'{}QueryProcessor(From: {}, Query: {})\n\n--\nSEARCH AREA: {}\n--\n'.format(
                 pre,
                 repr(driver),
                 query,

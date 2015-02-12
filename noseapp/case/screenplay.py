@@ -49,7 +49,24 @@ WEIGHT_ATTRIBUTE_NAME = '__WEIGHT__'
 SCREENPLAY_ATTRIBUTE_NAME = '__SCREENPLAY__'
 
 STEP_INFO_PATTERN = u'<{}.{}> Step {} "{}"'
-ERROR_INFO_PATTERN = u'<{}.{}> ({}: "{}") Step {} "{}"\nWith params: {}'
+
+ERROR_INFO_PATTERN = u"""
+
+* History:
+{}
+
+* Point:
+{}.{} -> Step {} "{}"
+
+* Params:
+{}
+
+* Raise:
+{}
+
+* Message:
+{}
+"""
 
 EXCLUDE_METHOD_PATTERN = re.compile(
     r'^fail[A-Z]|^fail$|^assert[A-Z]|^assert_$',
@@ -168,26 +185,28 @@ def run_step(case, method, params=None):
     except AssertionError as e:
         raise StepFail(
             ERROR_INFO_PATTERN.format(
+                u'\n'.join(case.__history),
                 case_name,
                 method_name,
-                e.__class__.__name__,
-                e.message,
                 weight,
                 doc,
-                str(params),
+                params,
+                e.__class__.__name__,
+                e.message,
             ).encode('utf-8', 'replace'),  # нужно для того, чтобы
             # русские буквы не были кракозябрами
         )
     except Exception as e:
         raise StepError(
             ERROR_INFO_PATTERN.format(
+                u'\n'.join(case.__history),
                 case_name,
                 method_name,
-                e.__class__.__name__,
-                e.message,
                 weight,
                 doc,
-                str(params)
+                params,
+                e.__class__.__name__,
+                e.message,
             ).encode('utf-8', 'replace'),
         )
 
@@ -202,22 +221,31 @@ def make_run_test(steps):
     def run_test(self):
         run_test.__doc__ = self.__doc__
 
-        begin = getattr(self, 'begin', lambda: None)
-        begin()
+        self.begin()
+
+        self.__history = []
+        history_line = u'{}. {}'
 
         if self.PARAMETRIZE and hasattr(self.PARAMETRIZE, '__iter__'):
 
             for params in self.PARAMETRIZE:
                 for step_method in steps:
+                    _, _, step, doc = get_step_info(self, step_method)
+                    self.__history.append(history_line.format(step, doc))
+
                     run_step(self, step_method, params=params)
+                else:
+                    self.__history = []
 
         else:
 
             for step_method in steps:
+                _, _, step, doc = get_step_info(self, step_method)
+                self.__history.append(history_line.format(step, doc))
+
                 run_step(self, step_method)
 
-        finalize = getattr(self, 'finalize', lambda: None)
-        finalize()
+        self.finalize()
 
     return run_test
 
@@ -266,3 +294,15 @@ class ScreenPlayCase(TestCase):
 
     USE_PROMPT = False
     PARAMETRIZE = None
+
+    def begin(self):
+        """
+        Callback. Вызывается перед началом выполнения сценария.
+        """
+        pass
+
+    def finalize(self):
+        """
+        Callback. Вызывается в конце выполнения сценария.
+        """
+        pass

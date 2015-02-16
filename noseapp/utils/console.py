@@ -130,6 +130,11 @@ def exc_suite_info(suites, show_docs=True, doc_lines=1):
                             if is_end:
                                 break
 
+            # если в кейсе только один тест, то не показываем
+            if len(mp[cls_name]['tests']) == 1:
+                method_counter += 1
+                continue
+
             # Tests
             for test_method in mp[cls_name]['tests']:
                 method_counter += 1

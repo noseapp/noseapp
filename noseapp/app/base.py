@@ -6,9 +6,9 @@ import logging
 from argparse import ArgumentError
 
 from noseapp.app import extensions
-from noseapp.suite.loader import AutoLoad
 from noseapp.app.program import TestProgram
 from noseapp.app.config import Config as AppConfig
+from noseapp.suite.loader import load_suites_from_path
 from noseapp.plugins.configure import AppConfigurePlugin
 
 
@@ -91,7 +91,8 @@ class NoseApp(object):
         """
         pass
 
-    def shared_extension(self, name=None, cls=None, args=None, kwargs=None):
+    @staticmethod
+    def shared_extension(name=None, cls=None, args=None, kwargs=None):
         """
         Расшарить расширение. Расшинение можно будет подключить
         с помощью параметра require в noseapp.suite.Suite
@@ -112,7 +113,8 @@ class NoseApp(object):
 
         return extensions.set(name, cls, in_context=True, args=args, kwargs=kwargs)
 
-    def shared_data(self, name, data):
+    @staticmethod
+    def shared_data(name, data):
         """
         Расшарить данные. Данные будут расшарены между TestCase.
         Важно понимать, что изменения сделанные в одном TestCase никогда
@@ -146,10 +148,9 @@ class NoseApp(object):
 
         :param path: путь до дирректории
         """
-        loader = AutoLoad(path)
-        self.register_suites(
-            loader.get_result(),
-        )
+        sys.path.append(path)
+        suites = load_suites_from_path(path)
+        self.register_suites(suites)
 
     def run(self):
         """

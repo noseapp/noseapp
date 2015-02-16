@@ -1,105 +1,100 @@
 # -*- coding: utf-8 -*-
 
 import os
-import imp
-import errno
+from importlib import import_module
 
 from noseapp.suite.base import Suite
 
 
-class LoadSuiteError(BaseException):
+class LoadSuitesError(BaseException):
     pass
 
 
-class AutoLoad(object):
+def is_exist(path):
     """
-    Автозагрузчик Suite по указанному пути.
-
-    Рекурсивно вычисляет все дирректории внутри каталога,
-    проходит по каталогам, находит python модули и инстансы
-    Suite внутри них.
+    Проверяет существование указанного пути
     """
+    if not os.path.exists(path):
+        raise LoadSuitesError('Dir "{}" does not exist'.format(path))
 
-    def __init__(self, path):
-        if not os.path.exists(path):
-            raise LoadSuiteError('Dir "{}" does not exist'.format(path))
 
-        self._suites = set()
+def is_package(path):
+    """
+    Проверяет является ли указанный путь python пакетом
+    """
+    if not os.path.isfile(os.path.join(path, '__init__.py')):
+        raise LoadSuitesError('"{}" is not python package'.format(path))
 
-        self.all_dirs = []
 
-        base_path = os.path.realpath(
-            os.path.expanduser(path),
+def load_from_dir(path, import_base=None):
+    """
+    Выполнить загрузку из директории
+
+    :param path: путь до директории
+    :param import_base: базовый путь до модуля при импорте
+    """
+    if import_base:
+        is_package(path)
+
+    suites = []
+
+    py_files = filter(
+        lambda f: f.endswith('.py') and not f.startswith('_'),
+        os.listdir(path),
+    )
+    modules = (m.rstrip('.py') for m in py_files)
+
+    for module in modules:
+
+        if import_base:
+            module = '{}.{}'.format(import_base, module)
+
+        module = import_module(module)
+
+        module_suites = (
+            getattr(module, atr)
+            for atr in dir(module)
+            if isinstance(
+                getattr(module, atr, None), Suite,
+            )
         )
 
-        self.all_dirs.append(base_path)
+        for suite in module_suites:
+            suites.append(suite)
 
-        self._collect_dirs(base_path)
-        self._do_load()
+    return suites
 
-    def _collect_dirs(self, path):
-        """
-        Рекурсивно вычисляет пути ко всем
-        дирректориям внутри каталога
 
-        :param path: абсолютнй путь до каталога
-        """
-        for root, dirs, files in os.walk(path):
-            for d in dirs:
-                dir_path = os.path.join(root, d)
-                self.all_dirs.append(dir_path)
-                self._collect_dirs(dir_path)
+def load_suites_from_path(path, import_base=None):
+    """
+    Рекурсивно обходит модули и пакеты внутри
+    директории, загружает suites из модулей
 
-    def _do_load(self):
-        """
-        Выполняет загрузку из списка дирректорий
-        """
-        for d in self.all_dirs:
-            self._load_suites_from_dir(d)
+    :param path: путь до папки откуда выгружать suites
+    :param import_base: базовый путь до модуля при импорте
+    """
+    is_exist(path)
 
-    def _load_suites_from_dir(self, path):
-        """
-        Выгружает инстансы Suite из дирректории
+    suites = []
 
-        :param path: абсолютнй путь до дрректории
-        """
-        files = filter(
-            lambda r: r.endswith('.py') and not r.startswith('_'),
-            os.listdir(path),
-        )
+    map(suites.append, load_from_dir(path, import_base=import_base))
 
-        if not files:
-            return
+    for root, dirs, files in os.walk(path):
 
-        for f in files:
-            file_path = os.path.join(path, f)
-            module = imp.new_module(file_path.rstrip('.py'))
-            module.__file__ = file_path
+        for d in dirs:
+            dir_abs_path = os.path.join(root, d)
 
-            try:
-                execfile(file_path, module.__dict__)
-            except IOError as e:
-                if e.errno in (errno.ENOENT, errno.EISDIR):
-                    continue
+            if import_base is None:
+                import_base = d
+            else:
+                import_base = '{}.{}'.format(import_base, d)
 
-                e.strerror = 'Unable to load file "{}"'.format(e.strerror)
-                raise
-
-            contents = (  # подготовить генератор, который на каждую итерацию
-                # будет доставать только значения public атрибутов
-                getattr(module, content, None)
-                for content in dir(module)
-                if not content.startswith('_')
+            map(
+                suites.append,
+                load_suites_from_path(
+                    dir_abs_path,
+                    import_base=import_base,
+                ),
             )
 
-            # поготовить генератор который будет возвращать только инстансы Suite
-            suites = (suite for suite in contents if isinstance(suite, Suite))
-
-            for s in suites:
-                self._suites.add(s)
-
-    def get_result(self):
-        """
-        Возвращает результат загрузки
-        """
-        return list(self._suites)
+    return suites

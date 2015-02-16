@@ -60,9 +60,9 @@ class MySQLClient(BaseExtension):
             raise
 
 
-class MySQLInstaller(object):
+class MySQLEx(object):
     """
-    Установщик MySQL
+    Установщик расширения MySQL
     """
 
     name = 'mysql'

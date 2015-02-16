@@ -5,6 +5,7 @@ from copy import copy
 from functools import wraps
 
 from noseapp.ext.selenium_ex import QueryProcessor
+from selenium.common.exceptions import NoSuchElementException
 
 
 def page_object_property(f):
@@ -39,7 +40,10 @@ class PageObject(object):
         """
         Возвращает текст страницы
         """
-        return self._query.page_text()
+        try:
+            return self._query.page_text()
+        except NoSuchElementException:
+            return None
 
     def wait_complete(self):
         """
@@ -79,7 +83,7 @@ class PageRouter(object):
 
         cls.__rules[re.compile(r'^{}$'.format(rule))] = page_cls
 
-    def get(self, path):
+    def get(self, path, wait=True):
         """
         Получить страницу по пути
 
@@ -95,6 +99,8 @@ class PageRouter(object):
 
         if self._base_path is not None:
             self._driver.get('{}{}'.format(self._base_path, path))
-            page.wait_complete()
+
+            if wait:
+                page.wait_complete()
 
         return page

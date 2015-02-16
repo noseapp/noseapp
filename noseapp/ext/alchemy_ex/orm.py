@@ -9,19 +9,17 @@ import logging
 from copy import copy
 from contextlib import contextmanager
 
-from wtforms import Form
+from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy.ext.declarative import declarative_base
-from wtforms.ext.sqlalchemy.orm import model_form as wtf_model_form
 
-from noseapp.ext.alchemy_ex import session
+from noseapp.ext.alchemy_ex import registry
 from noseapp.ext.alchemy_ex.exc import NotFound
-from noseapp.ext.alchemy_ex.exc import ValidationError
 
 
 logger = logging.getLogger(__name__)
 
 
-Session = session.get()
+Session = registry.get_session()
 
 
 @contextmanager
@@ -40,51 +38,6 @@ def session_scope(rollback=True):
         session.close()
 
 
-class BaseForm(Form):
-    """Базовый класс формы созданной от модели"""
-
-    model = None  # Класс модели
-    _save_data = None  # Данные после сохранения
-
-    def __init__(self, *args, **kwargs):
-        """
-        Переопределяем конструктор с целью валидации
-        формы на момент создания инстанса
-        """
-        super(BaseForm, self).__init__(*args, **kwargs)
-        if not self.validate():
-            raise ValidationError(self.errors)
-
-    @property
-    def save_data(self):
-        """Возвращает результат сохранения"""
-        return self._save_data
-
-    def save(self):
-        """Сохранение формы"""
-        self._save_data = self.model.create(**self.data)
-
-    def save_update_by(self, **by):
-        """Обновление данных по параметрам"""
-        self._save_data = self.model.update_by(by, **self.data)
-
-    def save_update(self, _id):
-        """Сохранение обновленных данных для id"""
-        self._save_data = self.model.update(_id, **self.data)
-
-
-def model_form(model, only=None,
-               exclude=None, field_args=None, converter=None,
-               exclude_pk=True, exclude_fk=False, type_name=None):
-    """Создает форму на базе модели"""
-    form = wtf_model_form(model, db_session=Session, base_class=BaseForm,
-                          only=only, exclude=exclude, field_args=field_args,
-                          converter=converter, exclude_pk=exclude_pk,
-                          exclude_fk=exclude_fk, type_name=type_name)
-    form.model = model
-    return form
-
-
 def dict_info(params):
     """
     Переводит словарь параметров в строковое представоение
@@ -96,7 +49,8 @@ def dict_info(params):
 
 class ModelCRUD(object):
     """
-    Миксин для упрощения раоты с CRUD операциями
+    Класс расширяет возможности BaseModel
+    для упрощения раоты с CRUD операциями
     """
 
     query = Session.query_property()
@@ -106,6 +60,7 @@ class ModelCRUD(object):
         Инициализатор нового объекта модели
         """
         logger.debug('create new model object {}'.format(self.__class__.__name__))
+
         for k, v in params:
             setattr(self, k, v)
 
@@ -116,11 +71,12 @@ class ModelCRUD(object):
         """
         with session_scope() as session:
             obj = cls(**params)
+
             session.add(obj)
             session.commit()
             session.refresh(obj)
-            obj = copy(obj)
-        return obj
+
+        return copy(obj)
 
     @classmethod
     def get(cls, id):
@@ -129,9 +85,13 @@ class ModelCRUD(object):
         """
         with session_scope(rollback=False) as session:
             obj = session.query(cls).get(id)
+
         if obj:
             return obj
-        raise NotFound(u'object id={} not found'.format(id))
+
+        raise NotFound(
+            u'object <{} id={}> not found'.format(cls.__name__, id),
+        )
 
     @classmethod
     def get_by(cls, **params):
@@ -140,9 +100,13 @@ class ModelCRUD(object):
         """
         with session_scope(rollback=False) as session:
             obj = session.query(cls).filter_by(**params).first()
+
         if obj:
             return obj
-        raise NotFound(u'object {} not found'.format(dict_info(params)))
+
+        raise NotFound(
+            u'object <{} {}> not found'.format(cls.__name__, dict_info(params)),
+        )
 
     @classmethod
     def getlist(cls):
@@ -151,6 +115,7 @@ class ModelCRUD(object):
         """
         with session_scope(rollback=False) as session:
             result = session.query(cls).all()
+
         return result
 
     @classmethod
@@ -160,6 +125,7 @@ class ModelCRUD(object):
         """
         with session_scope(rollback=False) as session:
             result = session.query(cls).filter_by(**params).all()
+
         return result
 
     @classmethod
@@ -169,15 +135,20 @@ class ModelCRUD(object):
         """
         with session_scope() as session:
             obj = session.query(cls).get(_id)
+
             if not obj:
-                raise NotFound(u'object id={} not found'.format(_id))
+                raise NotFound(
+                    u'object <{} id={}> not found'.format(cls.__name__, _id),
+                )
+
             for k, v in params.items():
                 setattr(obj, k, v)
+
             session.add(obj)
             session.commit()
             session.refresh(obj)
-            obj = copy(obj)
-        return obj
+
+        return copy(obj)
 
     @classmethod
     def update_by(cls, by, **params):
@@ -186,15 +157,20 @@ class ModelCRUD(object):
         """
         with session_scope() as session:
             obj = session.query(cls).filter_by(**by).first()
+
             if not obj:
-                raise NotFound(u'object {} not found'.format(dict_info(by)))
+                raise NotFound(
+                    u'object <{} {}> not found'.format(cls.__name__, dict_info(by)),
+                )
+
             for k, v in params.items():
                 setattr(obj, k, v)
+
             session.add(obj)
             session.commit()
             session.refresh(obj)
-            obj = copy(obj)
-        return obj
+
+        return copy(obj)
 
     @classmethod
     def remove(cls, id):
@@ -203,10 +179,15 @@ class ModelCRUD(object):
         """
         with session_scope() as session:
             obj = session.query(cls).get(id)
+
             if not obj:
-                raise NotFound(u'object id={} not found'.format(id))
+                raise NotFound(
+                    u'object <{} id={}> not found'.format(cls.__name__, id),
+                )
+
             session.delete(obj)
             session.commit()
+
         return u'object {} is removed'.format(id)
 
     @classmethod
@@ -216,16 +197,59 @@ class ModelCRUD(object):
         """
         with session_scope() as session:
             obj = session.query(cls).filter_by(**params).first()
+
             if not obj:
-                raise NotFound(u'object {} not found'.format(dict_info(params)))
+                raise NotFound(
+                    u'object <{} {}> not found'.format(cls.__name__, dict_info(params)),
+                )
+
             session.delete(obj)
             session.commit()
-        return u'object {} is removed'.format(dict_info(params))
 
-    def __str__(self):
+        return u'object <{} {}> is removed'.format(cls.__name__, dict_info(params))
+
+    def __repr__(self):
         if hasattr(self, 'id'):
             return '<{} id={}>'.format(self.__class__.__name__, self.id or 'NULL')
+
         return '<{}>'.format(self.__class__.__name__)
 
 
-BaseModel = declarative_base(cls=ModelCRUD)
+def mount_meta(meta, cls):
+    """
+    Монтирует свойства из класса Meta в класс
+    модели, как это привычно видеть алхимии
+    """
+    model_cls = cls.__mro__[0]
+
+    table_name = getattr(meta, 'table', None)
+
+    if table_name is not None:
+        setattr(model_cls, '__tablename__', table_name)
+
+
+class BoundDeclarativeMeta(DeclarativeMeta):
+    """
+    Расширяет конфигурацию модели дополняя ее классом Meta
+    """
+
+    def __init__(self, name, bases, d):
+        meta = d.pop('Meta', None)
+
+        if meta is not None:
+            bind_key = getattr(meta, 'bind', 'default')
+            mount_meta(meta, self)
+        else:
+            bind_key = 'default'
+
+        DeclarativeMeta.__init__(self, name, bases, d)
+
+        try:
+            self.__table__.info['bind_key'] = bind_key
+        except AttributeError:  # при создании декларативного
+            # класса еще не будет атрибута __table__, поэтому эта
+            # ситация является нормальной
+            pass
+
+
+BaseModel = declarative_base(cls=ModelCRUD, metaclass=BoundDeclarativeMeta)

@@ -2,19 +2,20 @@
 
 
 """
-Клиент для работы с БД
+Базовый модуль для работы с alchemy
 """
 
 from urllib import urlencode
 
-import sqlalchemy
 from sqlalchemy import event
+from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine.result import exc
 from sqlalchemy.orm import scoped_session
 
-from noseapp.ext.alchemy_ex import session
+from noseapp.ext.alchemy_ex import registry
+from noseapp.ext.alchemy_ex.session import Session
 
 
 AUTO_FLUSH = True
@@ -35,14 +36,15 @@ def ping_connection(connection, connection_record, connection_proxy):
     cursor.close()
 
 
-def create_engine(
+def setup_engine(
         protocol, host, port, db, user,
         password='',
         dns_params='',
+        bind_key='default',
         pool_class=DEFAULT_POOL_CLASS,
         **engine_options):
     """
-    Создает движок для работы с DB
+    Установить движок для работы с DB
 
     :param host: db хост
     :param port: db порт
@@ -59,7 +61,7 @@ def create_engine(
 
     dns = '{protocol}://{user}:{password}@{host}:{port}/{database}%s' % dns_params
 
-    engine = sqlalchemy.create_engine(
+    engine = create_engine(
         dns.format(
             user=user,
             host=host,
@@ -72,36 +74,27 @@ def create_engine(
         **engine_options
     )
 
-    event.listen(engine, 'checkout', ping_connection)
+    if pool_class != DEFAULT_POOL_CLASS:
+        event.listen(engine, 'checkout', ping_connection)
 
-    return engine
+    registry.register_engine(bind_key, engine)
 
 
-def create_session(
-        engine,
+def setup_session(
         autoflush=AUTO_FLUSH,
         autocommit=AUTO_COMMIT,
         expire_on_commit=EXPIRE_ON_COMMIT,
         **options):
     """
-    Создать сессию для работы с orm
+    Установить сессию для работы с orm
     """
-    return scoped_session(
+    sess = scoped_session(
         sessionmaker(
-            bind=engine,
+            class_=Session,
             autoflush=autoflush,
             autocommit=autocommit,
             expire_on_commit=expire_on_commit,
             **options
         ),
     )
-
-
-def setup_orm(config, engine=None, **params):
-    """
-    Установить ORM
-
-    :param config: engine конфиг
-    """
-    engine = create_engine(**config)
-    session.set(create_session(engine, **params))
+    registry.register_session(sess)

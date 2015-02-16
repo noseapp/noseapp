@@ -15,3 +15,9 @@ class NotFound(BaseError):
     """Не найдено"""
     pass
 
+
+class InvalidBindKey(BaseError):
+    """
+    Не найден ключ по которому нужно вытащить движок
+    """
+    pass

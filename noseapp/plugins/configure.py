@@ -44,7 +44,7 @@ class AppConfigurePlugin(AppPlugin):
             dest='ls',
             action='store_true',
             default=False,
-            help='Show suites info.'
+            help='Show suites tree.'
         )
         parser.add_option(
             '--doc',

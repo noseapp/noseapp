@@ -8,7 +8,9 @@ from noseapp.ext.alchemy_ex.exc import ValidationError
 
 
 class BaseForm(Form):
-    """Базовый класс формы созданной от модели"""
+    """
+    Базовый класс формы созданной от модели
+    """
 
     model = None  # Класс модели
     _save_data = None  # Данные после сохранения
@@ -41,17 +43,19 @@ class BaseForm(Form):
         """
         self._save_data = self.model.update_by(by, **self.data)
 
-    def save_update(self, _id):
+    def save_update(self, id):
         """
         Сохранение обновленных данных для id
         """
-        self._save_data = self.model.update(_id, **self.data)
+        self._save_data = self.model.update(id, **self.data)
 
 
 def model_form(model, only=None,
                exclude=None, field_args=None, converter=None,
                exclude_pk=True, exclude_fk=False, type_name=None):
-    """Создает форму на базе модели"""
+    """
+    Создает форму на базе модели
+    """
     form = wtf_model_form(model, db_session=Session, base_class=BaseForm,
                           only=only, exclude=exclude, field_args=field_args,
                           converter=converter, exclude_pk=exclude_pk,

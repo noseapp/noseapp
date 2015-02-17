@@ -5,8 +5,8 @@ import sys
 from nose.core import TestProgram as BaseTestProgram
 
 from noseapp.app import extensions
-from noseapp.suite.collect import CollectSuites
 from noseapp.utils.console import exc_suite_info
+from noseapp.suite.collector import CollectSuites
 
 
 # Стратегии указывают на то, какой TestRunner будем использовать
@@ -57,6 +57,8 @@ class TestProgram(BaseTestProgram):
     Класс который отвечает за запуск тестов
     """
 
+    collector_class = CollectSuites
+
     def __init__(self, app, argv, *args, **kwargs):
         self._app = app
         self._argv = argv
@@ -74,36 +76,29 @@ class TestProgram(BaseTestProgram):
     def runTests(self):
         pass
 
-    def init_suite(self):
+    def init_suites(self):
         """
         Инициализация suite из приложения
         """
         if self.config.options.ls:  # если нужно показать дерево suite, то делаем это
-            exc_suite_info(self._app._suite, show_docs=self.config.options.doc)
+            exc_suite_info(self._app.suites, show_docs=self.config.options.doc)
 
         if len(self._argv) > 2:
             load_path = self._argv[1]
         else:
             load_path = ''
 
-        collect = CollectSuites(  # если мы указали конкретную suite,
-            # case или test, то нужно из всех выбрать нужные для запуска
-            load_path, self._app._suite, self.testLoader, self.config,
+        collector = self.collector_class(
+            load_path, self._app.suites, self.testLoader, self.config,
         )
-        collect.make_result()
 
-        if collect.empty():
-            self.test = self.testLoader.suiteClass(
-                [suite(self.config, self.testLoader) for suite in self._app._suite]
-            )
-        else:
-            self.test = self.testLoader.suiteClass(collect.result)
+        self.test = collector.make_result()
 
     def perform(self):
         """
         Запуск suite
         """
-        self.init_suite()
+        self.init_suites()
 
         extensions.clear()
 

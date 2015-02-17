@@ -1,6 +1,5 @@
 # -*- coding: utf8 -*-
 
-
 """
 Базовый модуль для работы с alchemy
 """
@@ -9,19 +8,19 @@ from urllib import urlencode
 
 from sqlalchemy import event
 from sqlalchemy import create_engine
-from sqlalchemy.pool import NullPool
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine.result import exc
 from sqlalchemy.orm import scoped_session
 
 from noseapp.ext.alchemy_ex import registry
 from noseapp.ext.alchemy_ex.session import Session
+from noseapp.ext.alchemy_ex.constants import DEFAULT_BIND_KEY
+from noseapp.ext.alchemy_ex.constants import DEFAULT_POOL_CLASS
 
 
 AUTO_FLUSH = True
 AUTO_COMMIT = False
 EXPIRE_ON_COMMIT = True
-DEFAULT_POOL_CLASS = NullPool
 
 
 def ping_connection(connection, connection_record, connection_proxy):
@@ -29,10 +28,12 @@ def ping_connection(connection, connection_record, connection_proxy):
     Проверяет, что соединение живое
     """
     cursor = connection.cursor()
+
     try:
-        cursor.execute("SELECT 1")
+        cursor.execute('SELECT 1')
     except:
         raise exc.DisconnectionError()
+
     cursor.close()
 
 
@@ -40,7 +41,7 @@ def setup_engine(
         protocol, host, port, db, user,
         password='',
         dns_params='',
-        bind_key='default',
+        bind_key=DEFAULT_BIND_KEY,
         pool_class=DEFAULT_POOL_CLASS,
         **engine_options):
     """

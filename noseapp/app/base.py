@@ -63,7 +63,7 @@ class NoseApp(object):
             else:
                 self.config.from_module(config)
 
-        self._suite = []
+        self._suites = []
 
         self.__test_program = self.program_class(
             app=self,
@@ -125,13 +125,20 @@ class NoseApp(object):
         """
         return extensions.set(name, data, in_context=False)
 
+    @property
+    def suites(self):
+        """
+        Возвращает suite из приложения
+        """
+        return self._suites
+
     def register_suite(self, suite):
         """
         Регистрирует suite в приложении
 
         :type suite: app.suite.Suite
         """
-        self._suite.append(suite)
+        self._suites.append(suite)
 
     def register_suites(self, suite):
         """

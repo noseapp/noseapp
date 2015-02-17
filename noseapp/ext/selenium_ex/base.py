@@ -60,7 +60,7 @@ class SeleniumEx(BaseExtension):
 
         logger.debug(
             'Selenium-EX initialize. Config: {}, Use Remote: {}, Driver name: {}'.format(
-                str(config),
+                config,
                 'Yes' if use_remote else 'No',
                 driver_name,
             ),

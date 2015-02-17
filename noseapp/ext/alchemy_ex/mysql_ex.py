@@ -3,18 +3,17 @@
 from copy import copy
 from contextlib import contextmanager
 
-from sqlalchemy.pool import NullPool
-
 from noseapp.ext.base import BaseExtension
 from noseapp.ext.alchemy_ex import registry
 from noseapp.ext.alchemy_ex.config import Config
 from noseapp.ext.alchemy_ex.base import setup_engine
 from noseapp.ext.alchemy_ex.base import setup_session
+from noseapp.ext.alchemy_ex.constants import DEFAULT_BIND_KEY
+from noseapp.ext.alchemy_ex.constants import DEFAULT_POOL_CLASS
 
 
 DEFAULT_PORT = 3306
 DEFAULT_HOST = '127.0.0.1'
-DEFAULT_POOL_CLASS = NullPool
 DEFAULT_PROTOCOL = 'mysql'
 
 DEFAULT_USE_UNICODE = 1
@@ -24,8 +23,6 @@ DEFAULT_DNS_PARAMS = {
     'charset': DEFAULT_CHARSET,
     'use_unicode': DEFAULT_USE_UNICODE,
 }
-
-DEFAULT_BIND_KEY = 'default'
 
 
 class MySQLClient(BaseExtension):

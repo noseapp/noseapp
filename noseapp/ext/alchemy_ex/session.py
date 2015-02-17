@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
 from sqlalchemy.orm.session import Session as BaseSession
 
 from noseapp.ext.alchemy_ex import registry

@@ -59,8 +59,7 @@ def load_from_dir(path, import_base=None):
             )
         )
 
-        for suite in module_suites:
-            suites.append(suite)
+        map(suites.append, module_suites)
 
     return suites
 

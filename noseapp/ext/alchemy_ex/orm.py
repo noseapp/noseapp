@@ -14,10 +14,10 @@ from sqlalchemy.ext.declarative import declarative_base
 
 from noseapp.ext.alchemy_ex import registry
 from noseapp.ext.alchemy_ex.exc import NotFound
+from noseapp.ext.alchemy_ex.constants import DEFAULT_BIND_KEY
 
 
 logger = logging.getLogger(__name__)
-
 
 Session = registry.get_session()
 
@@ -231,16 +231,17 @@ def mount_meta(meta, cls):
 class BoundDeclarativeMeta(DeclarativeMeta):
     """
     Расширяет конфигурацию модели дополняя ее классом Meta
+    и возможностью монтировать модели к различным движкам
     """
 
     def __init__(self, name, bases, d):
         meta = d.pop('Meta', None)
 
         if meta is not None:
-            bind_key = getattr(meta, 'bind', 'default')
+            bind_key = getattr(meta, 'bind', DEFAULT_BIND_KEY)
             mount_meta(meta, self)
         else:
-            bind_key = 'default'
+            bind_key = DEFAULT_BIND_KEY
 
         DeclarativeMeta.__init__(self, name, bases, d)
 

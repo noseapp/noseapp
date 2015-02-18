@@ -103,9 +103,9 @@ class CollectSuites(object):
         self._nose_config = nose_config
         self._test_loader = test_loader
 
-    def _do_suite(self):
+    def _with_suite(self):
         """
-        Включить в сборку только один suite
+        Собрать с указанной suite
         """
         suite = get_suite_from_map(self._load_path, self._mp)
 
@@ -113,9 +113,9 @@ class CollectSuites(object):
             suite(self._nose_config, self._test_loader),
         )
 
-    def _do_case(self):
+    def _with_case(self):
         """
-        Включить в сборку только один TestCase класс
+        Собрать с указанным TestCase классом
         """
         suite_name, case_name = self._load_path.split(':')
         app_suite = get_suite_from_map(suite_name, self._mp)
@@ -131,9 +131,9 @@ class CollectSuites(object):
 
         self._result = CollectResult(suite)
 
-    def _do_method(self):
+    def _with_method(self):
         """
-        Включить в сборку только один метод класса TestCase
+        Собрать с указанным методом класса TestCase
         """
         suite_name, case_info = self._load_path.split(':')
         case_name, method_name = case_info.split('.')
@@ -156,16 +156,16 @@ class CollectSuites(object):
 
     def make_result(self):
         """
-        Выполнить сборку suites
+        Выполнить сборку
         """
         if self._load_type is SUITE_LOAD_TYPE:
-            self._do_suite()
+            self._with_suite()
 
         elif self._load_type is CASE_LOAD_TYPE:
-            self._do_case()
+            self._with_case()
 
         elif self._load_type is METHOD_LOAD_TYPE:
-            self._do_method()
+            self._with_method()
 
         if self._result:
             return self._test_loader.suiteClass(self._result)

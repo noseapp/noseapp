@@ -5,7 +5,7 @@ import re
 from noseapp.runner.suites.base import BaseSuite
 
 
-base_pattern = re.compile(r'^.*\.')
+base_pattern = re.compile(r'^.*\.|^.*:')
 
 case_load_pattern = re.compile(r'^.*\:')
 method_load_pattern = re.compile(r'^.*\:.*\..*')

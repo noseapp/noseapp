@@ -3,6 +3,7 @@
 import re
 
 from noseapp.runner.suites.base import BaseSuite
+from noseapp.utils.collector import exec_suite_info
 
 
 base_pattern = re.compile(r'^.*\.|^.*:')
@@ -87,11 +88,16 @@ class CollectSuites(object):
     Класс выполняет работу по сборке suite
     """
 
-    def __init__(self, load_path, suites, test_loader, nose_config):
+    def __init__(self, argv, suites, test_loader, nose_config):
+        if nose_config.options.ls:
+            exec_suite_info(suites, show_docs=nose_config.options.doc)
+
+        load_path = argv[1] if len(argv) > 2 else ''
+
         self._result = None
         self._suites = suites
 
-        if base_pattern.search(load_path) is not None:
+        if load_path and base_pattern.search(load_path) is not None:
             self._load_type = get_load_type(load_path)
             self._load_path = load_path
             self._mp = create_map(suites)

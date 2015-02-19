@@ -67,7 +67,7 @@ def _doc(string, is_end):
     return '| - {}{}'.format(string, '...' if is_end else '')
 
 
-def exc_suite_info(suites, show_docs=True, doc_lines=1):
+def exec_suite_info(suites, show_docs=True, doc_lines=1):
     """
     Вывести в консоль информацию о всех suite
 

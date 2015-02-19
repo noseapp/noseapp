@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from threading import Lock
+from threading import Thread
 from Queue import Queue as TaskQueue
 
 from noseapp.utils.common import waiting_for
@@ -27,7 +29,7 @@ def _import_mp():
     m = Manager()
 
     Process, ResultQueue, cpu_count = (
-        Process, m.Queue, cpu_count,
+        Process, m.Queue, cpu_count
     )
 
 
@@ -57,6 +59,26 @@ def task(suite, result, result_queue):
     result_queue.put_nowait([failures, errors, skipped, result.testsRun])
 
 
+def run(processor, queue_handler):
+    """
+    Запускает прогон
+    """
+    workers = [
+        Thread(target=processor.serve),
+        Thread(target=queue_handler.handle),
+    ]
+
+    try:
+        for worker in workers:
+            worker.start()
+        for worker in workers:
+            worker.join()
+    except KeyboardInterrupt:
+        processor.destroy()
+    finally:
+        processor.close()
+
+
 class ResultQueueHandler(object):
     """
     Обработчик очереди результатов
@@ -64,29 +86,17 @@ class ResultQueueHandler(object):
 
     TEST_REPR = 'Test({})'  # repr формат который будет создан в результате
 
-    def __init__(self, suites, result):
+    def __init__(self, suites, result, result_queue):
         self._result = result
         self._comparison = {}
+        self._result_queue = result_queue
 
         self._counter = 0
         self._length_suites = 0
 
         self._match(suites)
 
-    def __call__(self, result_queue):
-        """
-        При вызове экземпляра начинаем слушать очередь
-        до тех пор пока не получим все результаты.
-        """
-        while self._counter < self._length_suites:
-            failures, errors, skipped, tests_run = result_queue.get()
-
-            self._add_failures(failures)
-            self._add_errors(errors)
-            self._add_skipped(skipped)
-
-            self._result.testsRun += tests_run
-            self._counter += 1
+        self._counter_lock = Lock()
 
     def _match(self, suites):
         """
@@ -139,6 +149,21 @@ class ResultQueueHandler(object):
                 self._create_result(skip),
             )
 
+    def handle(self):
+        """
+        Начать обработку очереди
+        """
+        while self._counter < self._length_suites:
+            failures, errors, skipped, tests_run = self._result_queue.get()
+
+            self._add_failures(failures)
+            self._add_errors(errors)
+            self._add_skipped(skipped)
+
+            with self._counter_lock:
+                self._result.testsRun += tests_run
+                self._counter += 1
+
 
 class TaskProcessor(object):
     """
@@ -156,7 +181,7 @@ class TaskProcessor(object):
         self._queue = TaskQueue()
         self._process_timeout = process_timeout
 
-    def _release(self):
+    def _is_release(self):
         """
         Освобождает место в текущем списке процессов,
         если удалось освободить, то True, иначе False
@@ -172,27 +197,6 @@ class TaskProcessor(object):
 
         return False
 
-    def _perform(self):
-        """
-        Начать выполнение тасков
-        """
-        if not self._closed:
-            raise RuntimeError(
-                'Processor is open, please close processor',
-            )
-
-        while not self._queue.empty():
-            try:
-                waiting_for(self._release, timeout=self._process_timeout, sleep=0.01)
-            except TimeoutException:
-                self.kill()
-                raise
-
-            target, args, kwargs = self._queue.get_nowait()
-            process = Process(target=target, args=args, kwargs=kwargs)
-            process.start()
-            self._current.append(process)
-
     def add_task(self, target, args=None, kwargs=None):
         """
         Добавить задачу в очередь
@@ -200,30 +204,28 @@ class TaskProcessor(object):
         :param target: функция котторую нужно выполнить
         :param args, kwargs: аргументы которые нужно передать target
         """
-        if self._closed:
-            raise RuntimeError('Processor is closed')
-
         self._queue.put_nowait((target, args or tuple(), kwargs or dict()))
 
     def serve(self):
         """
-        Обслуживать очередь.
-        Этот метод приводит объект в состояние выполнения,
-        после того, как вызван этот метод в очередь уже
-        ничего нельзя добавить.
+        Обслуживать очередь
         """
-        self._closed = True
-        self._perform()
+        while not self._queue.empty():
+            try:
+                waiting_for(self._is_release, timeout=self._process_timeout, sleep=0.01)
+            except TimeoutException:
+                self.destroy()
+                raise
 
-    def kill(self):
+            target, args, kwargs = self._queue.get_nowait()
+            process = Process(target=target, args=args, kwargs=kwargs)
+            process.start()
+            self._current.append(process)
+
+    def destroy(self):
         """
         Убить процессы
         """
-        if not self._closed:
-            raise RuntimeError(
-                'Processor is open, please close processor',
-            )
-
         for process in self._current:
             process.terminate()
 
@@ -232,9 +234,6 @@ class TaskProcessor(object):
         Закончить работу и дождаться
         завершения оставшихся процессов.
         """
-        if not self._closed:
-            raise RuntimeError('Processor is not working')
-
         for process in self._current:
             process.join()
 
@@ -260,26 +259,15 @@ class MultiprocessingTestRunner(BaseTestRunner):
         _import_mp()
 
         result_queue = ResultQueue()
-        queue_handler = ResultQueueHandler(suites, result)
-
-        size = self.config.options.app_processes
-
-        if size < 0:
-            size = cpu_count()
-
-        processor = TaskProcessor(size)
+        processor = TaskProcessor(self.config.options.app_processes)
+        queue_handler = ResultQueueHandler(suites, result, result_queue)
 
         for suite in suites:
             processor.add_task(task, args=(suite, result, result_queue))
 
         with measure_time(result):
-            try:
-                processor.serve()
-                queue_handler(result_queue)
-            except KeyboardInterrupt:
-                processor.kill()
-            finally:
-                processor.close()
+            run(processor, queue_handler)
 
         self.config.plugins.finalize(result)
+
         return result

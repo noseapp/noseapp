@@ -5,7 +5,6 @@ import sys
 from nose.core import TestProgram as BaseTestProgram
 
 from noseapp.app import extensions
-from noseapp.utils.console import exc_suite_info
 from noseapp.suite.collector import CollectSuites
 
 
@@ -76,29 +75,14 @@ class TestProgram(BaseTestProgram):
     def runTests(self):
         pass
 
-    def init_suites(self):
-        """
-        Инициализация suite из приложения
-        """
-        if self.config.options.ls:  # если нужно показать дерево suite, то делаем это
-            exc_suite_info(self._app.suites, show_docs=self.config.options.doc)
-
-        if len(self._argv) > 2:
-            load_path = self._argv[1]
-        else:
-            load_path = ''
-
-        collector = self.collector_class(
-            load_path, self._app.suites, self.testLoader, self.config,
-        )
-
-        self.test = collector.make_result()
-
     def perform(self):
         """
-        Запуск suite
+        Запуск прогона
         """
-        self.init_suites()
+        collector = self.collector_class(
+            self._argv, self._app.suites, self.testLoader, self.config,
+        )
+        suites = collector.make_result()
 
         extensions.clear()
 
@@ -115,7 +99,7 @@ class TestProgram(BaseTestProgram):
 
         self._app.before()
 
-        result = self.testRunner.run(self.test)
+        result = self.testRunner.run(suites)
         self.success = result.wasSuccessful()
 
         self._app.after()

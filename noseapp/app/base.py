@@ -67,6 +67,7 @@ class NoseApp(object):
 
         self.__test_program = self.program_class(
             app=self,
+            exit=True,
             argv=prepare_argv(argv),
             addplugins=[p(self) for p in (DEFAULT_PLUGINS + (plugins or []))],
         )

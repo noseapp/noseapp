@@ -19,6 +19,7 @@ if __name__ == '__main__':
         author='Mikhail Trifonov',
         author_email='mikhail.trifonov@corp.mail.ru',
         description='NoseApp pattern for test development',
+        long_description=open('README.rst').read(),
         include_package_data=True,
         zip_safe=False,
         platforms='any',

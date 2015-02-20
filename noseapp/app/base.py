@@ -26,13 +26,12 @@ DEFAULT_ARGV = sys.argv + [
 
 def prepare_argv(argv):
     """
-    Подготавливает аргументы командной
-    строки перед инициализацией в TestProgram
+    :type argv: list
     """
     argv = DEFAULT_ARGV + (argv or [])
 
     for arg in argv:
-        if '--processes' in arg:  # не поддерживаем параллельный запуск через nose plugin
+        if '--processes' in arg:
             raise ArgumentError(None, 'Option "--processes" is deprecated')
         if arg == '--ls':  # если нужно показать дерево suites,
             # то без дефолта NOSE_NOCAPTURE это будет невозможно
@@ -43,7 +42,7 @@ def prepare_argv(argv):
 
 class NoseApp(object):
     """
-    Базовый класс приложения
+    Base app class
     """
 
     config_class = AppConfig
@@ -51,9 +50,9 @@ class NoseApp(object):
 
     def __init__(self, config=None, plugins=None, argv=None):
         """
-        :param config: установка конфигурации (строка для импорта или путь до файла)
-        :param plugins: плагины котрые необходимо передать в nose.app.program.TestProgram
-        :param argv: аргументы командной строки
+        :type config: basestring
+        :type plugins: list
+        :type argv: list
         """
         self.config = self.config_class()
 
@@ -74,7 +73,7 @@ class NoseApp(object):
 
     def initialize(self):
         """
-        Инициализатор вашего приложения
+        Callback for initialize application
         """
         logger.warning(
             'initialize method of class {} is not implemented'.format(self.__class__.__name__),
@@ -82,25 +81,27 @@ class NoseApp(object):
 
     def before(self):
         """
-        Callback вызывается перед прогоном
+        Call before run suites
         """
         pass
 
     def after(self):
         """
-        Callback вызывается после прогона
+        Call after run suites
         """
         pass
 
     @staticmethod
     def shared_extension(name=None, cls=None, args=None, kwargs=None):
         """
-        Расшарить расширение. Расшинение можно будет подключить
-        с помощью параметра require в noseapp.suite.Suite
+        Shared extension to TestCase classes. Use require param in noseapp.Suite class.
 
-        :param name: имя расшинения
-        :param cls: класс который нужно расшарить
-        :param args, kwargs: аргументы которые нужно передать классу при инициализации
+        :param name: extension name. this is property name in case class.
+        :type name: str
+        :param cls: extension class
+        :param args, kwargs: class init arguments
+        :type args: tuple
+        :type kwargs: dict
         """
         if cls is None:
             raise ValueError('cls param is required')
@@ -117,25 +118,22 @@ class NoseApp(object):
     @staticmethod
     def shared_data(name, data):
         """
-        Расшарить данные. Данные будут расшарены между TestCase.
-        Важно понимать, что изменения сделанные в одном TestCase никогда
-        не будут видны в другом.
+        Shared extension to TestCase classes.
+        Data will be copied during installation.
 
-        :param name: имя(ключ расширения)
-        :param data: объект с данными
+        :param name: this is property name in case class
+        :type name: str
+        :param data: any object
         """
         return extensions.set(name, data, in_context=False)
 
     @property
     def suites(self):
-        """
-        Возвращает suite из приложения
-        """
         return self._suites
 
     def register_suite(self, suite):
         """
-        Регистрирует suite в приложении
+        Add suite in application
 
         :type suite: app.suite.Suite
         """
@@ -143,7 +141,7 @@ class NoseApp(object):
 
     def register_suites(self, suite):
         """
-        Регистрирует список suite
+        App suite list in application
 
         :type suite: list, tuple
         """
@@ -152,9 +150,10 @@ class NoseApp(object):
 
     def load_suites(self, path):
         """
-        Загружает suites по указанному пути
+        Auto load suites. Path can be package or simple dir.
 
-        :param path: путь до дирректории
+        :param path: dir path
+        :type path: str
         """
         sys.path.append(path)
         suites = load_suites_from_path(path)
@@ -162,7 +161,7 @@ class NoseApp(object):
 
     def run(self):
         """
-        Запускает приложение
+        Perform run suites
         """
         self.__test_program.perform()
 

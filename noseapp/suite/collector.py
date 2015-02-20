@@ -12,9 +12,9 @@ case_load_pattern = re.compile(r'^.*\:')
 method_load_pattern = re.compile(r'^.*\:.*\..*')
 
 
-CASE_LOAD_TYPE = 'case'
-SUITE_LOAD_TYPE = 'suite'
-METHOD_LOAD_TYPE = 'method'
+CASE_COLLECT_STRATEGY = 'case'
+SUITE_COLLECT_STRATEGY = 'suite'
+METHOD_COLLECT_STRATEGY = 'method'
 
 
 class CollectError(BaseException):
@@ -22,37 +22,25 @@ class CollectError(BaseException):
 
 
 class CollectResult(list):
-    """
-    Результат сборки
-    """
 
     def __init__(self, suite):
         super(CollectResult, self).__init__([suite])
 
 
-def get_load_type(load_path):
-    """
-    Возвращает тип по которому определяется,
-    какую стратегию загрузки выбрать
-
-    :param load_path: строка с путем для загрузки
-    """
+def get_collect_strategy(load_path):
     if not load_path:
         return
 
     if method_load_pattern.search(load_path) is not None:
-        return METHOD_LOAD_TYPE
+        return METHOD_COLLECT_STRATEGY
 
     if case_load_pattern.search(load_path) is not None:
-        return CASE_LOAD_TYPE
+        return CASE_COLLECT_STRATEGY
 
-    return SUITE_LOAD_TYPE
+    return SUITE_COLLECT_STRATEGY
 
 
 def create_map(suites):
-    """
-    Создает карту сопоставления имени suite к инстансу
-    """
     mp = {}
 
     for suite in suites:
@@ -62,9 +50,6 @@ def create_map(suites):
 
 
 def get_suite_from_map(name, mp):
-    """
-    Возвращает suite по имени
-    """
     try:
         return mp[name]
     except KeyError:
@@ -74,9 +59,6 @@ def get_suite_from_map(name, mp):
 
 
 def get_case_from_suite(case_name, suite):
-    """
-    Возвращает case из suite
-    """
     try:
         return suite.get_map()[case_name]['cls']
     except KeyError:
@@ -85,7 +67,7 @@ def get_case_from_suite(case_name, suite):
 
 class CollectSuites(object):
     """
-    Класс выполняет работу по сборке suite
+    Collect suite for test runner
     """
 
     def __init__(self, argv, suites, test_loader, nose_config):
@@ -98,31 +80,25 @@ class CollectSuites(object):
         self._suites = suites
 
         if load_path and base_pattern.search(load_path) is not None:
-            self._load_type = get_load_type(load_path)
+            self._strategy = get_collect_strategy(load_path)
             self._load_path = load_path
             self._mp = create_map(suites)
         else:
-            self._load_type = None
+            self._strategy = None
             self._load_path = None
             self._mp = None
 
         self._nose_config = nose_config
         self._test_loader = test_loader
 
-    def _with_suite(self):
-        """
-        Собрать с указанной suite
-        """
+    def _by_suite_strategy(self):
         suite = get_suite_from_map(self._load_path, self._mp)
 
         self._result = CollectResult(
             suite(self._nose_config, self._test_loader),
         )
 
-    def _with_case(self):
-        """
-        Собрать с указанным TestCase классом
-        """
+    def _by_case_strategy(self):
         suite_name, case_name = self._load_path.split(':')
         app_suite = get_suite_from_map(suite_name, self._mp)
 
@@ -137,10 +113,7 @@ class CollectSuites(object):
 
         self._result = CollectResult(suite)
 
-    def _with_method(self):
-        """
-        Собрать с указанным методом класса TestCase
-        """
+    def _by_method_strategy(self):
         suite_name, case_info = self._load_path.split(':')
         case_name, method_name = case_info.split('.')
 
@@ -161,17 +134,14 @@ class CollectSuites(object):
         self._result = CollectResult(suite)
 
     def make_result(self):
-        """
-        Выполнить сборку
-        """
-        if self._load_type is SUITE_LOAD_TYPE:
-            self._with_suite()
+        if self._strategy is SUITE_COLLECT_STRATEGY:
+            self._by_suite_strategy()
 
-        elif self._load_type is CASE_LOAD_TYPE:
-            self._with_case()
+        elif self._strategy is CASE_COLLECT_STRATEGY:
+            self._by_case_strategy()
 
-        elif self._load_type is METHOD_LOAD_TYPE:
-            self._with_method()
+        elif self._strategy is METHOD_COLLECT_STRATEGY:
+            self._by_method_strategy()
 
         if self._result:
             return self._test_loader.suiteClass(self._result)

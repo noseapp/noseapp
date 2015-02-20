@@ -6,15 +6,16 @@ from unittest import TestCase as BaseTestCase
 
 class TestCase(BaseTestCase):
     """
-    Базовый класс для всех TestCase
+    Base case class
     """
 
     @classmethod
     def with_require(cls, require=None):
         """
-        Инициализирует необходимые extensions
+        Init require extensions
 
-        :param require: спискок extensions
+        :param require: extensions list
+        :type require: list or tuple
         """
         if require and hasattr(require, '__iter__'):
             for ext_name in require:

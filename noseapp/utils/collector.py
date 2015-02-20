@@ -5,22 +5,10 @@ from warnings import warn
 
 
 def _print_line(string, spaces=0):
-    """
-    Выводит строку в консоль.
-
-    :param string: строка для вывода в консоль
-    :param spaces: кол-во пробелов перед строкой
-    """
     sys.stdout.write('| {}{}\n'.format(_get_spaces(spaces), string))
 
 
 def _print_total_info(suites, cases, methods):
-    """
-    Выводит значения итого
-
-    :param suites: кол-во suite
-    :param cases: кол-во классов TestCase
-    """
     info = 'Total: suites: {}. cases: {}. methods: {}.\n'.format(
         suites, cases, methods,
     )
@@ -35,11 +23,6 @@ def _print_total_info(suites, cases, methods):
 
 
 def _get_spaces(num):
-    """
-    Возвращает строку с указанным числом пробелов
-
-    :param num: кол-во пробелов в строке
-    """
     s = []
 
     for i in xrange(num):
@@ -49,31 +32,20 @@ def _get_spaces(num):
 
 
 def _li(string):
-    """
-    Фоматирует строку в подпункт
-
-    :param string: строка для форматирования
-    """
     return '\_ * {}'.format(string)
 
 
 def _doc(string, is_end):
-    """
-    Форматирует строку в докстринг
-
-    :param string: строка для форматирования
-    :param is_end: флаг сигнализирует о том, что это последня строка
-    """
     return '| - {}{}'.format(string, '...' if is_end else '')
 
 
 def exec_suite_info(suites, show_docs=True, doc_lines=1):
     """
-    Вывести в консоль информацию о всех suite
+    Print suites tree
 
-    :param suites: список suite
-    :param show_docs: флаг сигнализирует о том нужно показывать докстринги или нет
-    :param doc_lines: кол-во срок которые нужно выводить из докстрингов
+    :param suites: suite list from app
+    :param show_docs: show docstring flag
+    :param doc_lines: number of docstring lines
     """
     case_counter = 0
     suite_counter = 0
@@ -130,7 +102,7 @@ def exec_suite_info(suites, show_docs=True, doc_lines=1):
                             if is_end:
                                 break
 
-            # если в кейсе только один тест, то не показываем
+            # if test method only one, no print info
             if len(mp[cls_name]['tests']) == 1:
                 method_counter += 1
                 continue

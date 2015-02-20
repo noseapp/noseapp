@@ -1,36 +1,38 @@
 # -*- coding: utf8 -*-
 
 """
-Модуль позволяет оформлять TestCase, как пошаговый сценарий.
+=================
+Step by step case
+=================
 
-Пример:
+Example::
 
-    class CaseExample(ScreenPlayCase):
+  class CaseExample(ScreenPlayCase):
 
-        USE_PROMPT = True  # использовать интерактивный отладчик или нет
+    USE_PROMPT = True  # usage interactive debug
 
-        @step(1, u'Шаг 1')
-        def step_1(self):
-            self.assertTrue(True)
+    @step(1, 'description')
+    def step_1(self):
+      self.assertTrue(True)
 
-        @step(2, u'Шаг 2')
-        def step_2(self):
-            self.assertTrue(True)
+    @step(2, 'description')
+    def step_2(self):
+      self.assertTrue(True)
 
 
-    class CaseParametrizeExample(ScreenPlayCase):
+  class CaseParametrizeExample(ScreenPlayCase):
 
-        PARAMETRIZE = (  # параметризация сценария
-            1, 2, 3
-        )
+    PARAMETRIZE = (
+      1, 2, 3
+    )
 
-        @step(1, u'Шаг 1')
-        def step_1(self, i):
-            self.assertGreater(i, 0)
+    @step(1, u'Шаг 1')
+    def step_1(self, i):
+      self.assertGreater(i, 0)
 
-        @step(2, u'Шаг 2')
-        def step_2(self, i):
-            self.assertGreater(i, 0)
+    @step(2, u'Шаг 2')
+    def step_2(self, i):
+      self.assertGreater(i, 0)
 """
 
 import re
@@ -74,26 +76,21 @@ EXCLUDE_METHOD_PATTERN = re.compile(
 
 
 class StepError(BaseException):
-    """
-    Ошбка при выполнении шага
-    """
     pass
 
 
 class StepFail(AssertionError):
-    """
-    Упавший assert при выполнении шага
-    """
     pass
 
 
 def step(num, doc=''):
     """
-    Декоратор. Подписывает метод как шаг
-    в последовательном сценарии TestCase
+    Decorator. Use wrapper method as case step.
 
-    :param num: номер шага
-    :param doc: строка документации
+    :param num: step num
+    :type num: int
+    :param doc: step description
+    :type doc: str, unicode
     """
 
     def wrapper(f):
@@ -115,10 +112,10 @@ def step(num, doc=''):
 
 def get_step_info(case, method):
     """
-    Возвращает информацию о методе реализующим шаг сценария
+    :param case: TestCase instance
+    :param method: step method
 
-    :param case: инстанс TestCase
-    :param method: step метод
+    :return: tuple
     """
     case_name = case.__class__.__name__
     method_name = method.__func__.__name__
@@ -130,14 +127,13 @@ def get_step_info(case, method):
 
 def perform_prompt(case_name, method_name, exit_code=0):
     """
-    Останавливает выполнение. Предлагает продолжить работу,
-    завершить работу или подрубить отладчик
+    Interactive mode for debug
 
-    :param case_name: имя case класса
-    :param method_name: имя метода шага
-    :param exit_code: с каким кодом произвести выход
+    :param case_name: case class name
+    :param method_name: step method name
+    :param exit_code: exit code
     """
-    commands = {  # набор доступных команд в prompt
+    commands = {  # prompt commands
         'exit': 'q',
         'debug': 'd',
         'continue': 'c',
@@ -160,11 +156,11 @@ def perform_prompt(case_name, method_name, exit_code=0):
 
 def run_step(case, method, params=None):
     """
-    Функция реализует запуск метода-шага
+    Run step
 
-    :param case: инстанс TestCase
-    :param method: step метод
-    :param params: параметры для шага из PARAMETRIZE
+    :param case: TestCase instance
+    :param method: step method
+    :param params: params from PARAMETRIZE property
     """
     case_name, method_name, weight, doc = get_step_info(case, method)
     step_info = STEP_INFO_PATTERN.format(
@@ -181,7 +177,7 @@ def run_step(case, method, params=None):
             method(case, params)
         else:
             method(case)
-    # ловим ошибки и форматируем их вывод
+    # handle errors
     except AssertionError as e:
         raise StepFail(
             ERROR_INFO_PATTERN.format(
@@ -193,8 +189,7 @@ def run_step(case, method, params=None):
                 params,
                 e.__class__.__name__,
                 e.message,
-            ).encode('utf-8', 'replace'),  # нужно для того, чтобы
-            # русские буквы не были кракозябрами
+            ).encode('utf-8', 'replace'),
         )
     except Exception as e:
         raise StepError(
@@ -213,9 +208,9 @@ def run_step(case, method, params=None):
 
 def make_run_test(steps):
     """
-    Создает метод runTest
+    Create runTest method
 
-    :param steps: список методов-шагов
+    :param steps: steps list
     """
 
     def run_test(self):
@@ -252,9 +247,7 @@ def make_run_test(steps):
 
 class ScreenPlayCaseMeta(type):
     """
-    Метакласс собирает все методы которые подписаны,
-    как шаги декоратором step, сортирует и создает метод
-    runTest, который реализует последовательный запуск.
+    Build step methods and create runTest
     """
 
     def __new__(cls, name, bases, dct):
@@ -262,8 +255,7 @@ class ScreenPlayCaseMeta(type):
 
         steps = []
 
-        attributes = (  # готовим генератор который будет
-            # отсеивать заведомо невалидные атрибуты
+        attributes = (
             a for a in dir(instance)
             if not a.startswith('_')
             and
@@ -286,8 +278,7 @@ class ScreenPlayCaseMeta(type):
 
 class ScreenPlayCase(TestCase):
     """
-    Базовый TestCase класс с готовой
-    реализацией пошагового сценария внутри
+    Base TestCase class. Enjoy :)
     """
 
     __metaclass__ = ScreenPlayCaseMeta
@@ -297,12 +288,14 @@ class ScreenPlayCase(TestCase):
 
     def begin(self):
         """
-        Callback. Вызывается перед началом выполнения сценария.
+        Call before run steps
         """
         pass
 
     def finalize(self):
         """
-        Callback. Вызывается в конце выполнения сценария.
+        Call after run steps.
+        If exception in step method be raised,
+        this method can not be called.
         """
         pass

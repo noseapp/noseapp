@@ -2,7 +2,7 @@
 
 
 """
-Модуль позволяет шарить расширения между TestCase
+Tmp storage for extensions
 """
 
 from copy import deepcopy
@@ -14,25 +14,21 @@ _EXTENSIONS = {}
 
 
 class ExtensionNotFound(BaseException):
-    """
-    Расширение не найдено
-    """
     pass
 
 
 class ExtensionNotRequired(BaseException):
-    """
-    Расширение не подключено
-    """
     pass
 
 
 def get(name, require=None):
     """
-    Получить расширение.
+    Get extension by name
 
-    :param name: имя расширения
-    :param require: список разрешенных расширений
+    :param name: extension name
+    :type name: basestring
+    :param require: allow extensions list
+    :type require: list or tuple
     """
     if require is not None and name not in require:
         raise ExtensionNotRequired(name)
@@ -43,19 +39,20 @@ def get(name, require=None):
         if ext.__class__ is ModifyDict:
             return ext.cls(*ext.args, **ext.kwargs)
 
-        return deepcopy(ext)  # каждая suite получит копию расширения
-        # чтобы не иметь не иметь возможности шарить изменения
+        return deepcopy(ext)
     except KeyError:
         raise ExtensionNotFound(name)
 
 
 def set(name, ext, in_context=False, args=None, kwargs=None):
     """
-    Зарегистрировать расширение
+    Register extension in tmp
 
-    :param name: имя расширения
-    :param ext: параметр может по сути содержать все, что угодно
-    :param in_context: флаг указывает на то, что нужно создать инстанс в контексте инициализации TestCase
+    :param name: extension name
+    :type name: basestring
+    :param ext: any objects
+    :param in_context: if True, create instance object with call get function
+    :type in_context: bool
     """
     if in_context:
         _EXTENSIONS[name] = ModifyDict(
@@ -69,7 +66,7 @@ def set(name, ext, in_context=False, args=None, kwargs=None):
 
 def clear():
     """
-    Очистить хранимку расширений
+    Clear tmp
     """
     global _EXTENSIONS
     _EXTENSIONS = {}

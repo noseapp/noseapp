@@ -12,12 +12,6 @@ THREAD_STRATEGY = 'thread'
 
 
 def _get_strategy(options):
-    """
-    Возвращает стратегию запуска тестов
-    внутри suite на основании nose_config
-
-    :param options: опции из nose парсера
-    """
     if options.app_processes and options.thread_pool:
         return THREAD_STRATEGY
     elif not options.app_processes and options.gevent_greanlets:
@@ -27,10 +21,6 @@ def _get_strategy(options):
 
 
 def get_suite_class(options):
-    """
-    Определяет стратегию, на основании
-    этого возвращает класс для suite
-    """
     strategy = _get_strategy(options)
 
     if strategy == BASIC_STATEGY:
@@ -46,13 +36,8 @@ def get_suite_class(options):
 
 class TestCaseMediator(object):
     """
-    Класс посредник между noseapp.suite.Suite, TestLoader, TestSuite
-    и одним или группой TestCase. Обеспечивает связь между
-    TestCase->TestLoader->TestSuite.
-
-    Основная задача класса скрыть реализацию связи от пользователя
-    в класса Suite. Так же данный паттерн позволяет гибко менять
-    реализацию в Suite классе путем установки вашего Mediator класса.
+    Mediator class beetwen noseapp.suite.Suite, TestLoader, TestSuite,
+    TestCase. Provides between TestCase->TestLoader->TestSuite.
     """
 
     def __init__(self, require):
@@ -61,14 +46,10 @@ class TestCaseMediator(object):
 
     @property
     def test_cases(self):
-        """
-        Возвращает список классов TestCase
-        """
         return self._test_cases
 
     def create_map(self):
         """
-        Создает карту зарегистрированных классов вида:
         {
             'class name': {
                 'cls': 'link to class object',
@@ -77,6 +58,8 @@ class TestCaseMediator(object):
                 },
             },
         }
+
+        :return: dict
         """
         mp = {}
 
@@ -96,7 +79,7 @@ class TestCaseMediator(object):
 
     def create_suite(self, nose_config, test_loader):
         """
-        Собираетвсе TestCase классы в набор suite и возвращает
+        Create suite instance
         """
         suite_class = get_suite_class(nose_config.options)
         suite = suite_class(config=nose_config)
@@ -111,7 +94,4 @@ class TestCaseMediator(object):
         return suite
 
     def add_test_case(self, test_case):
-        """
-        Добавить TestCase класс
-        """
         self._test_cases.append(test_case)

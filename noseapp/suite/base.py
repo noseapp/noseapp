@@ -5,15 +5,19 @@ from noseapp.suite.mediator import TestCaseMediator
 
 class Suite(object):
     """
-    Suite для групп TestCase
+    Base Suite class for group or one TestCase.
+
+    Usage DEFAULT_REQUIRE property for default extensions require.
     """
 
     mediator_class = TestCaseMediator
 
     def __init__(self, name, require=None):
         """
-        :param name: имя suite
-        :param require: необходимые расширениия
+        :param name: suite name
+        :type name: str
+        :param require: extension names list
+        :type require: list
         """
         self._name = name
 
@@ -34,27 +38,19 @@ class Suite(object):
 
     def register(self, cls):
         """
-        Регистрирует класс TestCase в текущей suite
+        Add test case class
 
-        :type cls: unittest.TestCase
+        :type cls: noseapp.case.TestCase
         """
         self._mediator.add_test_case(cls)
         return cls
 
     def get_map(self):
-        """
-        Возвращает карту для поиска
-        TestCase классов и тест методов
-        """
         return self._mediator.create_map()
 
     def __call__(self, nose_config, test_loader):
         """
-        При вызове экземпляра возвращает иснстанс объекта ContextSuite
-        в котором собраны все тесты из TestCase классов
-
-        :param nose_config: конфиг nose
-        :param test_loader: инстанс TestLoader
+        Build suite
         """
         return self._mediator.create_suite(nose_config, test_loader)
 

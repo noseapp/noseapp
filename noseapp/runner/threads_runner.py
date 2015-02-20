@@ -8,17 +8,13 @@ from noseapp.runner.base import BaseTestRunner
 
 
 def suite_wrapper(data):
-    """
-    Обертка над suite.
-    Необходима для того чтобы замапить suite и result.
-    """
     suite, result = data
     suite(result)
 
 
 class ThreadsTestRunner(BaseTestRunner):
     """
-    Запуск тестов с помощью multiprocessing.pool.ThreadPool
+    Run tests with multiprocessing.pool.ThreadPool
     """
 
     def run(self, suites):

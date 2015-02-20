@@ -6,11 +6,6 @@ from noseapp.exc import CrashError
 
 
 def crash(message):
-    """
-    Возбуждает исключение CrashError останавливая прогон
-
-    :param message: сообщение
-    """
     raise CrashError(message)
 
 
@@ -20,12 +15,10 @@ class TimeoutException(BaseException):
 
 def waiting_for(func, timeout=30, sleep=0.5, stopped=False, args=None, kwargs=None):
     """
-    Функция ожидания положительного ответа от callback
-
-    :param func: функция callback
-    :param timeout: время ожидания в секундах
-    :param sleep: сколько спать на каждой итерации
-    :param args, kwargs: аргументы которые нужно передать в callback
+    :param func: callback function
+    :param timeout: number of seconds for timeout
+    :param sleep: number of second for sleep after call function
+    :param args, kwargs: callback arguments
     """
     args = args or tuple()
     kwargs = kwargs or {}

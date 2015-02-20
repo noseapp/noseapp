@@ -33,8 +33,7 @@ def prepare_argv(argv):
     for arg in argv:
         if '--processes' in arg:
             raise ArgumentError(None, 'Option "--processes" is deprecated')
-        if arg == '--ls':  # если нужно показать дерево suites,
-            # то без дефолта NOSE_NOCAPTURE это будет невозможно
+        if arg == '--ls':
             os.environ.setdefault('NOSE_NOCAPTURE', '1')
 
     return argv

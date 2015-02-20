@@ -50,7 +50,7 @@ class NoseApp(object):
 
     def __init__(self, config=None, plugins=None, argv=None):
         """
-        :type config: basestring
+        :type config: str
         :type plugins: list
         :type argv: list
         """

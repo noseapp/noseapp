@@ -5,9 +5,7 @@ from functools import wraps
 
 def parametrize(*params):
     """
-    Позволяет параметризировать тест кейс
-
-    :param params: параметры которые нужно передать в тест кейс
+    Decorator for parametrize test case method
     """
     def wrapper(f):
         @wraps(f)

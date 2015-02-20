@@ -5,7 +5,7 @@ from nose.suite import ContextSuite
 
 class BaseSuite(ContextSuite):
     """
-    Базовая Suite
+    Base suite
     """
 
     def _run(self, result, orig):

@@ -8,9 +8,6 @@ from noseapp.datastructures import ModifyDict
 
 
 def _load(obj):
-    """
-    Загружает конфигурацию из объекта
-    """
     for atr in dir(obj):
         if not atr.startswith('_'):
             yield (atr, getattr(obj, atr))
@@ -22,13 +19,12 @@ class ConfigError(BaseException):
 
 class Config(ModifyDict):
     """
-    Класс отвечает за хранение и
-    формирование конфигурации приложения
+    App config storage
     """
 
     def init_nose_config(self, nose_config):
         """
-        Инициализирует nose конфигурацию
+        Merge options from nose argument parser
         """
         self['nose'] = ModifyDict(
             _load(nose_config.options),
@@ -36,7 +32,10 @@ class Config(ModifyDict):
 
     def from_module(self, module):
         """
-        Спарсить конфигурацию из модуля
+        Init configuration from python module
+
+        :param module: import path
+        :type module: str
         """
         try:
             obj = import_module(module)
@@ -49,9 +48,10 @@ class Config(ModifyDict):
 
     def from_py_file(self, file_path):
         """
-        Загружает конфигурацию из python файла
+        Init configuration from py file
 
-        :param file_path: путь до файла
+        :param file_path: absolute file path
+        :type file_path: str
         """
         if not os.path.isfile(file_path):
             raise ConfigError('config file does not exist "{}"'.format(file_path))

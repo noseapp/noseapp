@@ -7,17 +7,13 @@ from noseapp.runner.suites.base import BaseSuite
 
 
 def test_wrapper(data):
-    """
-    Обертка над тестом и результатом.
-    Необходима для того чтобы замапить result и test.
-    """
     test, orig = data
     test(orig)
 
 
 class ThreadSuite(BaseSuite):
     """
-    Suite которая запускает тесты в pool потоков
+    Run tests with multiprocessing.pool.ThreadPool
     """
 
     def _run(self, result, orig):

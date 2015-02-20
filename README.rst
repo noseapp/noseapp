@@ -88,7 +88,7 @@ example_suite.py::
   class BasicExampleCase(TestCase):
 
     rand = None  # from MyTestApplication.setup_example_ex
-  
+
     def test(self):
       rand_int = self.rend.get_random()
       self.assertGreater(rand_int, 0)
@@ -96,17 +96,17 @@ example_suite.py::
   
   @suite.register
   class StepByStepCase(ScreenPlayCase):
-  
+
     settings = None  # from MyTestApplication.setup_case_settings
-  
+
     def setUp(self):
       self.USE_PROMPT = self.settings['interactive_mode']
-  
+
     @step(1, 'step description')
     def step_one(self):
       rand_int = self.rend.get_random()
       self.assertGreater(rand_int, 0)
-  
+
     @step(2, 'description')
     def ...
 
@@ -125,8 +125,8 @@ runner.py::
     # app.register_suites([suite])
     # or
     # app.load_suites(path_to_dir)
-  
-  app.run()
+
+    app.run()
 
 
 =====================

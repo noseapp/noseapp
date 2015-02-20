@@ -2,7 +2,4 @@
 
 
 class CrashError(KeyboardInterrupt):
-    """
-    Ошибка котторая останавливает прогон
-    """
     pass

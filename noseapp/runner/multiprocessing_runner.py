@@ -15,10 +15,7 @@ Process = ResultQueue = cpu_count = None
 
 def _import_mp():
     """
-    Импортирует все, что нужно из multiprocessing.
-    Необходимость этой функции возникает из-за того,
-    что импорт нужно сделать тогда, когда все необходимое
-    в TestRunner проинициализированно.
+    Import multiprocessing
     """
     global Process, ResultQueue, cpu_count
 
@@ -35,19 +32,13 @@ def _import_mp():
 
 def task(suite, result, result_queue):
     """
-    Задача на запуск suite.
-    После выполнения формирует результат и ставит его в очередь.
+    Task to perform suite
     """
     suite(result)
 
-    del suite  # инстанс suite нам больше не нужен, удаляем
+    del suite
 
     def get_value(value):
-        """
-        Если значение будет, не строка, то это test метод.
-        Поскольку метод из процесса передать нельзя, то передаем
-        его repr, т.к. он составлен уникального для каждого теста.
-        """
         if isinstance(value, basestring):
             return value
         return repr(value)
@@ -61,7 +52,7 @@ def task(suite, result, result_queue):
 
 def run(processor, queue_handler):
     """
-    Запускает прогон
+    Go, go, go!
     """
     workers = [
         Thread(target=processor.serve),
@@ -80,11 +71,8 @@ def run(processor, queue_handler):
 
 
 class ResultQueueHandler(object):
-    """
-    Обработчик очереди результатов
-    """
 
-    TEST_REPR = 'Test({})'  # repr формат который будет создан в результате
+    TEST_REPR = 'Test({})'
 
     def __init__(self, suites, result, result_queue):
         self._result = result
@@ -100,11 +88,7 @@ class ResultQueueHandler(object):
 
     def _match(self, suites):
         """
-        Для того чтобы сформировать результат нам
-        нужно уметь определять для какого кейса он
-        был создан. Поэтому готовим таблицу отношений
-        вида repr -> тест, т.к. id при выполнении в
-        процессе у него будет другой.
+        Create dict: repr -> test
         """
         suite_list = [s for s in suites]
         self._length_suites = len(suite_list)
@@ -115,17 +99,12 @@ class ResultQueueHandler(object):
                     repr(test.test),
                 )
 
-                if key in self._comparison:  # если в разных модулях будут классы с
-                    # одинаковыми именами и с методами, которые имеют одинаковое название,
-                    # то таблица отношений окажется невалидной.
+                if key in self._comparison:
                     raise ValueError('Test __repr__ "{}" already exist'.format(key))
 
                 self._comparison[key] = test.test
 
     def _create_result(self, data):
-        """
-        Создает новый результат для добавления
-        """
         _repr, messages = data[0], data[1:]
         test = self._comparison[_repr]
         del self._comparison[_repr]
@@ -150,9 +129,6 @@ class ResultQueueHandler(object):
             )
 
     def handle(self):
-        """
-        Начать обработку очереди
-        """
         while self._counter < self._length_suites:
             failures, errors, skipped, tests_run = self._result_queue.get()
 
@@ -167,25 +143,22 @@ class ResultQueueHandler(object):
 
 class TaskProcessor(object):
     """
-    Класс организует работу с очередью задач
+    Collect tasks and run with multiprocessing.Process
     """
 
     def __init__(self, processes, process_timeout=1800):
         """
-        :param processes: кол-во одновременно работающих процессов
-        :param process_timeout: timeout на выполнение процесса
+        :param processes: nun processes
+        :type processes: int
+        :param process_timeout: number of seconds for process timeout
+        :type process_timeout: int, float
         """
         self._processes = processes if processes > 0 else cpu_count()
         self._current = []
-        self._closed = False
         self._queue = TaskQueue()
         self._process_timeout = process_timeout
 
     def _is_release(self):
-        """
-        Освобождает место в текущем списке процессов,
-        если удалось освободить, то True, иначе False
-        """
         if len(self._current) < self._processes:
             return True
 
@@ -198,18 +171,9 @@ class TaskProcessor(object):
         return False
 
     def add_task(self, target, args=None, kwargs=None):
-        """
-        Добавить задачу в очередь
-
-        :param target: функция котторую нужно выполнить
-        :param args, kwargs: аргументы которые нужно передать target
-        """
         self._queue.put_nowait((target, args or tuple(), kwargs or dict()))
 
     def serve(self):
-        """
-        Обслуживать очередь
-        """
         while not self._queue.empty():
             try:
                 waiting_for(self._is_release, timeout=self._process_timeout, sleep=0.01)
@@ -224,25 +188,19 @@ class TaskProcessor(object):
 
     def destroy(self):
         """
-        Убить процессы
+        Kill all processes
         """
         for process in self._current:
             process.terminate()
 
     def close(self):
-        """
-        Закончить работу и дождаться
-        завершения оставшихся процессов.
-        """
         for process in self._current:
             process.join()
 
 
 class MultiprocessingTestRunner(BaseTestRunner):
     """
-    Многопоточный запуск тестов.
-    Одна noseapp.suite.Suite == 1 процесс.
-    Порядок регистрации в приложении имеет значение.
+    Run suites with multiprocessing.Process
     """
 
     def run(self, suites):

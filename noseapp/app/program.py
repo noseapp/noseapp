@@ -8,7 +8,6 @@ from noseapp.app import extensions
 from noseapp.suite.collector import CollectSuites
 
 
-# Стратегии указывают на то, какой TestRunner будем использовать
 BASIC_STRATEGY = 'basic'
 GEVENT_STRATERY = 'gevent'
 THREADS_STRATEGY = 'threads'
@@ -16,10 +15,6 @@ MULTIPROCESSING_STRATEGY = 'multiprocessing'
 
 
 def _get_strategy(options):
-    """
-    Возвращает стратегию запуска
-    на основании опций sys.argv
-    """
     if options.app_processes:
         return MULTIPROCESSING_STRATEGY
     elif options.gevent_pool:
@@ -32,8 +27,7 @@ def _get_strategy(options):
 
 def get_test_runner_class(options):
     """
-    На основании стратегии импортирует
-    класс testRunner и возвращает его
+    :return: nose.core.TextTestRunner
     """
     strategy = _get_strategy(options)
 
@@ -52,9 +46,6 @@ def get_test_runner_class(options):
 
 
 class TestProgram(BaseTestProgram):
-    """
-    Класс который отвечает за запуск тестов
-    """
 
     collector_class = CollectSuites
 
@@ -67,8 +58,7 @@ class TestProgram(BaseTestProgram):
         self._app.config.init_nose_config(self.config)
         self._app.initialize()
 
-    # для того чтобы TestProgram не запустился при
-    # иициализации нужно обезоружить эти 2 метода
+    # disarm base class
     def createTests(self):
         pass
 
@@ -77,7 +67,7 @@ class TestProgram(BaseTestProgram):
 
     def perform(self):
         """
-        Запуск прогона
+        Perform test program
         """
         collector = self.collector_class(
             self._argv, self._app.suites, self.testLoader, self.config,

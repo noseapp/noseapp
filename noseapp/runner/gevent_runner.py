@@ -10,7 +10,7 @@ from noseapp.runner.base import BaseTestRunner
 
 class GeventTestRunner(BaseTestRunner):
     """
-    Запуск тестов с помощью gevent
+    Run suites with gevent
     """
 
     def run(self, suites):

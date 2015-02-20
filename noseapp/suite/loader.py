@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+"""
+Auto load suites for register in noseapp.NoseApp
+"""
+
 import os
 from importlib import import_module
 
@@ -12,7 +16,7 @@ class LoadSuitesError(BaseException):
 
 def is_exist(path):
     """
-    Проверяет существование указанного пути
+    Check exist path
     """
     if not os.path.exists(path):
         raise LoadSuitesError('Dir "{}" does not exist'.format(path))
@@ -20,7 +24,7 @@ def is_exist(path):
 
 def is_package(path):
     """
-    Проверяет является ли указанный путь python пакетом
+    May be path is python package?
     """
     if not os.path.isfile(os.path.join(path, '__init__.py')):
         raise LoadSuitesError('"{}" is not python package'.format(path))
@@ -28,10 +32,11 @@ def is_package(path):
 
 def load_from_dir(path, import_base=None):
     """
-    Выполнить загрузку из директории
+    Load suites from dir
 
-    :param path: путь до директории
-    :param import_base: базовый путь до модуля при импорте
+    :type path: str
+    :param import_base: base import path
+    :type import_base: str
     """
     if import_base:
         is_package(path)
@@ -66,11 +71,12 @@ def load_from_dir(path, import_base=None):
 
 def load_suites_from_path(path, import_base=None):
     """
-    Рекурсивно обходит модули и пакеты внутри
-    директории, загружает suites из модулей
+    Recursive load suites by path
 
-    :param path: путь до папки откуда выгружать suites
-    :param import_base: базовый путь до модуля при импорте
+    :param path: path to dir
+    :type path: str
+    :param import_base: base import path
+    :type import_base: str
     """
     is_exist(path)
 

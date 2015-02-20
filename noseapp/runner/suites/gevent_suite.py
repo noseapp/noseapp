@@ -9,18 +9,14 @@ from noseapp.runner.suites.base import BaseSuite
 
 
 def test_wrapper(data):
-    """
-    Обертка над тестом и результатом.
-    Необходима для того чтобы замапить result и test.
-    """
     test, orig = data
     test(orig)
-    hub.sleep()  # передаем управление на hub
+    hub.sleep()
 
 
 class GeventSuite(BaseSuite):
     """
-    Suite которая запускает тесты в Pool gevent-а
+    Run tests with gevent pool
     """
 
     def _run(self, result, orig):

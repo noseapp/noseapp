@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 
 """
-Модуль позаимсвован из библиотеки flask.
-Да простит меня mitsuhiko
-
-Официальный источник: https://github.com/mitsuhiko/flask.git
+author: mitsuhiko
+source: https://github.com/mitsuhiko/flask.git
 """
 
 import os

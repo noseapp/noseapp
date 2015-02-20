@@ -5,11 +5,14 @@ from nose.plugins import Plugin as BasePlugin
 
 class AppPlugin(BasePlugin):
     """
-    Базовый класс для плагинов.
-    Прокидываем инстанс app в плагин, чтобы можно
-    было что-нибудь с ним сделать изнутри.
+    Base application plugin
     """
 
     def __call__(self, app):
+        """
+        Push app instance
+
+        :type app: noseapp.NoseApp
+        """
         self.app = app
         return self

@@ -24,4 +24,5 @@ if __name__ == '__main__':
         zip_safe=False,
         platforms='any',
         install_requires=requirements,
+        test_suite='tests',
     )

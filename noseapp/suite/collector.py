@@ -100,7 +100,9 @@ class CollectSuites(object):
 
     def _by_case_strategy(self):
         suite_name, case_name = self._load_path.split(':')
+
         app_suite = get_suite_from_map(suite_name, self._mp)
+        app_suite(self._nose_config, self._test_loader)
 
         case = get_case_from_suite(case_name, app_suite)
 
@@ -118,6 +120,7 @@ class CollectSuites(object):
         case_name, method_name = case_info.split('.')
 
         app_suite = get_suite_from_map(suite_name, self._mp)
+        app_suite(self._nose_config, self._test_loader)
 
         case = get_case_from_suite(case_name, app_suite)
 

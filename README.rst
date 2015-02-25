@@ -1,3 +1,28 @@
+
+=============
+About NoseApp
+=============
+
+This is pattern of development for testing with complex logic.
+
+:background Initialization: application -> extensions -> suites -> test cases
+:flexibility and control:
+ * application is only one service point
+ * required extensions for case at suite initialization
+ * default require in base suite class
+ * support nose plugins (noseapp.AppPlugin)
+ * creation of application configuration
+ * before, after callbacks in application class
+:implementation by steps for test case:
+ * memorized steps for exception info
+ * before, finalize callbacks
+ * interactive debug mode
+ * parametrize step flow
+:asynchrony:
+ * multiprocessing
+ * threading
+ * gevent event loop
+
 ===========
 Quick start
 ===========
@@ -135,15 +160,15 @@ Usage noseapp runners
 
 With multiprocessing:
   * processes:
-    runner.py --app-processes 2
+    runner.py --app-processes 2 (one suite === one process)
 
   * processes and threads:
-    runner.py --app-processes 4 --threads 2
+    runner.py --app-processes 4 --threads 2 (one suite == one process, one test == one thread)
 
   * threads only:
-    runner.py --threads 2
+    runner.py --threads 2 (one suite == one thread)
 
 
 With gevent:
-  * runner.py --gevent 4
-  * runner.py --gevent 4 --greenlets 2
+  * runner.py --gevent 4 (one suite == one greenlet)
+  * runner.py --gevent 4 --greenlets 2 (one suite == one greenlet, one test == one greenlet)

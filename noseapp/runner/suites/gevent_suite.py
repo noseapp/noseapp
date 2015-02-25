@@ -2,16 +2,9 @@
 
 from multiprocessing import cpu_count
 
-from gevent import hub
 from gevent.pool import Pool
 
 from noseapp.runner.suites.base import BaseSuite
-
-
-def test_wrapper(data):
-    test, orig = data
-    test(orig)
-    hub.sleep()
 
 
 class GeventSuite(BaseSuite):
@@ -26,5 +19,8 @@ class GeventSuite(BaseSuite):
             size = cpu_count() - 1
 
         pool = Pool(int(round(size)) or 2)
-        pool.imap(test_wrapper, ((t, orig) for t in self._tests))
+
+        for test in self._tests:
+            pool.spawn(test, orig)
+
         pool.join()

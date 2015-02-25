@@ -102,4 +102,6 @@ def load_suites_from_path(path, import_base=None):
                 ),
             )
 
+            import_base = None
+
     return suites

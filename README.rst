@@ -8,7 +8,7 @@ This is pattern of test development with complex logic base on nose
 :background Initialization: application -> extensions -> suites -> test cases
 :flexibility and control:
  * application is only one service point
- * required extensions for test case at suite initialization
+ * require extensions for test case at suite initialization
  * default require in base suite class
  * support nose plugins (noseapp.AppPlugin)
  * creation of application configuration

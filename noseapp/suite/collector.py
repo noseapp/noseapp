@@ -6,53 +6,41 @@ from noseapp.runner.suites.base import BaseSuite
 from noseapp.utils.collector import exec_suite_info
 
 
-base_pattern = re.compile(r'^.*\.|^.*:')
-
-case_load_pattern = re.compile(r'^.*\:')
-method_load_pattern = re.compile(r'^.*\:.*\..*')
-
-
 CASE_COLLECT_STRATEGY = 'case'
+BASIC_COLLETC_STRATEGY = 'basic'
 SUITE_COLLECT_STRATEGY = 'suite'
 METHOD_COLLECT_STRATEGY = 'method'
+
+COLLECTOR_COMMAND_PATTERN = re.compile(r'^.*\.|^.*:')
+COLLECT_CASE_COMMAND_PATTERN = re.compile(r'^.*\:')
+COLLECT_METHOD_COMMAND_PATTERN = re.compile(r'^.*\:.*\..*')
 
 
 class CollectError(BaseException):
     pass
 
 
-class CollectResult(list):
+def get_collector_strategy(command):
+    if command and COLLECTOR_COMMAND_PATTERN.search(command) is not None:
 
-    def __init__(self, suite):
-        super(CollectResult, self).__init__([suite])
+        if COLLECT_METHOD_COMMAND_PATTERN.search(command) is not None:
+            return METHOD_COLLECT_STRATEGY
 
+        if COLLECT_CASE_COMMAND_PATTERN.search(command) is not None:
+            return CASE_COLLECT_STRATEGY
 
-def get_collect_strategy(load_path):
-    if not load_path:
-        return
+        return SUITE_COLLECT_STRATEGY
 
-    if method_load_pattern.search(load_path) is not None:
-        return METHOD_COLLECT_STRATEGY
-
-    if case_load_pattern.search(load_path) is not None:
-        return CASE_COLLECT_STRATEGY
-
-    return SUITE_COLLECT_STRATEGY
+    return BASIC_COLLETC_STRATEGY
 
 
-def create_map(suites):
-    mp = {}
-
+def get_suite_by_name(name, suites):
     for suite in suites:
-        mp[suite.name] = suite
 
-    return mp
+        if suite.name == name:
+            return suite
 
-
-def get_suite_from_map(name, mp):
-    try:
-        return mp[name]
-    except KeyError:
+    else:
         raise CollectError(
             'Suite "{}" is not found'.format(name),
         )
@@ -65,7 +53,7 @@ def get_case_from_suite(case_name, suite):
         raise CollectError('TestCase "{}" is not found'.format(case_name))
 
 
-class CollectSuites(object):
+class CollectSuite(object):
     """
     Collect suite for test runner
     """
@@ -74,34 +62,51 @@ class CollectSuites(object):
         if nose_config.options.ls:
             exec_suite_info(suites, show_docs=nose_config.options.doc)
 
-        load_path = argv[1] if len(argv) > 2 else ''
-
-        self._result = None
         self._suites = suites
-
-        if load_path and base_pattern.search(load_path) is not None:
-            self._strategy = get_collect_strategy(load_path)
-            self._load_path = load_path
-            self._mp = create_map(suites)
-        else:
-            self._strategy = None
-            self._load_path = None
-            self._mp = None
-
         self._nose_config = nose_config
         self._test_loader = test_loader
 
-    def _by_suite_strategy(self):
-        suite = get_suite_from_map(self._load_path, self._mp)
+        self._command = argv[1] if len(argv) > 2 else ''
 
-        self._result = CollectResult(
-            suite(self._nose_config, self._test_loader),
+    @property
+    def command(self):
+        return self._command
+
+    @property
+    def suites(self):
+        return self._suites
+
+    @property
+    def collect(self):  # sugar of syntax :)
+        strategy_to_method = {
+            CASE_COLLECT_STRATEGY: self._collect_by_case_strategy,
+            BASIC_COLLETC_STRATEGY: self._collect_by_basic_strategy,
+            SUITE_COLLECT_STRATEGY: self._collect_by_suite_strategy,
+            METHOD_COLLECT_STRATEGY: self._collect_by_method_strategy,
+        }
+
+        return strategy_to_method[get_collector_strategy(self._command)]
+
+    def make_result(self):
+        return self._test_loader.suiteClass(
+            self.collect(),
         )
 
-    def _by_case_strategy(self):
-        suite_name, case_name = self._load_path.split(':')
+    def _collect_by_basic_strategy(self):
+        return [
+            suite(self._nose_config, self._test_loader)
+            for suite in self._suites
+        ]
 
-        app_suite = get_suite_from_map(suite_name, self._mp)
+    def _collect_by_suite_strategy(self):
+        suite = get_suite_by_name(self._command, self._suites)
+
+        return [suite(self._nose_config, self._test_loader)]
+
+    def _collect_by_case_strategy(self):
+        suite_name, case_name = self._command.split(':')
+
+        app_suite = get_suite_by_name(suite_name, self._suites)
         app_suite(self._nose_config, self._test_loader)
 
         case = get_case_from_suite(case_name, app_suite)
@@ -111,13 +116,13 @@ class CollectSuites(object):
             self._test_loader.loadTestsFromTestCase(case),
         )
 
-        self._result = CollectResult(suite)
+        return [suite]
 
-    def _by_method_strategy(self):
-        suite_name, case_info = self._load_path.split(':')
+    def _collect_by_method_strategy(self):
+        suite_name, case_info = self._command.split(':')
         case_name, method_name = case_info.split('.')
 
-        app_suite = get_suite_from_map(suite_name, self._mp)
+        app_suite = get_suite_by_name(suite_name, self._suites)
         app_suite(self._nose_config, self._test_loader)
 
         case = get_case_from_suite(case_name, app_suite)
@@ -132,24 +137,4 @@ class CollectSuites(object):
                 'Method "{}" of class "{}" is not found'.format(method_name, case_name)
             )
 
-        self._result = CollectResult(suite)
-
-    def make_result(self):
-        if self._strategy is SUITE_COLLECT_STRATEGY:
-            self._by_suite_strategy()
-
-        elif self._strategy is CASE_COLLECT_STRATEGY:
-            self._by_case_strategy()
-
-        elif self._strategy is METHOD_COLLECT_STRATEGY:
-            self._by_method_strategy()
-
-        if self._result:
-            return self._test_loader.suiteClass(self._result)
-
-        return self._test_loader.suiteClass(
-            [
-                suite(self._nose_config, self._test_loader)
-                for suite in self._suites
-            ],
-        )
+        return [suite]

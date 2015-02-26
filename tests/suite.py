@@ -9,7 +9,7 @@ from noseapp.suite import Suite
 from noseapp.suite import TestCaseMediator
 from noseapp.app.program import TestProgram
 from noseapp import TestCase as NoseAppTestCase
-from noseapp.suite.collector import CollectSuites
+from noseapp.suite.collector import CollectSuite
 from noseapp.plugins.configure import AppConfigurePlugin
 
 
@@ -126,7 +126,7 @@ class TestCollectorClass(TestCase):
         for suite in suites:
             suite.register(NoseAppTestCase)
 
-        collector = CollectSuites(
+        collector = CollectSuite(
             argv,
             suites,
             program.testLoader,
@@ -156,7 +156,7 @@ class TestCollectorClass(TestCase):
             plugins=[AppConfigurePlugin()],
         )
 
-        collector = CollectSuites(
+        collector = CollectSuite(
             argv,
             suites,
             program.testLoader,
@@ -195,7 +195,7 @@ class TestCollectorClass(TestCase):
             plugins=[AppConfigurePlugin()],
         )
 
-        collector = CollectSuites(
+        collector = CollectSuite(
             argv,
             suites,
             program.testLoader,
@@ -243,7 +243,7 @@ class TestCollectorClass(TestCase):
             plugins=[AppConfigurePlugin()],
         )
 
-        collector = CollectSuites(
+        collector = CollectSuite(
             argv,
             suites,
             program.testLoader,

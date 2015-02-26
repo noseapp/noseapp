@@ -14,6 +14,7 @@ THREAD_STRATEGY = 'thread'
 def _get_strategy(options):
     if options.app_processes and options.thread_pool:
         return THREAD_STRATEGY
+
     elif not options.app_processes and options.gevent_greanlets:
         return GEVENT_STRATEGY
 
@@ -26,9 +27,11 @@ def get_suite_class(options):
     if strategy == BASIC_STATEGY:
         from noseapp.runner.suites.base import BaseSuite
         return BaseSuite
+
     elif strategy == GEVENT_STRATEGY:
         from noseapp.runner.suites.gevent_suite import GeventSuite
         return GeventSuite
+
     elif strategy == THREAD_STRATEGY:
         from noseapp.runner.suites.thread_suite import ThreadSuite
         return ThreadSuite

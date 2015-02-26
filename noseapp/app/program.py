@@ -5,7 +5,7 @@ import sys
 from nose.core import TestProgram as BaseTestProgram
 
 from noseapp.app import extensions
-from noseapp.suite.collector import CollectSuites
+from noseapp.suite.collector import CollectSuite
 
 
 BASIC_STRATEGY = 'basic'
@@ -17,10 +17,13 @@ MULTIPROCESSING_STRATEGY = 'multiprocessing'
 def _get_strategy(options):
     if options.app_processes:
         return MULTIPROCESSING_STRATEGY
+
     elif options.gevent_pool:
         return GEVENT_STRATERY
+
     elif options.thread_pool:
         return THREADS_STRATEGY
+
     else:
         return BASIC_STRATEGY
 
@@ -34,12 +37,15 @@ def get_test_runner_class(options):
     if strategy == BASIC_STRATEGY:
         from noseapp.runner.base import BaseTestRunner
         return BaseTestRunner
+
     elif strategy == MULTIPROCESSING_STRATEGY:
         from noseapp.runner.multiprocessing_runner import MultiprocessingTestRunner
         return MultiprocessingTestRunner
+
     elif strategy == GEVENT_STRATERY:
         from noseapp.runner.gevent_runner import GeventTestRunner
         return GeventTestRunner
+
     elif strategy == THREADS_STRATEGY:
         from noseapp.runner.threads_runner import ThreadsTestRunner
         return ThreadsTestRunner
@@ -47,7 +53,7 @@ def get_test_runner_class(options):
 
 class TestProgram(BaseTestProgram):
 
-    collector_class = CollectSuites
+    collector_class = CollectSuite
 
     def __init__(self, app, argv, *args, **kwargs):
         self._app = app

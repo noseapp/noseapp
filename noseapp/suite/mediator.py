@@ -39,7 +39,7 @@ def get_suite_class(options):
 
 class TestCaseMediator(object):
     """
-    Mediator class beetwen noseapp.suite.Suite, TestLoader, TestSuite,
+    Mediator class between noseapp.suite.Suite, TestLoader, TestSuite,
     TestCase. Provides between TestCase->TestLoader->TestSuite.
     """
 

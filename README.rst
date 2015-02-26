@@ -1,7 +1,7 @@
 
-=============
-About NoseApp
-=============
+=====
+About
+=====
 
 This is pattern of development for testing with complex logic.
 

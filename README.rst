@@ -9,7 +9,7 @@ This is pattern of test development with complex logic base on nose
 :flexibility and control:
  * application is only one service point
  * require extensions for test case at suite initialization
- * default require in base suite class
+ * default require on base suite class
  * support nose plugins (noseapp.AppPlugin)
  * creation of application configuration
  * before, after callbacks on base application class

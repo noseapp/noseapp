@@ -7,7 +7,7 @@ from noseapp.utils.collector import exec_suite_info
 
 
 CASE_COLLECT_STRATEGY = 'case'
-BASIC_COLLETC_STRATEGY = 'basic'
+BASIC_COLLECT_STRATEGY = 'basic'
 SUITE_COLLECT_STRATEGY = 'suite'
 METHOD_COLLECT_STRATEGY = 'method'
 
@@ -31,7 +31,7 @@ def get_collector_strategy(command):
 
         return SUITE_COLLECT_STRATEGY
 
-    return BASIC_COLLETC_STRATEGY
+    return BASIC_COLLECT_STRATEGY
 
 
 def get_suite_by_name(name, suites):
@@ -66,7 +66,7 @@ class CollectSuite(object):
         self._nose_config = nose_config
         self._test_loader = test_loader
 
-        self._command = argv[1] if len(argv) > 2 else ''
+        self._command = argv[1] if len(argv) > 2 else None
 
     @property
     def command(self):
@@ -77,10 +77,10 @@ class CollectSuite(object):
         return self._suites
 
     @property
-    def collect(self):  # sugar of syntax :)
+    def collect(self):  # syntax of sugar :)
         strategy_to_method = {
             CASE_COLLECT_STRATEGY: self._collect_by_case_strategy,
-            BASIC_COLLETC_STRATEGY: self._collect_by_basic_strategy,
+            BASIC_COLLECT_STRATEGY: self._collect_by_basic_strategy,
             SUITE_COLLECT_STRATEGY: self._collect_by_suite_strategy,
             METHOD_COLLECT_STRATEGY: self._collect_by_method_strategy,
         }

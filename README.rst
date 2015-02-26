@@ -3,19 +3,19 @@
 About
 =====
 
-This is pattern of development for testing with complex logic.
+This is pattern of test development with complex logic base on nose
 
 :background Initialization: application -> extensions -> suites -> test cases
 :flexibility and control:
  * application is only one service point
- * required extensions for case at suite initialization
+ * required extensions for test case at suite initialization
  * default require in base suite class
  * support nose plugins (noseapp.AppPlugin)
  * creation of application configuration
- * before, after callbacks in application class
+ * before, after callbacks on base application class
 :implementation by steps for test case:
  * memorized steps for exception info
- * before, finalize callbacks
+ * before, finalize callbacks on base test case class
  * interactive debug mode
  * parametrize step flow
 :asynchrony:
@@ -83,13 +83,13 @@ app.py::
   # app = create_app(plugins=[MyAppPlugin()], argv=['--with-my-app-plugin'])
 
 
-  # use config module for configuration your app
+  # use config module for configuration in your application
   #
   # app = create_app(config='etc.base')
   # or
   # app = create_app(config='/home/user/projects/example/etc/base.py')
   #
-  # use config property inside app class
+  # use config property inside application class
 
 
 example_suite.py::
@@ -103,7 +103,7 @@ example_suite.py::
   suite = Suite(__name__, require=['rand', 'settings'])
 
 
-  # create your suite class and use default
+  # create your suite class and use default require
   #
   # class MySuite(Suite):
   #     DEFAULT_REQUIRE = ['settings']

@@ -71,7 +71,7 @@ def load_from_dir(path, import_base=None):
 
 def load_suites_from_path(path, import_base=None):
     """
-    Recursive load suites by path
+    Recursive load suites from path
 
     :param path: path to dir
     :type path: str

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Realisation of flask lib
+Realisation from flask lib
 """
 
 

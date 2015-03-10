@@ -22,7 +22,7 @@ Example::
 
   class CaseParametrizeExample(ScreenPlayCase):
 
-    PARAMETRIZE = (
+    FLOWS = (
       1, 2, 3
     )
 
@@ -60,7 +60,7 @@ ERROR_INFO_PATTERN = u"""
 * Point:
 {}.{} -> Step {} "{}"
 
-* Params:
+* Flow:
 {}
 
 * Raise:
@@ -154,13 +154,13 @@ def perform_prompt(case_name, method_name, exit_code=0):
         pdb.set_trace()
 
 
-def run_step(case, method, params=None):
+def run_step(case, method, flow=None):
     """
     Run step
 
     :param case: TestCase instance
     :param method: step method
-    :param params: params from PARAMETRIZE property
+    :param flow: from FLOWS property
     """
     case_name, method_name, weight, doc = get_step_info(case, method)
     step_info = STEP_INFO_PATTERN.format(
@@ -173,8 +173,8 @@ def run_step(case, method, params=None):
     logger.info(step_info)
 
     try:
-        if params is not None:
-            method(case, params)
+        if flow is not None:
+            method(case, flow)
         else:
             method(case)
     # handle errors
@@ -186,7 +186,7 @@ def run_step(case, method, params=None):
                 method_name,
                 weight,
                 doc,
-                params,
+                flow,
                 e.__class__.__name__,
                 e.message,
             ).encode('utf-8', 'replace'),
@@ -199,7 +199,7 @@ def run_step(case, method, params=None):
                 method_name,
                 weight,
                 doc,
-                params,
+                flow,
                 e.__class__.__name__,
                 e.message,
             ).encode('utf-8', 'replace'),
@@ -221,14 +221,14 @@ def make_run_test(steps):
         self.__history = []
         history_line = u'{}. {}'
 
-        if self.PARAMETRIZE and hasattr(self.PARAMETRIZE, '__iter__'):
+        if self.FLOWS and hasattr(self.FLOWS, '__iter__'):
 
-            for params in self.PARAMETRIZE:
+            for flow in self.FLOWS:
                 for step_method in steps:
                     _, _, step, doc = get_step_info(self, step_method)
                     self.__history.append(history_line.format(step, doc))
 
-                    run_step(self, step_method, params=params)
+                    run_step(self, step_method, flow=flow)
                 else:
                     self.__history = []
 
@@ -251,19 +251,19 @@ class ScreenPlayCaseMeta(type):
     """
 
     def __new__(cls, name, bases, dct):
-        instance = type.__new__(cls, name, bases, dct)
+        new_cls = type.__new__(cls, name, bases, dct)
 
         steps = []
 
         attributes = (
-            a for a in dir(instance)
+            a for a in dir(new_cls)
             if not a.startswith('_')
             and
             EXCLUDE_METHOD_PATTERN.search(a) is None
         )
 
         for atr in attributes:
-            method = getattr(instance, atr, None)
+            method = getattr(new_cls, atr, None)
             if hasattr(method, SCREENPLAY_ATTRIBUTE_NAME):
                 steps.append(method)
 
@@ -271,9 +271,9 @@ class ScreenPlayCaseMeta(type):
             steps.sort(
                 key=lambda m: getattr(m, WEIGHT_ATTRIBUTE_NAME),
             )
-            instance.runTest = make_run_test(steps)
+            new_cls.runTest = make_run_test(steps)
 
-        return instance
+        return new_cls
 
 
 class ScreenPlayCase(TestCase):
@@ -283,8 +283,8 @@ class ScreenPlayCase(TestCase):
 
     __metaclass__ = ScreenPlayCaseMeta
 
+    FLOWS = None
     USE_PROMPT = False
-    PARAMETRIZE = None
 
     def begin(self):
         """

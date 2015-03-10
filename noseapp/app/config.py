@@ -4,7 +4,7 @@ import os
 import imp
 from importlib import import_module
 
-from noseapp.datastructures import ModifyDict
+from noseapp.datastructures import ModifyDict as BaseConfig
 
 
 def _load(obj):
@@ -17,7 +17,7 @@ class ConfigError(BaseException):
     pass
 
 
-class Config(ModifyDict):
+class Config(BaseConfig):
     """
     App config storage
     """
@@ -26,7 +26,7 @@ class Config(ModifyDict):
         """
         Merge options from nose argument parser
         """
-        self['nose'] = ModifyDict(
+        self['nose'] = BaseConfig(
             _load(nose_config.options),
         )
 

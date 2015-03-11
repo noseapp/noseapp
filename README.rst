@@ -3,13 +3,13 @@
 About
 =====
 
-This is pattern of test development with complex logic base on nose
+This is framework for test development with complex logic based on nose library
 
 :background Initialization: application -> extensions -> suites -> test cases
 :flexibility and control:
  * application is only one service point
- * require extensions for test case at suite initialization
- * default require on base suite class
+ * require extensions for test case through suite initialization
+ * opportunity set default require on your base suite class
  * support nose plugins (noseapp.AppPlugin)
  * creation of application configuration
  * before, after callbacks on base application class

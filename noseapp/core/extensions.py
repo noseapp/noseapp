@@ -45,7 +45,7 @@ def get(name, require=None):
 
 def set(name, ext, in_context=False, args=None, kwargs=None):
     """
-    Register extension in tmp
+    Register extension in tmp storage
 
     :param name: extension name
     :type name: basestring

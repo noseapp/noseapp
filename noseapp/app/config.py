@@ -2,9 +2,13 @@
 
 import os
 import imp
+import logging
 from importlib import import_module
 
 from noseapp.datastructures import ModifyDict as BaseConfig
+
+
+logger = logging.getLogger(__name__)
 
 
 def _load(obj):
@@ -26,6 +30,8 @@ class Config(BaseConfig):
         """
         Merge options from nose argument parser
         """
+        logger.debug('Initialize nose config options')
+
         self['nose'] = BaseConfig(
             _load(nose_config.options),
         )
@@ -37,6 +43,8 @@ class Config(BaseConfig):
         :param module: import path
         :type module: str
         """
+        logger.debug('Init config from module "%s"', module)
+
         try:
             obj = import_module(module)
         except ImportError:
@@ -53,6 +61,8 @@ class Config(BaseConfig):
         :param file_path: absolute file path
         :type file_path: str
         """
+        logger.debug('Init config from py file "%s"', file_path)
+
         if not os.path.isfile(file_path):
             raise ConfigError('config file does not exist "{}"'.format(file_path))
 

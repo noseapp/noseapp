@@ -3,7 +3,7 @@
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 
-from noseapp.utils.runner import measure_time
+from noseapp.runner.base import measure_time
 from noseapp.runner.base import BaseTestRunner
 
 
@@ -12,7 +12,7 @@ def suite_wrapper(data):
     suite(result)
 
 
-class ThreadsTestRunner(BaseTestRunner):
+class ThreadingTestRunner(BaseTestRunner):
     """
     Run tests with multiprocessing.pool.ThreadPool
     """

@@ -4,7 +4,7 @@ from multiprocessing import cpu_count
 
 from gevent.pool import Pool
 
-from noseapp.runner.suites.base import BaseSuite
+from noseapp.suite.bases.simple import BaseSuite
 
 
 class GeventSuite(BaseSuite):

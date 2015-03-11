@@ -2,6 +2,12 @@
 
 
 class ModifyDict(dict):
+    """
+    Verb in class name as instruction to usage
+
+    Example:
+        from noseapp.datastructures import ModifyDict as Context
+    """
 
     def __getattr__(self, item):
         try:

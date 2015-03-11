@@ -6,35 +6,17 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-BASIC_STATEGY = 'basic'
-GEVENT_STRATEGY = 'gevent'
-THREADING_STRATEGY = 'threading'
-
-
-def _get_strategy(options):
-    if options.app_processes and options.thread_pool:
-        return THREADING_STRATEGY
-
-    elif not options.app_processes and options.gevent_greanlets:
-        return GEVENT_STRATEGY
-
-    return BASIC_STATEGY
-
-
 def get_suite_class(options):
-    strategy = _get_strategy(options)
-
-    if strategy == BASIC_STATEGY:
-        from noseapp.suite.bases.simple import BaseSuite
-        return BaseSuite
-
-    elif strategy == GEVENT_STRATEGY:
+    if not options.app_processes and options.gevent_greanlets:
         from noseapp.suite.bases.gevent_suite import GeventSuite
         return GeventSuite
 
-    elif strategy == THREADING_STRATEGY:
+    elif options.app_processes and options.thread_pool:
         from noseapp.suite.bases.threading_suite import ThreadSuite
         return ThreadSuite
+
+    from noseapp.suite.bases.simple import BaseSuite
+    return BaseSuite
 
 
 class TestCaseMediator(object):

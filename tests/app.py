@@ -233,10 +233,12 @@ class TestInitConfig(TestCase):
     """
 
     def test_config_from_module(self):
+        from noseapp.core.program import TestProgram
+
         app = NoseApp()
         app.config.from_module('noseapp.core.program')
 
-        self.assertEqual(app.config.BASIC_STRATEGY, 'basic')
+        self.assertEqual(app.config.TestProgram, TestProgram)
 
     def test_config_from_py_file(self):
         path = os.path.abspath(

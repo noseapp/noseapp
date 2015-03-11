@@ -39,9 +39,9 @@ def _doc(string, is_end):
     return '| - {}{}'.format(string, '...' if is_end else '')
 
 
-def exec_suite_info(suites, show_docs=True, doc_lines=1):
+def tree(suites, show_docs=True, doc_lines=1):
     """
-    Print suites tree
+    Print suites tree from application
 
     :param suites: suite list from app
     :param show_docs: show docstring flag

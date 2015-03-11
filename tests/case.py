@@ -2,7 +2,13 @@
 
 from unittest import TestCase
 
-from noseapp import NoseApp
+from noseapp import NoseApp as _NoseApp
+
+
+class NoseApp(_NoseApp):
+
+    def initialize(self):
+        pass
 
 
 class TestInitExtensions(TestCase):
@@ -21,7 +27,7 @@ class TestInitExtensions(TestCase):
 
     def runTest(self):
         from noseapp import TestCase
-        from noseapp.app.extensions import ExtensionNotFound
+        from noseapp.core.extensions import ExtensionNotFound
 
         app = NoseApp()
         ex_cls = self.create_fake_extension()
@@ -37,7 +43,7 @@ class TestInitExtensions(TestCase):
 class TestScreenPlayCase(TestCase):
     """
     Test noseapp.case.ScreenPlayCase class
-    TODO: Test parametrize
+    TODO: Test flows
     """
 
     @staticmethod
@@ -68,7 +74,7 @@ class TestScreenPlayCase(TestCase):
 
         case_cls = self.create_test_class()
 
-        self.assertEqual(case_cls.PARAMETRIZE, None)
+        self.assertEqual(case_cls.FLOWS, None)
         self.assertEqual(case_cls.USE_PROMPT, False)
         self.assertEqual(case_cls.__metaclass__, ScreenPlayCaseMeta)
 

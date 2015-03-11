@@ -4,8 +4,14 @@ import os
 from unittest import TestCase
 
 from noseapp import Suite
-from noseapp.app import extensions
-from noseapp.app.base import NoseApp
+from noseapp.core import extensions
+from noseapp.app import NoseApp as _NoseApp
+
+
+class NoseApp(_NoseApp):
+
+    def initialize(self):
+        pass
 
 
 class TestDefaultClasses(TestCase):
@@ -14,8 +20,8 @@ class TestDefaultClasses(TestCase):
     """
 
     def runTest(self):
+        from noseapp.core import TestProgram
         from noseapp.app.config import Config
-        from noseapp.app.program import TestProgram
 
         self.assertEqual(NoseApp.config_class, Config)
         self.assertEqual(NoseApp.program_class, TestProgram)
@@ -59,7 +65,7 @@ class TestBeforeAfterCallback(TestCase):
 
     @staticmethod
     def mock_test_runner():
-        import noseapp.app.program
+        import noseapp.core.program
 
         def get_test_runner_class(options):
 
@@ -78,7 +84,7 @@ class TestBeforeAfterCallback(TestCase):
 
             return FakeTestRunner
 
-        noseapp.app.program.get_test_runner_class = get_test_runner_class
+        noseapp.core.program.get_test_runner_class = get_test_runner_class
 
     def runTest(self):
         self.mock_test_runner()
@@ -208,8 +214,8 @@ class TestSharedExtension(TestCase):
         self.assertEqual(data.get('test'), 'test')
 
     def test_raises(self):
-        from noseapp.app.extensions import ExtensionNotFound
-        from noseapp.app.extensions import ExtensionNotRequired
+        from noseapp.core.extensions import ExtensionNotFound
+        from noseapp.core.extensions import ExtensionNotRequired
 
         ex = self.get_fake_ex()
         app = NoseApp()
@@ -228,7 +234,7 @@ class TestInitConfig(TestCase):
 
     def test_config_from_module(self):
         app = NoseApp()
-        app.config.from_module('noseapp.app.program')
+        app.config.from_module('noseapp.core.program')
 
         self.assertEqual(app.config.BASIC_STRATEGY, 'basic')
 
@@ -256,18 +262,3 @@ class TestInitConfig(TestCase):
         app.config.init_nose_config(FakeNoseConfig())
 
         self.assertEqual(app.config.nose.test, 'test')
-
-
-class TestClearExtensions(TestCase):
-    """
-    Set extension, check get extension, call clear, check raise
-    """
-
-    def runTest(self):
-        from noseapp.app.extensions import ExtensionNotFound
-
-        extensions.set('test', dict(test='test'))
-        self.assertEqual(extensions.get('test').get('test'), 'test')
-
-        extensions.clear()
-        self.assertRaises(ExtensionNotFound, extensions.get, 'test')

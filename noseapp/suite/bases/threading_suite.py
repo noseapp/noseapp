@@ -3,7 +3,7 @@
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 
-from noseapp.runner.suites.base import BaseSuite
+from noseapp.suite.bases.simple import BaseSuite
 
 
 class ThreadSuite(BaseSuite):

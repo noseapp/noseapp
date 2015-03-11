@@ -2,8 +2,8 @@
 
 import re
 
-from noseapp.runner.suites.base import BaseSuite
-from noseapp.utils.collector import exec_suite_info
+from noseapp.core.collector import console
+from noseapp.suite.bases.simple import BaseSuite
 
 
 CASE_COLLECT_STRATEGY = 'case'
@@ -60,7 +60,7 @@ class CollectSuite(object):
 
     def __init__(self, argv, suites, test_loader, nose_config):
         if nose_config.options.ls:
-            exec_suite_info(suites, show_docs=nose_config.options.doc)
+            console.tree(suites, show_docs=nose_config.options.doc)
 
         self._suites = suites
         self._nose_config = nose_config

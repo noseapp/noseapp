@@ -4,13 +4,19 @@ from unittest import TestCase
 
 from nose.suite import ContextSuite
 
-from noseapp import NoseApp
 from noseapp.suite import Suite
+from noseapp.core import TestProgram
+from noseapp.core import CollectSuite
+from noseapp import NoseApp as _NoseApp
 from noseapp.suite import TestCaseMediator
-from noseapp.app.program import TestProgram
 from noseapp import TestCase as NoseAppTestCase
-from noseapp.suite.collector import CollectSuite
 from noseapp.plugins.configure import AppConfigurePlugin
+
+
+class NoseApp(_NoseApp):
+
+    def initialize(self):
+        pass
 
 
 class FakeTestCase(NoseAppTestCase):
@@ -56,9 +62,8 @@ class TestSuiteClass(TestCase):
 
     def test_build_suite(self):
         from nose.case import Test
-        from noseapp import NoseApp
         import noseapp.suite.mediator
-        from noseapp.runner.suites.base import BaseSuite
+        from noseapp.suite.bases.simple import BaseSuite
 
         mock_get_suite_class = lambda o: BaseSuite
         noseapp.suite.mediator.get_suite_class = mock_get_suite_class

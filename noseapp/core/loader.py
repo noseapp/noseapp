@@ -7,7 +7,7 @@ Auto load suites for register in noseapp.NoseApp
 import os
 from importlib import import_module
 
-from noseapp.suite.base import Suite
+from noseapp.suite import Suite
 
 
 class LoadSuitesError(BaseException):

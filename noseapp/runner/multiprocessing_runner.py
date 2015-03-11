@@ -5,7 +5,7 @@ from threading import Thread
 from Queue import Queue as TaskQueue
 
 from noseapp.utils.common import waiting_for
-from noseapp.utils.runner import measure_time
+from noseapp.runner.base import measure_time
 from noseapp.runner.base import BaseTestRunner
 from noseapp.utils.common import TimeoutException
 

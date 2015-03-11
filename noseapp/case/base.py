@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from noseapp.app import extensions
 from unittest import TestCase as BaseTestCase
+
+from noseapp.core import extensions
 
 
 class TestCase(BaseTestCase):

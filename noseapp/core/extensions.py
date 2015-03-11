@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
-
 """
 Tmp storage for extensions
 """
 
 from copy import deepcopy
 
-from noseapp.datastructures import ModifyDict
+from noseapp.datastructures import ModifyDict as Transport
 
 
 _EXTENSIONS = {}
@@ -36,7 +35,7 @@ def get(name, require=None):
     try:
         ext = _EXTENSIONS[name]
 
-        if ext.__class__ is ModifyDict:
+        if ext.__class__ is Transport:
             return ext.cls(*ext.args, **ext.kwargs)
 
         return deepcopy(ext)
@@ -55,7 +54,7 @@ def set(name, ext, in_context=False, args=None, kwargs=None):
     :type in_context: bool
     """
     if in_context:
-        _EXTENSIONS[name] = ModifyDict(
+        _EXTENSIONS[name] = Transport(
             cls=ext, args=args or tuple(), kwargs=kwargs or dict(),
         )
     else:

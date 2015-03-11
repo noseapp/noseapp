@@ -4,7 +4,7 @@ from multiprocessing import cpu_count
 
 from gevent.pool import Pool
 
-from noseapp.utils.runner import measure_time
+from noseapp.runner.base import measure_time
 from noseapp.runner.base import BaseTestRunner
 
 

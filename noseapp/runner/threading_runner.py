@@ -7,11 +7,6 @@ from noseapp.runner.base import measure_time
 from noseapp.runner.base import BaseTestRunner
 
 
-def suite_wrapper(data):
-    suite, result = data
-    suite(result)
-
-
 class ThreadingTestRunner(BaseTestRunner):
     """
     Run tests with multiprocessing.pool.ThreadPool
@@ -35,7 +30,10 @@ class ThreadingTestRunner(BaseTestRunner):
         pool = ThreadPool(size)
 
         with measure_time(result):
-            pool.imap(suite_wrapper, ((suite, result) for suite in suites))
+
+            for suite in suites:
+                pool.apply_async(suite, args=(result,))
+
             pool.close()
             pool.join()
 

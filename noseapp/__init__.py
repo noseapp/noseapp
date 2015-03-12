@@ -8,7 +8,7 @@ from noseapp.plugins import AppPlugin
 from noseapp.case import ScreenPlayCase
 
 
-__version__ = '0.1.0'
+__version__ = '1.0.0'
 
 
 __all__ = (

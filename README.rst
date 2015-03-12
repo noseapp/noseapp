@@ -172,3 +172,19 @@ With multiprocessing:
 With gevent:
   * runner.py --gevent 4 (one suite == one greenlet)
   * runner.py --gevent 4 --greenlets 2 (one suite == one greenlet, one test == one greenlet)
+
+
+============================
+Creating your own extensions
+============================
+
+You will can create extensions for nose app as independent library. Usage redirect imports from noseapp.ext
+
+Example::
+
+  # from your lib
+  from noseapp_my_ext import Extension
+  # With redirect import
+  from noseapp.ext.my_ext import Extension
+
+Good luck and easy testing!

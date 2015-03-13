@@ -1,4 +1,13 @@
 
+============
+Installation
+============
+
+::
+
+  pip install noseapp
+
+
 =====
 About
 =====
@@ -22,15 +31,6 @@ This is framework for test development with complex logic based on nose library
  * multiprocessing
  * threading
  * gevent event loop
-
-
-============
-Installation
-============
-
-::
-
-  pip install noseapp
 
 
 ===========

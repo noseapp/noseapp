@@ -38,6 +38,7 @@ Example::
 import re
 import sys
 import logging
+import traceback
 from functools import wraps
 
 from noseapp.case.base import TestCase
@@ -68,6 +69,8 @@ ERROR_INFO_PATTERN = u"""
 
 * Message:
 {}
+
+* {}
 """
 
 EXCLUDE_METHOD_PATTERN = re.compile(
@@ -189,6 +192,7 @@ def run_step(case, method, flow=None):
                 flow,
                 e.__class__.__name__,
                 e.message,
+                traceback.format_exc()
             ).encode('utf-8', 'replace'),
         )
     except Exception as e:
@@ -202,6 +206,7 @@ def run_step(case, method, flow=None):
                 flow,
                 e.__class__.__name__,
                 e.message,
+                traceback.format_exc()
             ).encode('utf-8', 'replace'),
         )
 

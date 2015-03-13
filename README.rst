@@ -23,6 +23,16 @@ This is framework for test development with complex logic based on nose library
  * threading
  * gevent event loop
 
+
+============
+Installation
+============
+
+::
+
+  pip install noseapp
+
+
 ===========
 Quick start
 ===========

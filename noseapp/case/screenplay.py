@@ -55,22 +55,22 @@ STEP_INFO_PATTERN = u'<{}.{}> Step {} "{}"'
 
 ERROR_INFO_PATTERN = u"""
 
+* {traceback}
+
 * History:
-{}
+{history}
 
 * Point:
-{}.{} -> Step {} "{}"
+{case}.{method} -> Step {step} "{step_doc}"
 
 * Flow:
-{}
+{flow}
 
-* Raise:
-{}
+* Raised:
+{raised}
 
 * Message:
-{}
-
-* {}
+{message}
 """
 
 EXCLUDE_METHOD_PATTERN = re.compile(
@@ -184,29 +184,29 @@ def run_step(case, method, flow=None):
     except AssertionError as e:
         raise StepFail(
             ERROR_INFO_PATTERN.format(
-                u'\n'.join(case.__history),
-                case_name,
-                method_name,
-                weight,
-                doc,
-                flow,
-                e.__class__.__name__,
-                e.message,
-                traceback.format_exc()
+                history=u'\n'.join(case.__history),
+                case=case_name,
+                method=method_name,
+                step=weight,
+                step_doc=doc,
+                flow=flow,
+                raised=e.__class__.__name__,
+                message=e.message,
+                traceback=traceback.format_exc()
             ).encode('utf-8', 'replace'),
         )
-    except Exception as e:
+    except BaseException as e:
         raise StepError(
             ERROR_INFO_PATTERN.format(
-                u'\n'.join(case.__history),
-                case_name,
-                method_name,
-                weight,
-                doc,
-                flow,
-                e.__class__.__name__,
-                e.message,
-                traceback.format_exc()
+                history=u'\n'.join(case.__history),
+                case=case_name,
+                method=method_name,
+                step=weight,
+                step_doc=doc,
+                flow=flow,
+                raised=e.__class__.__name__,
+                message=e.message,
+                traceback=traceback.format_exc()
             ).encode('utf-8', 'replace'),
         )
 

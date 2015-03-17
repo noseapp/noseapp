@@ -107,7 +107,7 @@ class CollectSuite(object):
         suite_name, case_name = self._command.split(':')
 
         app_suite = get_suite_by_name(suite_name, self._suites)
-        app_suite(self._nose_config, self._test_loader)
+        app_suite.init_extensions()
 
         case = get_case_from_suite(case_name, app_suite)
 
@@ -123,7 +123,7 @@ class CollectSuite(object):
         case_name, method_name = case_info.split('.')
 
         app_suite = get_suite_by_name(suite_name, self._suites)
-        app_suite(self._nose_config, self._test_loader)
+        app_suite.init_extensions()
 
         case = get_case_from_suite(case_name, app_suite)
 

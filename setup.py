@@ -3,13 +3,14 @@
 from setuptools import setup
 from setuptools import find_packages
 
-import noseapp
+
+__version__ = '1.0.2'
 
 
 if __name__ == '__main__':
     setup(
         name='noseapp',
-        version=noseapp.__version__,
+        version=__version__,
         url='https://github.com/trifonovmixail/noseapp',
         packages=find_packages(),
         author='Mikhail Trifonov',

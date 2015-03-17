@@ -48,6 +48,13 @@ class Suite(object):
     def get_map(self):
         return self._mediator.create_map()
 
+    def init_extensions(self):
+        """
+        Init extensions for test cases. Without build suite.
+        """
+        for case in self._mediator.test_cases:
+            case.with_require(self._require)
+
     def __call__(self, nose_config, test_loader):
         """
         Build suite

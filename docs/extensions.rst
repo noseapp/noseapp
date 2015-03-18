@@ -1,11 +1,15 @@
-Contents
-========
+==========
+Extensions
+==========
 
-.. toctree::
-    :maxdepth: 2
+You will can create extensions for noseapp as independent library. Usage redirect imports from noseapp.ext
 
-    index
-    app
-    suites
-    cases
-    runners
+Example::
+
+  # from your lib
+  from noseapp_my_ext import Extension
+  # With redirect import
+  from noseapp.ext.my_ext import Extension
+
+
+This is realization from flask library.

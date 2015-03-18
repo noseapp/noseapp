@@ -8,6 +8,13 @@ Installation
   pip install noseapp
 
 
+=============
+Documentation
+=============
+
+See full documentation here <https://pythonhosted.org/noseapp/>
+
+
 =====
 About
 =====

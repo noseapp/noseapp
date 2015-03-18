@@ -1,3 +1,4 @@
+=======
 NoseApp
 =======
 
@@ -5,16 +6,19 @@ NoseApp
     :maxdepth: 2
 
     app
-    suites
-    cases
-    runners
+    suite
+    case
+    runner
     extensions
+    simple_example
 
 
 About
 =====
 
-This is framework for test development with complex logic based on nose library
+This is framework for test development with complex logic based on nose library.
+Build your regression testing process with noseapp library.
+
 
 Installation
 ------------
@@ -27,12 +31,14 @@ Installation
 Motivation
 ==========
 
-Why noseapp? What i can to get from usage?
+Why noseapp? What i can get from usage?
+
 
 Background Initialization
 -------------------------
 
 application -> extensions -> suites -> test cases
+
 
 Flexibility and control
 -----------------------
@@ -44,6 +50,7 @@ Flexibility and control
 * creation of application configuration
 * before, after callbacks on base application class
 
+
 Implementation by steps for test case
 -------------------------------------
 
@@ -51,6 +58,7 @@ Implementation by steps for test case
 * before, finalize callbacks on base test case class
 * interactive debug mode
 * parametrize step flow
+
 
 Async
 -----

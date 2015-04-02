@@ -31,7 +31,7 @@ For initialization your application, base class implemented "initialize" callbac
 Configuration
 -------------
 
-Use python module for configuration storage
+Use python module as configuration storage
 
 ::
 
@@ -154,7 +154,7 @@ Recommend
 ---------
 
 * Ideal case if your application class contains setup methods only.
-* Try create application instance through create function wrapper. This is a sign of good manners :)
+* Try create application instance through function wrapper. This is a sign of good manners :)
 
 ::
 

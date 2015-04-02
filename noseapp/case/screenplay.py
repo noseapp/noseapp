@@ -26,11 +26,11 @@ Example::
       1, 2, 3
     )
 
-    @step(1, u'Шаг 1')
+    @step(1, u'Step 1')
     def step_1(self, i):
       self.assertGreater(i, 0)
 
-    @step(2, u'Шаг 2')
+    @step(2, u'Step 2')
     def step_2(self, i):
       self.assertGreater(i, 0)
 """
@@ -157,6 +157,16 @@ def perform_prompt(case_name, method_name, exit_code=0):
         pdb.set_trace()
 
 
+def error_handler(e, msg):
+    """
+    Handler for raised exception
+    """
+    if isinstance(e, AssertionError):
+        raise StepFail(msg)
+
+    raise StepError(msg)
+
+
 def run_step(case, method, flow=None):
     """
     Run step
@@ -180,35 +190,37 @@ def run_step(case, method, flow=None):
             method(case, flow)
         else:
             method(case)
-    # handle errors
-    except AssertionError as e:
-        raise StepFail(
-            ERROR_INFO_PATTERN.format(
-                history=u'\n'.join(case.__history),
-                case=case_name,
-                method=method_name,
-                step=weight,
-                step_doc=doc,
-                flow=flow,
-                raised=e.__class__.__name__,
-                message=e.message,
-                traceback=traceback.format_exc()
-            ).encode('utf-8', 'replace'),
-        )
     except BaseException as e:
-        raise StepError(
-            ERROR_INFO_PATTERN.format(
-                history=u'\n'.join(case.__history),
+        orig_tb = traceback.format_exc()
+        history = u'\n'.join(case.__history)
+        exc_cls_name = e.__class__.__name__
+
+        try:
+            msg = ERROR_INFO_PATTERN.format(
+                history=history,
                 case=case_name,
                 method=method_name,
                 step=weight,
                 step_doc=doc,
                 flow=flow,
-                raised=e.__class__.__name__,
+                raised=exc_cls_name,
                 message=e.message,
-                traceback=traceback.format_exc()
-            ).encode('utf-8', 'replace'),
-        )
+                traceback=orig_tb,
+            ).encode('utf-8', 'replace')
+        except UnicodeDecodeError:
+            msg = ERROR_INFO_PATTERN.format(
+                history=history,
+                case=case_name,
+                method=method_name,
+                step=weight,
+                step_doc=doc,
+                flow=flow,
+                raised=exc_cls_name,
+                message=e.message,
+                traceback=orig_tb.decode('utf8'),
+            ).encode('utf-8', 'replace')
+
+        error_handler(e, msg)
 
 
 def make_run_test(steps):

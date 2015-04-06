@@ -10,6 +10,7 @@ from noseapp.core import TestProgram
 from noseapp.core import load_suites_from_path
 from noseapp.app.config import Config as AppConfig
 from noseapp.plugins.configure import AppConfigurePlugin
+from noseapp.core.loader import load_from_dir as load_suites_from_dir
 
 
 logger = logging.getLogger(__name__)
@@ -151,15 +152,22 @@ class NoseApp(object):
         for s in suite:
             self.register_suite(s)
 
-    def load_suites(self, path):
+    def load_suites(self, path, recursive=True):
         """
         Auto load suites. Path can be package or simple dir.
 
         :param path: dir path
         :type path: str
+        :param recursive: recursive load from path or load from simple dir
+        :type recursive: bool
         """
         sys.path.append(path)
-        suites = load_suites_from_path(path)
+
+        if recursive:
+            suites = load_suites_from_path(path)
+        else:
+            suites = load_suites_from_dir(path)
+
         self.register_suites(suites)
 
     def run(self):

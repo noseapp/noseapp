@@ -66,7 +66,12 @@ class CollectSuite(object):
         self._nose_config = nose_config
         self._test_loader = test_loader
 
-        self._command = argv[1] if len(argv) > 2 else None
+        if nose_config.options.run_test:
+            self._command = nose_config.options.run_test
+        elif len(argv) > 2:
+            self._command = argv[1]
+        else:
+            self._command = None
 
     @property
     def command(self):

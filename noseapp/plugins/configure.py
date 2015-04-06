@@ -53,3 +53,10 @@ class AppConfigurePlugin(AppPlugin):
             default=False,
             help='Show docstring in suite info.'
         )
+        parser.add_option(
+            '-t', '--test',
+            dest='run_test',
+            default='',
+            type=str,
+            help='test case or suite name for running'
+        )

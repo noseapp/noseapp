@@ -1,4 +1,3 @@
-
 ============
 Installation
 ============
@@ -8,36 +7,14 @@ Installation
   pip install noseapp
 
 
-=============
-Documentation
-=============
+==========
+Extensions
+==========
 
-See full documentation here <https://pythonhosted.org/noseapp/>
-
-
-=====
-About
-=====
-
-This is framework for test development with complex logic based on nose library
-
-:background Initialization: application -> extensions -> suites -> test cases
-:flexibility and control:
- * application is only one service point
- * require extensions for test case through suite initialization
- * opportunity set default require on your base suite class
- * support nose plugins (noseapp.AppPlugin)
- * creation of application configuration
- * before, after callbacks on base application class
-:implementation by steps for test case:
- * memorized steps for exception info
- * before, finalize callbacks on base test case class
- * interactive debug mode
- * parametrize step flow
-:asynchrony:
- * multiprocessing
- * threading
- * gevent event loop
+* `noseapp_daemon https://pypi.python.org/pypi/noseapp_daemon`_
+* `noseapp_requests https://pypi.python.org/pypi/noseapp_requests`_
+* noseapp_selenium - coming soon `alpha https://github.com/noseapp/noseapp_selenium`_
+* noseapp_alchemy - coming soon `alpha https://github.com/noseapp/noseapp_alchemy`_
 
 
 ===========
@@ -153,23 +130,6 @@ example_suite.py::
     def ...
 
 
-runner.py::
-
-  from .app import create_app
-  
-  
-  if __name__ == '__main__':
-    app = create_app()
-    
-    from .example_suite import suite
-    app.register_suite(suite)
-    # or
-    # app.register_suites([suite])
-    # or
-    # app.load_suites(path_to_dir)
-
-    app.run()
-
 
 =====================
 Usage noseapp runners
@@ -177,18 +137,18 @@ Usage noseapp runners
 
 With multiprocessing:
   * processes:
-    runner.py --app-processes 2 (one suite === one process)
+    noseapp-manage run myproject.app:create_app --app-processes 2 (one suite === one process)
 
   * processes and threads:
-    runner.py --app-processes 4 --threads 2 (one suite == one process, one test == one thread)
+    noseapp-manage run myproject.app:create_app --app-processes 4 --threads 2 (one suite == one process, one test == one thread)
 
   * threads only:
-    runner.py --threads 2 (one suite == one thread)
+    noseapp-manage run myproject.app:create_app --threads 2 (one suite == one thread)
 
 
 With gevent:
-  * runner.py --gevent 4 (one suite == one greenlet)
-  * runner.py --gevent 4 --greenlets 2 (one suite == one greenlet, one test == one greenlet)
+  * noseapp-manage run myproject.app:create_app --gevent 4 (one suite == one greenlet)
+  * noseapp-manage run myproject.app:create_app --gevent 4 --greenlets 2 (one suite == one greenlet, one test == one greenlet)
 
 
 ============================

@@ -74,6 +74,9 @@ class TestCaseMediator(object):
         return suite
 
     def add_test_case(self, test_case):
+        """
+        Remember test case class
+        """
         self._test_cases.append(test_case)
 
     def add_handler(self, f):

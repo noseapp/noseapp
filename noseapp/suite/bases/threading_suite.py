@@ -11,7 +11,7 @@ class ThreadSuite(BaseSuite):
     Run tests with multiprocessing.pool.ThreadPool
     """
 
-    def _run(self, result, orig):
+    def _run_suite_handler(self, result, orig):
         size = self.config.options.thread_pool
 
         if size < 0:

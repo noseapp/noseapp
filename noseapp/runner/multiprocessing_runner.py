@@ -117,18 +117,21 @@ class ResultQueueHandler(object):
     def _add_failures(self, failures):
         for fail in failures:
             result = self._create_result(fail)
+
             if result:
                 self._result.failures.append(result)
 
     def _add_errors(self, errors):
         for err in errors:
             result = self._create_result(err)
+
             if result:
                 self._result.failures.append(result)
 
     def _add_skipped(self, skipped):
         for skip in skipped:
             result = self._create_result(skip)
+
             if result:
                 self._result.failures.append(result)
 

@@ -12,7 +12,7 @@ class GeventSuite(BaseSuite):
     Run tests with gevent pool
     """
 
-    def _run(self, result, orig):
+    def _run_suite_handler(self, result, orig):
         size = self.config.options.gevent_greanlets
 
         if size < 0:

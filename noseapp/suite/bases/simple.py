@@ -13,7 +13,7 @@ class BaseSuite(ContextSuite):
 
         super(BaseSuite, self).__init__(*args, **kwargs)
 
-    def _run(self, result, orig):
+    def _run_suite_handler(self, result, orig):
         for test in self._tests:
                 if result.shouldStop:
                     break
@@ -48,7 +48,7 @@ class BaseSuite(ContextSuite):
             return
 
         try:
-            self._run(result, orig)
+            self._run_suite_handler(result, orig)
         finally:
             self.has_run = True
 

@@ -1,23 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import logging
-
-
-logger = logging.getLogger(__name__)
-
-
-def get_suite_class(options):
-    if not options.app_processes and options.gevent_greanlets:
-        from noseapp.suite.bases.gevent_suite import GeventSuite
-        return GeventSuite
-
-    elif options.app_processes and options.thread_pool:
-        from noseapp.suite.bases.threading_suite import ThreadSuite
-        return ThreadSuite
-
-    from noseapp.suite.bases.simple import BaseSuite
-    return BaseSuite
-
 
 class TestCaseMediator(object):
     """
@@ -62,12 +44,11 @@ class TestCaseMediator(object):
 
         return mp
 
-    def create_suite(self, nose_config, test_loader):
+    def create_suite(self, nose_config, test_loader, class_factory):
         """
         Create suite instance
         """
-        suite_class = get_suite_class(nose_config.options)
-        suite = suite_class(config=nose_config)
+        suite = class_factory.suite_class(config=nose_config)
 
         for case in self._test_cases:
             suite.addTests(

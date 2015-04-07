@@ -58,13 +58,14 @@ class CollectSuite(object):
     Collect suite for test runner
     """
 
-    def __init__(self, argv, suites, test_loader, nose_config):
+    def __init__(self, argv, suites, test_loader, class_factory, nose_config):
         if nose_config.options.ls:
             console.tree(suites, show_docs=nose_config.options.doc)
 
         self._suites = suites
         self._nose_config = nose_config
         self._test_loader = test_loader
+        self._class_factory = class_factory
 
         if nose_config.options.run_test:
             self._command = nose_config.options.run_test
@@ -82,7 +83,7 @@ class CollectSuite(object):
         return self._suites
 
     @property
-    def collect(self):  # syntax of sugar :)
+    def collect(self):  # sugar of syntax :)
         strategy_to_method = {
             CASE_COLLECT_STRATEGY: self._collect_by_case_strategy,
             BASIC_COLLECT_STRATEGY: self._collect_by_basic_strategy,
@@ -99,14 +100,14 @@ class CollectSuite(object):
 
     def _collect_by_basic_strategy(self):
         return [
-            suite(self._nose_config, self._test_loader)
+            suite(self._nose_config, self._test_loader, self._class_factory)
             for suite in self._suites
         ]
 
     def _collect_by_suite_strategy(self):
         suite = get_suite_by_name(self._command, self._suites)
 
-        return [suite(self._nose_config, self._test_loader)]
+        return [suite(self._nose_config, self._test_loader, self._class_factory)]
 
     def _collect_by_case_strategy(self):
         suite_name, case_name = self._command.split(':')

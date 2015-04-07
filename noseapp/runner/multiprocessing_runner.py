@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from warnings import warn
 from threading import Lock
 from threading import Thread
 from Queue import Queue as TaskQueue
@@ -106,27 +107,32 @@ class ResultQueueHandler(object):
 
     def _create_result(self, data):
         _repr, messages = data[0], data[1:]
-        test = self._comparison[_repr]
-        del self._comparison[_repr]
+        try:
+            test = self._comparison[_repr]
+            del self._comparison[_repr]
+        except KeyError:
+            warn('Test repr by "{}" is not found'.format(_repr), RuntimeWarning)
+            return None
+
         return tuple([test] + messages)
 
     def _add_failures(self, failures):
         for fail in failures:
-            self._result.failures.append(
-                self._create_result(fail),
-            )
+            result = self._create_result(fail)
+            if result:
+                self._result.failures.append(result)
 
     def _add_errors(self, errors):
         for err in errors:
-            self._result.failures.append(
-                self._create_result(err),
-            )
+            result = self._create_result(err)
+            if result:
+                self._result.failures.append(result)
 
     def _add_skipped(self, skipped):
         for skip in skipped:
-            self._result.failures.append(
-                self._create_result(skip),
-            )
+            result = self._create_result(skip)
+            if result:
+                self._result.failures.append(result)
 
     def handle(self):
         while self._counter < self._length_suites:

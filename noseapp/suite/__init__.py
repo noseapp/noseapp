@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 
+import logging
+
 from noseapp.suite.mediator import TestCaseMediator
+
+
+logger = logging.getLogger(__name__)
 
 
 class Suite(object):
@@ -42,6 +47,8 @@ class Suite(object):
 
         :type cls: noseapp.case.TestCase
         """
+        logger.debug('Registering test case "{}" in {} '.format(cls.__name__, repr(self)))
+
         self._mediator.add_test_case(cls)
         return cls
 
@@ -50,16 +57,20 @@ class Suite(object):
 
     def init_extensions(self):
         """
-        Init extensions for test cases. Without build suite.
+        Init extensions for test cases. Without building suite.
         """
         for case in self._mediator.test_cases:
             case.with_require(self._require)
 
-    def __call__(self, nose_config, test_loader):
+    def __call__(self, nose_config, test_loader, class_factory):
         """
         Build suite
         """
-        return self._mediator.create_suite(nose_config, test_loader)
+        logging.debug('Building {}'.format(repr(self)))
+
+        return self._mediator.create_suite(
+            nose_config, test_loader, class_factory,
+        )
 
     def __repr__(self):
         return '<Suite {}>'.format(self._name)

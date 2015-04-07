@@ -11,50 +11,55 @@ Installation
 Extensions
 ==========
 
-* `noseapp_daemon https://pypi.python.org/pypi/noseapp_daemon`_
-* `noseapp_requests https://pypi.python.org/pypi/noseapp_requests`_
-* noseapp_selenium - coming soon `alpha https://github.com/noseapp/noseapp_selenium`_
-* noseapp_alchemy - coming soon `alpha https://github.com/noseapp/noseapp_alchemy`_
+`noseapp_daemon https://pypi.python.org/pypi/noseapp_daemon`_
+`noseapp_requests https://pypi.python.org/pypi/noseapp_requests`_
+noseapp_selenium - coming soon `alpha https://github.com/noseapp/noseapp_selenium`_
+noseapp_alchemy - coming soon `alpha https://github.com/noseapp/noseapp_alchemy`_
 
 
 ===========
 Quick start
 ===========
 
-app.py::
+::
 
   from random import randint
 
+  from noseapp import Suite
   from noseapp import NoseApp
+  from noseapp import TestCase
+  from noseapp.case import step
+  from noseapp import ScreenPlayCase
 
-  class ExampleExtesion(object):
-    
+  class ExampleExtesnion(object):
+
     name = 'rand'
-    
+
     def __init__(self, a, b):
       self._a = a
       self._b = b
-    
+
     def get_random(self):
       return randint(self._a, self._b)
-    
+
+
   class MyTestApplication(NoseApp):
-    
+
       def initialize(self):
         self.setup_example_ex()
         self.setup_case_settings()
-      
+
       def setup_example_ex(self):
         self.shared_extension(
           cls=ExampleExtesion,
           args=(1, 1000),
         )
-      
+
       def setup_case_settings():
         settings = {
-          'interactiv_mode': True # may be False :)
+          'interactive_mode': True # may be False :)
         }
-        
+
         self.shared_data('settings', settings)
 
 
@@ -77,21 +82,18 @@ app.py::
   # app = create_app(plugins=[MyAppPlugin()], argv=['--with-my-app-plugin'])
 
 
-  # use config module for configuration in your application
+  # use config module for configuration of application
   #
   # app = create_app(config='etc.base')
   # or
   # app = create_app(config='/home/user/projects/example/etc/base.py')
+  # or
+  # app = create_app()
+  # app.config.from_module('etc.base')
+  # or
+  # app.config.from_py_file('/home/user/projects/example/etc/base.py')
   #
   # use config property inside application class
-
-
-example_suite.py::
-
-  from noseapp import Suite
-  from noseapp import TestCase
-  from noseapp.case import step
-  from noseapp import ScreenPlayCase
 
 
   suite = Suite(__name__, require=['rand', 'settings'])
@@ -111,8 +113,8 @@ example_suite.py::
     def test(self):
       rand_int = self.rend.get_random()
       self.assertGreater(rand_int, 0)
-  
-  
+
+
   @suite.register
   class StepByStepCase(ScreenPlayCase):
 
@@ -149,6 +151,15 @@ With multiprocessing:
 With gevent:
   * noseapp-manage run myproject.app:create_app --gevent 4 (one suite == one greenlet)
   * noseapp-manage run myproject.app:create_app --gevent 4 --greenlets 2 (one suite == one greenlet, one test == one greenlet)
+
+
+Run one test or suite:
+
+::
+
+  noseapp-manage run myproject.app:create_app -t package.module:TestCase
+
+Use --ls option for suite tree to console
 
 
 ============================

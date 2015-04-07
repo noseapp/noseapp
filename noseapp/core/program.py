@@ -5,31 +5,13 @@ import sys
 from nose.core import TestProgram as BaseTestProgram
 
 from noseapp.core import extensions
+from noseapp.core.factory import ClassFactory
 from noseapp.core.collector import CollectSuite
-
-
-def get_test_runner_class(options):
-    """
-    :return: nose.core.TextTestRunner
-    """
-    if options.app_processes:
-        from noseapp.runner.multiprocessing_runner import MultiprocessingTestRunner
-        return MultiprocessingTestRunner
-
-    elif options.gevent_pool:
-        from noseapp.runner.gevent_runner import GeventTestRunner
-        return GeventTestRunner
-
-    elif options.thread_pool:
-        from noseapp.runner.threading_runner import ThreadingTestRunner
-        return ThreadingTestRunner
-
-    from noseapp.runner.base import BaseTestRunner
-    return BaseTestRunner
 
 
 class TestProgram(BaseTestProgram):
 
+    class_factory = ClassFactory
     collector_class = CollectSuite
 
     def __init__(self, app, argv, *args, **kwargs):
@@ -52,23 +34,32 @@ class TestProgram(BaseTestProgram):
         """
         Perform test program
         """
+        class_factory = self.class_factory(self.config.options)
         collector = self.collector_class(
-            self._argv, self._app.suites, self.testLoader, self.config,
+            self._argv,
+            self._app.suites,
+            self.testLoader,
+            class_factory,
+            self.config,
         )
+
         suites = collector.make_result()
 
         extensions.clear()
+        del collector
 
-        test_runner = get_test_runner_class(self.config.options)
-
-        self.testRunner = test_runner(stream=self.config.stream,
-                                      verbosity=self.config.verbosity,
-                                      config=self.config)
+        self.testRunner = class_factory.runner_class(
+            stream=self.config.stream,
+            verbosity=self.config.verbosity,
+            config=self.config,
+        )
 
         plug_runner = self.config.plugins.prepareTestRunner(self.testRunner)
 
         if plug_runner is not None:
             self.testRunner = plug_runner
+
+        del class_factory
 
         self._app.before()
 

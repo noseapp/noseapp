@@ -16,28 +16,29 @@ class AppConfigurePlugin(AppPlugin):
             dest='app_processes',
             default=0,
             type=int,
-            help='Spread test run among this many processes.'
+            help='Num of processes for running. one process == one suite.'
         )
         parser.add_option(
             '--gevent',
             dest='gevent_pool',
             default=0,
             type=int,
-            help='Spread test run among this many gevent greanlets.'
+            help='Num of greenlets for running. One greenlet == one suite.'
         )
         parser.add_option(
             '--greenlets',
             dest='gevent_greanlets',
             default=0,
             type=int,
-            help='Spread greenlets inside suite greanlet.'
+            help='Num of greenlets for running. One greenlet == one test case.'
         )
         parser.add_option(
             '--threads',
             dest='thread_pool',
             default=0,
             type=int,
-            help='Spread threads inside process.'
+            help='Num of threads for running. If app processes is set, one thread == one test case, '
+                 'else one thread == one suite.'
         )
         parser.add_option(
             '--ls',
@@ -51,12 +52,12 @@ class AppConfigurePlugin(AppPlugin):
             dest='doc',
             action='store_true',
             default=False,
-            help='Show docstring in suite info.'
+            help='Show docstring of test cases.'
         )
         parser.add_option(
             '-t', '--test',
             dest='run_test',
             default='',
             type=str,
-            help='test case or suite name for running'
+            help='test case or suite name for running.'
         )

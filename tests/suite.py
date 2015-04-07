@@ -62,17 +62,18 @@ class TestSuiteClass(TestCase):
 
     def test_build_suite(self):
         from nose.case import Test
-        import noseapp.suite.mediator
         from noseapp.suite.bases.simple import BaseSuite
 
-        mock_get_suite_class = lambda o: BaseSuite
-        noseapp.suite.mediator.get_suite_class = mock_get_suite_class
+        class MockOptions:
+            app_processes = None
+            gevent_greanlets = None
+            thread_pool = None
 
         suite = Suite(__name__)
         suite.register(FakeTestCase)
 
         program = TestProgram(NoseApp(), ['test'])
-        test = suite(program.config, program.testLoader)
+        test = suite(program.config, program.testLoader, program.class_factory(MockOptions))
 
         self.assertIsInstance(test, BaseSuite)
 
@@ -135,6 +136,7 @@ class TestCollectorClass(TestCase):
             argv,
             suites,
             program.testLoader,
+            program.class_factory(program.config.options),
             program.config,
         )
         result = collector.make_result()
@@ -165,6 +167,7 @@ class TestCollectorClass(TestCase):
             argv,
             suites,
             program.testLoader,
+            program.class_factory(program.config.options),
             program.config,
         )
         result = collector.make_result()
@@ -204,6 +207,7 @@ class TestCollectorClass(TestCase):
             argv,
             suites,
             program.testLoader,
+            program.class_factory(program.config.options),
             program.config,
         )
         result = collector.make_result()
@@ -252,6 +256,7 @@ class TestCollectorClass(TestCase):
             argv,
             suites,
             program.testLoader,
+            program.class_factory(program.config.options),
             program.config,
         )
         result = collector.make_result()

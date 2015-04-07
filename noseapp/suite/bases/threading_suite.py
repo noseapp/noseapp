@@ -20,7 +20,10 @@ class ThreadSuite(BaseSuite):
         pool = ThreadPool(int(round(size)) or 2)
 
         for test in self._tests:
-            pool.apply_async(test, args=(result,))
+            if result.shouldStop:
+                    break
+
+            pool.apply_async(self._run_test_handler, args=(test, orig))
 
         pool.close()
         pool.join()

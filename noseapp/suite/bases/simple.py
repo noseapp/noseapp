@@ -8,11 +8,29 @@ class BaseSuite(ContextSuite):
     Base suite
     """
 
+    def __init__(self, *args, **kwargs):
+        self._handlers = kwargs.pop('handlers', [])
+
+        super(BaseSuite, self).__init__(*args, **kwargs)
+
     def _run(self, result, orig):
         for test in self._tests:
                 if result.shouldStop:
                     break
-                test(orig)
+                self._run_test_handler(test, orig)
+
+    def _run_test_handler(self, test, orig):
+        for handler in self._handlers:
+            try:
+                handler(test.test)
+            except KeyboardInterrupt:
+                raise
+            except:
+                self.error_context = 'setup'
+                orig.addError(self, self._exc_info())
+                return
+
+        test(orig)
 
     def run(self, result):
         if self.resultProxy:

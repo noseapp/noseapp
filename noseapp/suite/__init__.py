@@ -27,11 +27,11 @@ class Suite(object):
         self._name = name
 
         if hasattr(self, 'DEFAULT_REQUIRE'):
-            self._require = self.DEFAULT_REQUIRE + (require or [])
+            _require = self.DEFAULT_REQUIRE + (require or [])
         else:
-            self._require = require
+            _require = require
 
-        self._mediator = self.mediator_class(require=self._require)
+        self._mediator = self.mediator_class(require=_require)
 
     @property
     def name(self):
@@ -39,7 +39,23 @@ class Suite(object):
 
     @property
     def require(self):
-        return self._require
+        """
+        List names of extensions require
+        """
+        return self._mediator.require
+
+    @property
+    def handlers(self):
+        """
+        Handlers list
+        """
+        return self._mediator.handlers
+
+    def add_handler(self, f):
+        """
+        Set run test handler
+        """
+        return self._mediator.add_handler(f)
 
     def register(self, cls):
         """
@@ -53,6 +69,11 @@ class Suite(object):
         return cls
 
     def get_map(self):
+        """
+        Get map of test classes
+
+        :return: dict
+        """
         return self._mediator.create_map()
 
     def init_extensions(self):
@@ -60,14 +81,12 @@ class Suite(object):
         Init extensions for test cases. Without building suite.
         """
         for case in self._mediator.test_cases:
-            case.with_require(self._require)
+            case.with_require(self.require)
 
     def __call__(self, nose_config, test_loader, class_factory):
         """
         Build suite
         """
-        logging.debug('Building {}'.format(repr(self)))
-
         return self._mediator.create_suite(
             nose_config, test_loader, class_factory,
         )

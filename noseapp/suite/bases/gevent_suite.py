@@ -21,6 +21,9 @@ class GeventSuite(BaseSuite):
         pool = Pool(int(round(size)) or 2)
 
         for test in self._tests:
-            pool.spawn(test, orig)
+            if result.shouldStop:
+                    break
+
+            pool.spawn(self._run_test_handler, test, orig)
 
         pool.join()

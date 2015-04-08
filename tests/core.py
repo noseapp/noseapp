@@ -19,6 +19,9 @@ class TestClearExtensions(TestCase):
 
 
 class TestProgramDefaultClasses(TestCase):
+    """
+    Test default classes on TestProgram
+    """
 
     def runTest(self):
         from noseapp.core.program import TestProgram
@@ -30,6 +33,9 @@ class TestProgramDefaultClasses(TestCase):
 
 
 class TestClassFactory(TestCase):
+    """
+    Test ClassFactory usage
+    """
 
     def runTest(self):
         from noseapp.runner.base import BaseTestRunner

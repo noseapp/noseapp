@@ -117,7 +117,10 @@ class CollectSuite(object):
 
         case = get_case_from_suite(case_name, app_suite)
 
-        suite = BaseSuite(config=self._nose_config)
+        suite = BaseSuite(
+            config=self._nose_config,
+            handlers=app_suite.handlers,
+        )
         suite.addTests(
             self._test_loader.loadTestsFromTestCase(case),
         )
@@ -135,8 +138,9 @@ class CollectSuite(object):
 
         try:
             suite = BaseSuite(
-                map(case, [method_name]),
+                tests=map(case, [method_name]),
                 config=self._nose_config,
+                handlers=app_suite.handlers,
             )
         except ValueError:
             raise CollectError(

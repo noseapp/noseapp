@@ -33,7 +33,7 @@ class ClassFactory(object):
         """
         Create class for building suite
         """
-        if not self._options.app_processes and self._options.gevent_greanlets:
+        if not self._options.app_processes and self._options.gevent_greenlets:
             from noseapp.suite.bases.gevent_suite import GeventSuite
             self._current_suite_class = GeventSuite
 

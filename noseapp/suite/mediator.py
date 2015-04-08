@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from functools import wraps
+
 
 class TestCaseMediator(object):
     """
@@ -10,10 +12,19 @@ class TestCaseMediator(object):
     def __init__(self, require):
         self._test_cases = []
         self._require = require
+        self._handlers = []
+
+    @property
+    def require(self):
+        return self._require
 
     @property
     def test_cases(self):
         return self._test_cases
+
+    @property
+    def handlers(self):
+        return self._handlers
 
     def create_map(self):
         """
@@ -48,7 +59,10 @@ class TestCaseMediator(object):
         """
         Create suite instance
         """
-        suite = class_factory.suite_class(config=nose_config)
+        suite = class_factory.suite_class(
+            config=nose_config,
+            handlers=self._handlers,
+        )
 
         for case in self._test_cases:
             suite.addTests(
@@ -60,4 +74,14 @@ class TestCaseMediator(object):
         return suite
 
     def add_test_case(self, test_case):
+        """
+        Remember test case class
+        """
         self._test_cases.append(test_case)
+
+    def add_handler(self, f):
+        """
+        Add run test handler
+        """
+        self._handlers.append(f)
+        return wraps(f)

@@ -27,7 +27,7 @@ class AppConfigurePlugin(AppPlugin):
         )
         parser.add_option(
             '--greenlets',
-            dest='gevent_greanlets',
+            dest='gevent_greenlets',
             default=0,
             type=int,
             help='Num of greenlets for running. One greenlet == one test case.'

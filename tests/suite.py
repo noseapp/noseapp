@@ -62,17 +62,19 @@ class TestSuiteClass(TestCase):
 
     def test_build_suite(self):
         from nose.case import Test
-        import noseapp.suite.mediator
         from noseapp.suite.bases.simple import BaseSuite
 
-        mock_get_suite_class = lambda o: BaseSuite
-        noseapp.suite.mediator.get_suite_class = mock_get_suite_class
+        class MockOptions:
+            app_processes = 0
+            gevent_greenlets = 0
+            thread_pool = 0
+            gevent_pool = 0
 
         suite = Suite(__name__)
         suite.register(FakeTestCase)
 
         program = TestProgram(NoseApp(), ['test'])
-        test = suite(program.config, program.testLoader)
+        test = suite(program.config, program.testLoader, program.class_factory(MockOptions))
 
         self.assertIsInstance(test, BaseSuite)
 
@@ -80,6 +82,9 @@ class TestSuiteClass(TestCase):
 
         self.assertEqual(len(test), 1)
         self.assertIsInstance(test[0], Test)
+
+    def test_add_handler(self):
+        pass
 
 
 class TestMediatorClass(TestCase):
@@ -135,6 +140,7 @@ class TestCollectorClass(TestCase):
             argv,
             suites,
             program.testLoader,
+            program.class_factory(program.config.options),
             program.config,
         )
         result = collector.make_result()
@@ -165,6 +171,7 @@ class TestCollectorClass(TestCase):
             argv,
             suites,
             program.testLoader,
+            program.class_factory(program.config.options),
             program.config,
         )
         result = collector.make_result()
@@ -204,6 +211,7 @@ class TestCollectorClass(TestCase):
             argv,
             suites,
             program.testLoader,
+            program.class_factory(program.config.options),
             program.config,
         )
         result = collector.make_result()
@@ -252,6 +260,7 @@ class TestCollectorClass(TestCase):
             argv,
             suites,
             program.testLoader,
+            program.class_factory(program.config.options),
             program.config,
         )
         result = collector.make_result()
@@ -267,3 +276,43 @@ class TestCollectorClass(TestCase):
 
             for test in suite:
                 self.assertIsInstance(test.test, FakeTestCase)
+
+
+class TestAddHandler(TestCase):
+    """
+    Test registering handler
+    """
+
+    def runTest(self):
+        suite = Suite(__name__)
+        func = lambda test: 1
+        suite.add_handler(func)
+
+        self.assertIn(func, suite.handlers)
+
+
+class TestApplyHandler(TestCase):
+    """
+    Test calling run handler
+    """
+
+    def runTest(self):
+        self.counter = 0
+
+        suite = Suite(__name__)
+        suite.register(FakeTestCase)
+
+        @suite.add_handler
+        def handler(test):
+            self.counter += 1
+            self.assertIsInstance(test, FakeTestCase)
+
+        app = NoseApp()
+        app.register_suite(suite)
+
+        try:
+            app.run()
+        except SystemExit:
+            pass
+
+        self.assertEqual(self.counter, 1)

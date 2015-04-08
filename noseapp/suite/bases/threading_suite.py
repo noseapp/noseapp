@@ -11,7 +11,7 @@ class ThreadSuite(BaseSuite):
     Run tests with multiprocessing.pool.ThreadPool
     """
 
-    def _run(self, result, orig):
+    def _run_suite_handler(self, result, orig):
         size = self.config.options.thread_pool
 
         if size < 0:
@@ -20,7 +20,10 @@ class ThreadSuite(BaseSuite):
         pool = ThreadPool(int(round(size)) or 2)
 
         for test in self._tests:
-            pool.apply_async(test, args=(result,))
+            if result.shouldStop:
+                    break
+
+            pool.apply_async(self._run_test_handler, args=(test, orig))
 
         pool.close()
         pool.join()

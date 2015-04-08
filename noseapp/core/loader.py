@@ -64,7 +64,7 @@ def load_from_dir(path, import_base=None):
             )
         )
 
-        map(suites.append, module_suites)
+        suites.extend(module_suites)
 
     return suites
 
@@ -84,7 +84,7 @@ def load_suites_from_path(path, import_base=None):
 
     copy_import_base = import_base
 
-    map(suites.append, load_from_dir(path, import_base=import_base))
+    suites.extend(load_from_dir(path, import_base=import_base))
 
     for root, dirs, files in os.walk(path):
 
@@ -96,8 +96,7 @@ def load_suites_from_path(path, import_base=None):
             else:
                 _import_base = '{}.{}'.format(import_base, d)
 
-            map(
-                suites.append,
+            suites.extend(
                 load_suites_from_path(
                     dir_abs_path,
                     import_base=_import_base,

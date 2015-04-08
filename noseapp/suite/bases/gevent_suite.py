@@ -12,7 +12,7 @@ class GeventSuite(BaseSuite):
     Run tests with gevent pool
     """
 
-    def _run(self, result, orig):
+    def _run_suite_handler(self, result, orig):
         size = self.config.options.gevent_greanlets
 
         if size < 0:
@@ -21,6 +21,9 @@ class GeventSuite(BaseSuite):
         pool = Pool(int(round(size)) or 2)
 
         for test in self._tests:
-            pool.spawn(test, orig)
+            if result.shouldStop:
+                    break
+
+            pool.spawn(self._run_test_handler, test, orig)
 
         pool.join()

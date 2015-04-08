@@ -150,6 +150,7 @@ With multiprocessing:
 
 With gevent:
   * noseapp-manage run myproject.app:create_app --gevent 4 (one suite == one greenlet)
+
   * noseapp-manage run myproject.app:create_app --gevent 4 --greenlets 2 (one suite == one greenlet, one test == one greenlet)
 
 

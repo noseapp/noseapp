@@ -13,7 +13,7 @@ class GeventSuite(BaseSuite):
     """
 
     def _run_suite_handler(self, result, orig):
-        size = self.config.options.gevent_greanlets
+        size = self.config.options.gevent_greenlets
 
         if size < 0:
             size = cpu_count() - 1

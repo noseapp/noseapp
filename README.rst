@@ -11,10 +11,29 @@ Installation
 Extensions
 ==========
 
-`noseapp_daemon https://pypi.python.org/pypi/noseapp_daemon`_
-`noseapp_requests https://pypi.python.org/pypi/noseapp_requests`_
-noseapp_selenium - coming soon `alpha https://github.com/noseapp/noseapp_selenium`_
-noseapp_alchemy - coming soon `alpha https://github.com/noseapp/noseapp_alchemy`_
+* noseapp_daemon https://pypi.python.org/pypi/noseapp_daemon
+* noseapp_requests https://pypi.python.org/pypi/noseapp_requests
+* noseapp_selenium - https://pypi.python.org/pypi/noseapp_selenium
+* noseapp_alchemy - coming soon https://github.com/noseapp/noseapp_alchemy
+
+
+===========
+What's new?
+===========
+
+* Added manage module. You may run apllication with noseapp-manage run command. See noseapp-manage help.
+* Your may add run hadler for test case of suite.
+
+Example::
+
+    suite.add_handler(lambda test: None)
+    #or
+    @suite.add_handler
+    def run_test_handler(test):
+        """
+        :param test: instance of test case class
+        """
+        pass
 
 
 ===========

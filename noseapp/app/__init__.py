@@ -54,22 +54,36 @@ class NoseApp(object):
         :type plugins: list
         :type argv: list
         """
+        # Initialization config storage
         self.config = self.config_class()
 
-        if config:
+        if config:  # Parse config module. You can do it later.
             if os.path.isfile(config):
                 self.config.from_py_file(config)
             else:
                 self.config.from_module(config)
 
+        # List suites. After register suite will be here.
         self._suites = []
 
+        # Options parser. Will be set after test program initialization.
+        self.__parser = None
+
+        # Program object initialization. Will be run later.
         self.__test_program = self.program_class(
             app=self,
             exit=True,
             argv=prepare_argv(argv),
             addplugins=[p(self) for p in (DEFAULT_PLUGINS + (plugins or []))],
         )
+
+    @property
+    def parser(self):
+        return self.__parser
+
+    @parser.setter
+    def parser(self, value):
+        self.__parser = value
 
     def initialize(self):
         """
@@ -86,6 +100,22 @@ class NoseApp(object):
     def after(self):
         """
         Call after run suites
+        """
+        pass
+
+    def add_options(self):
+        """
+        Add options to command line interface.
+
+        Usage ::
+
+            def add_options(self):
+                self.parser.add_option(
+                    '--project-url',
+                    dest='project_url',
+                    default='http://my-site.com',
+                    help='Project URL',
+                )
         """
         pass
 

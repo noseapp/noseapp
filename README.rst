@@ -21,6 +21,20 @@ Extensions
 What's new?
 ===========
 
+* Add command line options from application class
+
+Example::
+
+    class MyTestApplication(NoseApp):
+
+        def add_options(self):
+            self.parser.add_option(
+                    '--project-url',
+                    dest='project_url',
+                    default='http://my-site.com',
+                    help='Project URL',
+                )
+
 * Added manage module. You may run apllication with noseapp-manage run command. See noseapp-manage help.
 * Your may add run hadler for test case of suite.
 

@@ -21,6 +21,20 @@ Extensions
 What's new?
 ===========
 
+* Installation settings for test case
+
+Example::
+
+    from noseapp.case import TestCaseSettings
+
+    settings = TestCaseSettings(
+        debug=True,
+        project_url='http://...',
+    )
+    settings.install(app)
+
+    suite = Suite(__name__, require=['settings'])
+
 * Add command line options from application class
 
 Example::

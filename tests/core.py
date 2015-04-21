@@ -18,20 +18,6 @@ class TestClearExtensions(TestCase):
         self.assertRaises(extensions.ExtensionNotFound, extensions.get, 'test')
 
 
-class TestProgramDefaultClasses(TestCase):
-    """
-    Test default classes on TestProgram
-    """
-
-    def runTest(self):
-        from noseapp.core.program import TestProgram
-        from noseapp.core.factory import ClassFactory
-        from noseapp.core.collector import CollectSuite
-
-        self.assertEqual(TestProgram.class_factory, ClassFactory)
-        self.assertEqual(TestProgram.collector_class, CollectSuite)
-
-
 class TestClassFactory(TestCase):
     """
     Test ClassFactory usage

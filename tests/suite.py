@@ -73,8 +73,8 @@ class TestSuiteClass(TestCase):
         suite = Suite(__name__)
         suite.register(FakeTestCase)
 
-        program = TestProgram(NoseApp(), ['test'])
-        test = suite(program.config, program.testLoader, program.class_factory(MockOptions))
+        program = TestProgram(app=NoseApp(), argv=['test'], plugins=[AppConfigurePlugin()],)
+        test = suite(program.data)
 
         self.assertIsInstance(test, BaseSuite)
 
@@ -124,26 +124,22 @@ class TestCollectorClass(TestCase):
     """
 
     def test_collect_suites(self):
-        argv = ['test', '--with-app-configure']
+        argv = ['test']
 
-        program = TestProgram(
-            NoseApp(),
-            argv,
-            plugins=[AppConfigurePlugin()],
-        )
         suites = [Suite(__name__) for _ in xrange(10)]
 
         for suite in suites:
             suite.register(NoseAppTestCase)
 
-        collector = CollectSuite(
-            argv,
-            suites,
-            program.testLoader,
-            program.class_factory(program.config.options),
-            program.config,
+        app = NoseApp()
+        app.register_suites(suites)
+
+        program = TestProgram(
+            app=app,
+            argv=argv,
+            plugins=[AppConfigurePlugin()],
         )
-        result = collector.make_result()
+        result = program.data.build_suites()
 
         self.assertIsInstance(result, ContextSuite)
 
@@ -161,19 +157,16 @@ class TestCollectorClass(TestCase):
 
         suites = [Suite(__name__) for _ in xrange(9)] + [expect_suite]
 
+        app = NoseApp()
+        app.register_suites(suites)
+
         program = TestProgram(
-            NoseApp(),
-            argv,
+            app=app,
+            argv=argv,
             plugins=[AppConfigurePlugin()],
         )
 
-        collector = CollectSuite(
-            argv,
-            suites,
-            program.testLoader,
-            program.class_factory(program.config.options),
-            program.config,
-        )
+        collector = CollectSuite(program.data)
         result = collector.make_result()
 
         self.assertIsInstance(result, ContextSuite)
@@ -201,19 +194,16 @@ class TestCollectorClass(TestCase):
 
         suites = [Suite(__name__) for _ in xrange(9)] + [expect_suite]
 
+        app = NoseApp()
+        app.register_suites(suites)
+
         program = TestProgram(
-            NoseApp(),
-            argv,
+            app=app,
+            argv=argv,
             plugins=[AppConfigurePlugin()],
         )
 
-        collector = CollectSuite(
-            argv,
-            suites,
-            program.testLoader,
-            program.class_factory(program.config.options),
-            program.config,
-        )
+        collector = CollectSuite(program.data)
         result = collector.make_result()
 
         self.assertIsInstance(result, ContextSuite)
@@ -250,19 +240,16 @@ class TestCollectorClass(TestCase):
 
         suites = [Suite(__name__) for _ in xrange(9)] + [expect_suite]
 
+        app = NoseApp()
+        app.register_suites(suites)
+
         program = TestProgram(
-            NoseApp(),
-            argv,
+            app=app,
+            argv=argv,
             plugins=[AppConfigurePlugin()],
         )
 
-        collector = CollectSuite(
-            argv,
-            suites,
-            program.testLoader,
-            program.class_factory(program.config.options),
-            program.config,
-        )
+        collector = CollectSuite(program.data)
         result = collector.make_result()
 
         self.assertIsInstance(result, ContextSuite)

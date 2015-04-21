@@ -11,7 +11,7 @@ from noseapp.datastructures import ModifyDict as BaseConfig
 logger = logging.getLogger(__name__)
 
 
-def _load(obj):
+def load(obj):
     for atr in dir(obj):
         if not atr.startswith('_'):
             yield (atr, getattr(obj, atr))
@@ -25,16 +25,6 @@ class Config(BaseConfig):
     """
     App config storage
     """
-
-    def init_nose_config(self, nose_config):
-        """
-        Merge options from nose argument parser
-        """
-        logger.debug('Initialize nose config options')
-
-        self['nose'] = BaseConfig(
-            _load(nose_config.options),
-        )
 
     def from_module(self, module):
         """
@@ -50,7 +40,7 @@ class Config(BaseConfig):
         except ImportError:
             raise ImportError('Config {} not found'.format(module))
 
-        self.update(_load(obj))
+        self.update(load(obj))
 
         return self
 
@@ -78,6 +68,6 @@ class Config(BaseConfig):
             e.strerror = 'Unable to load file "{}"'.format(e.strerror)
             raise
 
-        self.update(_load(module))
+        self.update(load(module))
 
         return self

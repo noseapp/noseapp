@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+from noseapp.runner.base import BaseTestRunner
+from noseapp.suite.bases.simple import BaseSuite
+
 
 class ClassFactory(object):
     """
@@ -33,16 +36,18 @@ class ClassFactory(object):
         """
         Create class for building suite
         """
-        if not self._options.app_processes and self._options.gevent_greenlets:
-            from noseapp.suite.bases.gevent_suite import GeventSuite
-            self._current_suite_class = GeventSuite
+        try:
+            if not self._options.app_processes and self._options.gevent_greenlets:
+                from noseapp.suite.bases.gevent_suite import GeventSuite
+                self._current_suite_class = GeventSuite
 
-        elif self._options.app_processes and self._options.thread_pool:
-            from noseapp.suite.bases.threading_suite import ThreadSuite
-            self._current_suite_class = ThreadSuite
+            elif self._options.app_processes and self._options.thread_pool:
+                from noseapp.suite.bases.threading_suite import ThreadSuite
+                self._current_suite_class = ThreadSuite
 
-        else:
-            from noseapp.suite.bases.simple import BaseSuite
+            else:
+                self._current_suite_class = BaseSuite
+        except AttributeError:
             self._current_suite_class = BaseSuite
 
         return self._current_suite_class
@@ -51,20 +56,22 @@ class ClassFactory(object):
         """
         Create test runner class
         """
-        if self._options.app_processes:
-            from noseapp.runner.multiprocessing_runner import MultiprocessingTestRunner
-            self._current_runner_class = MultiprocessingTestRunner
+        try:
+            if self._options.app_processes:
+                from noseapp.runner.multiprocessing_runner import MultiprocessingTestRunner
+                self._current_runner_class = MultiprocessingTestRunner
 
-        elif self._options.gevent_pool:
-            from noseapp.runner.gevent_runner import GeventTestRunner
-            self._current_runner_class = GeventTestRunner
+            elif self._options.gevent_pool:
+                from noseapp.runner.gevent_runner import GeventTestRunner
+                self._current_runner_class = GeventTestRunner
 
-        elif self._options.thread_pool:
-            from noseapp.runner.threading_runner import ThreadingTestRunner
-            self._current_runner_class = ThreadingTestRunner
+            elif self._options.thread_pool:
+                from noseapp.runner.threading_runner import ThreadingTestRunner
+                self._current_runner_class = ThreadingTestRunner
 
-        else:
-            from noseapp.runner.base import BaseTestRunner
+            else:
+                self._current_runner_class = BaseTestRunner
+        except AttributeError:
             self._current_runner_class = BaseTestRunner
 
         return self._current_runner_class

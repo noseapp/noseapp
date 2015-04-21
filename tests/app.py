@@ -22,9 +22,13 @@ class TestDefaultClasses(TestCase):
     def runTest(self):
         from noseapp.core import TestProgram
         from noseapp.app.config import Config
+        from noseapp.core.factory import ClassFactory
+        from noseapp.core.collector import CollectSuite
 
         self.assertEqual(NoseApp.config_class, Config)
         self.assertEqual(NoseApp.program_class, TestProgram)
+        self.assertEqual(NoseApp.class_factory, ClassFactory)
+        self.assertEqual(NoseApp.collector_class, CollectSuite)
 
 
 class TestInitializeCallback(TestCase):
@@ -252,15 +256,3 @@ class TestInitConfig(TestCase):
         app.config.from_py_file(path)
 
         self.assertIsInstance(app.config.suite1, Suite)
-
-    def test_init_nose_config(self):
-
-        class FakeNoseConfig(object):
-
-            class options:
-                test = 'test'
-
-        app = NoseApp()
-        app.config.init_nose_config(FakeNoseConfig())
-
-        self.assertEqual(app.config.nose.test, 'test')

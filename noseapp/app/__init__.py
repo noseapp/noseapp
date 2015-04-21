@@ -1,13 +1,26 @@
 # -*- coding: utf-8 -*-
 
+"""
+Base application for your test program.
+
+You must implementation initialize method on base your application class.
+Use add_options method for add option to command line interface.
+Use noseapp-manage run command for running your application.
+"""
+
 import os
 import sys
 import logging
 from argparse import ArgumentError
 
+from optparse import OptionParser
+
 from noseapp.core import extensions
 from noseapp.core import TestProgram
+from noseapp.plugins.base import AppPlugin
+from noseapp.core.factory import ClassFactory
 from noseapp.core import load_suites_from_path
+from noseapp.core.collector import CollectSuite
 from noseapp.app.config import Config as AppConfig
 from noseapp.plugins.configure import AppConfigurePlugin
 from noseapp.core.loader import load_from_dir as load_suites_from_dir
@@ -20,22 +33,20 @@ DEFAULT_PLUGINS = [
     AppConfigurePlugin(),
 ]
 
-DEFAULT_ARGV = sys.argv + [
-    '--with-app-configure',
-]
 
-
-def prepare_argv(argv):
+def prepare_argv(argv, plugins):
     """
     :type argv: list
     """
-    argv = DEFAULT_ARGV + (argv or [])
+    argv = sys.argv + (argv or [])
 
     for arg in argv:
         if '--processes' in arg:
             raise ArgumentError(None, 'Option "--processes" is deprecated')
         if arg == '--ls':
             os.environ.setdefault('NOSE_NOCAPTURE', '1')
+
+    argv.extend(('--with-{}'.format(p.name) for p in plugins))
 
     return argv
 
@@ -47,6 +58,8 @@ class NoseApp(object):
 
     config_class = AppConfig
     program_class = TestProgram
+    class_factory = ClassFactory
+    collector_class = CollectSuite
 
     def __init__(self, config=None, plugins=None, argv=None):
         """
@@ -68,28 +81,65 @@ class NoseApp(object):
 
         # Options parser. Will be set after test program initialization.
         self.__parser = None
+        # Command line options. Will be set after test program initialization.
+        self.__options = None
+
+        # Init plugins. Saving support nose plugins and add supporting self plugins.
+        add_plugins = []
+
+        for plugin in (DEFAULT_PLUGINS + (plugins or [])):
+            if isinstance(plugin, AppPlugin):
+                add_plugins.append(plugin(self))
+            else:
+                add_plugins.append(plugin)
 
         # Program object initialization. Will be run later.
         self.__test_program = self.program_class(
             app=self,
             exit=True,
-            argv=prepare_argv(argv),
-            addplugins=[p(self) for p in (DEFAULT_PLUGINS + (plugins or []))],
+            argv=prepare_argv(argv, add_plugins),
+            addplugins=add_plugins,
         )
 
     @property
     def parser(self):
+        if self.__parser is None:
+            raise RuntimeError(
+                'Parser not found. Maybe you ignored noseapp.plugins.configure.AppConfigurePlugin?',
+            )
+
         return self.__parser
 
     @parser.setter
     def parser(self, value):
+        assert isinstance(value, OptionParser), \
+            'parser is not instance of "optparse.OptionParser"'
+
         self.__parser = value
+
+    @property
+    def options(self):
+        if self.__options is None:
+            raise RuntimeError('Options not found. Working outside initialize callback.')
+
+        return self.__options
+
+    @options.setter
+    def options(self, value):
+        assert isinstance(value, self.config_class),\
+            'options is not instance of "{}"'.format(self.config_class.__name__)
+
+        self.__options = value
 
     def initialize(self):
         """
         Callback for initialize application
         """
-        raise NotImplementedError
+        raise NotImplementedError(
+            'Initialize method is not implemented in "{}"'.format(
+                self.__class__.__name__,
+            ),
+        )
 
     def before(self):
         """

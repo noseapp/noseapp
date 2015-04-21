@@ -62,7 +62,7 @@ class AppConfigurePlugin(AppPlugin):
             help='Test case or suite name for running.'
         )
 
-        try:  # if app instance is not push to plugin,
+        try:  # if app instance is does not pushed to plugin,
             # AttributeError will be passed.
             self.app.parser = parser
             self.app.add_options()

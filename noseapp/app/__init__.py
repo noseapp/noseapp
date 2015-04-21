@@ -193,7 +193,7 @@ class NoseApp(object):
 
         logger.debug('Shared extension "%s"', name)
 
-        return extensions.set(name, cls, in_context=True, args=args, kwargs=kwargs)
+        return extensions.set(name, cls, to_transport=True, args=args, kwargs=kwargs)
 
     @staticmethod
     def shared_data(name, data):
@@ -207,7 +207,7 @@ class NoseApp(object):
         """
         logger.debug('Shared data "%s"', name)
 
-        return extensions.set(name, data, in_context=False)
+        return extensions.set(name, data, to_transport=False)
 
     @property
     def suites(self):

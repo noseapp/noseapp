@@ -81,7 +81,7 @@ class Suite(object):
         Init extensions for test cases. Without building suite.
         """
         for case in self._mediator.test_cases:
-            case.with_require(self.require)
+            case.setup_extensions(self.require)
 
     def __call__(self, program_data):
         """

@@ -16,22 +16,13 @@ class ExtensionNotFound(BaseException):
     pass
 
 
-class ExtensionNotRequired(BaseException):
-    pass
-
-
-def get(name, require=None):
+def get(name):
     """
     Get extension by name
 
     :param name: extension name
     :type name: basestring
-    :param require: allow extensions list
-    :type require: list or tuple
     """
-    if require is not None and name not in require:
-        raise ExtensionNotRequired(name)
-
     try:
         ext = _EXTENSIONS[name]
 
@@ -43,17 +34,17 @@ def get(name, require=None):
         raise ExtensionNotFound(name)
 
 
-def set(name, ext, in_context=False, args=None, kwargs=None):
+def set(name, ext, to_transport=False, args=None, kwargs=None):
     """
     Register extension in tmp storage
 
     :param name: extension name
     :type name: basestring
     :param ext: any objects
-    :param in_context: if True, create instance object with call get function
+    :param to_transport: if True, create instance object with calling get function
     :type in_context: bool
     """
-    if in_context:
+    if to_transport:
         _EXTENSIONS[name] = Transport(
             cls=ext, args=args or tuple(), kwargs=kwargs or dict(),
         )

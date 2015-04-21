@@ -33,11 +33,11 @@ class TestInitExtensions(TestCase):
         ex_cls = self.create_fake_extension()
         app.shared_extension(cls=ex_cls)
 
-        TestCase.with_require(require=['test'])
+        TestCase.setup_extensions(require=['test'])
 
         self.assertTrue(hasattr(TestCase, 'test'))
         self.assertIsInstance(TestCase.test, ex_cls)
-        self.assertRaises(ExtensionNotFound, TestCase.with_require, require=['no_ex'])
+        self.assertRaises(ExtensionNotFound, TestCase.setup_extensions, require=['no_ex'])
 
 
 class TestScreenPlayCase(TestCase):

@@ -11,7 +11,7 @@ class TestCase(BaseTestCase):
     """
 
     @classmethod
-    def with_require(cls, require=None):
+    def setup_extensions(cls, require):
         """
         Init require extensions
 
@@ -20,6 +20,6 @@ class TestCase(BaseTestCase):
         """
         if require and hasattr(require, '__iter__'):
             for ext_name in require:
-                setattr(cls, ext_name, extensions.get(ext_name, require))
+                setattr(cls, ext_name, extensions.get(ext_name))
 
         return cls

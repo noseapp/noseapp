@@ -67,7 +67,7 @@ class TestCaseMediator(object):
         for case in self._test_cases:
             suite.addTests(
                 program_data.test_loader.loadTestsFromTestCase(
-                    case.with_require(self._require),
+                    case.setup_extensions(self._require),
                 ),
             )
 

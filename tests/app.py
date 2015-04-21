@@ -219,7 +219,6 @@ class TestSharedExtension(TestCase):
 
     def test_raises(self):
         from noseapp.core.extensions import ExtensionNotFound
-        from noseapp.core.extensions import ExtensionNotRequired
 
         ex = self.get_fake_ex()
         app = NoseApp()
@@ -228,7 +227,6 @@ class TestSharedExtension(TestCase):
 
         self.assertRaises(AttributeError, app.shared_extension, cls=ex)
         self.assertRaises(ExtensionNotFound, extensions.get, 'no_ex')
-        self.assertRaises(ExtensionNotRequired, extensions.get, 'test', require=['test2'])
 
 
 class TestInitConfig(TestCase):

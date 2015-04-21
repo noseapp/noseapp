@@ -55,18 +55,18 @@ class TestCaseMediator(object):
 
         return mp
 
-    def create_suite(self, nose_config, test_loader, class_factory):
+    def create_suite(self, program_data):
         """
         Create suite instance
         """
-        suite = class_factory.suite_class(
-            config=nose_config,
+        suite = program_data.suite_class(
+            config=program_data.config,
             handlers=self._handlers,
         )
 
         for case in self._test_cases:
             suite.addTests(
-                test_loader.loadTestsFromTestCase(
+                program_data.test_loader.loadTestsFromTestCase(
                     case.with_require(self._require),
                 ),
             )

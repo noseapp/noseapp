@@ -83,13 +83,11 @@ class Suite(object):
         for case in self._mediator.test_cases:
             case.with_require(self.require)
 
-    def __call__(self, nose_config, test_loader, class_factory):
+    def __call__(self, program_data):
         """
         Build suite
         """
-        return self._mediator.create_suite(
-            nose_config, test_loader, class_factory,
-        )
+        return self._mediator.create_suite(program_data)
 
     def __repr__(self):
         return '<Suite {}>'.format(self._name)

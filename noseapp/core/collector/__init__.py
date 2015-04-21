@@ -58,29 +58,22 @@ class CollectSuite(object):
     Collect suite for test runner
     """
 
-    def __init__(self, argv, suites, test_loader, class_factory, nose_config):
-        if nose_config.options.ls:
-            console.tree(suites, show_docs=nose_config.options.doc)
+    def __init__(self, program_data):
+        if program_data.config.options.ls:
+            console.tree(program_data.suites, show_docs=program_data.config.options.doc)
 
-        self._suites = suites
-        self._nose_config = nose_config
-        self._test_loader = test_loader
-        self._class_factory = class_factory
-
-        if nose_config.options.run_test:
-            self._command = nose_config.options.run_test
-        elif len(argv) > 2:
-            self._command = argv[1]
+        if program_data.config.options.run_test:
+            self._command = program_data.config.options.run_test
+        elif len(program_data.argv) > 2:
+            self._command = program_data.argv[1]
         else:
             self._command = None
+
+        self._program_data = program_data
 
     @property
     def command(self):
         return self._command
-
-    @property
-    def suites(self):
-        return self._suites
 
     @property
     def collect(self):  # sugar of syntax :)
@@ -94,35 +87,35 @@ class CollectSuite(object):
         return strategy_to_method[get_collector_strategy(self._command)]
 
     def make_result(self):
-        return self._test_loader.suiteClass(
+        return self._program_data.test_loader.suiteClass(
             self.collect(),
         )
 
     def _collect_by_basic_strategy(self):
         return [
-            suite(self._nose_config, self._test_loader, self._class_factory)
-            for suite in self._suites
+            suite(self._program_data)
+            for suite in self._program_data.suites
         ]
 
     def _collect_by_suite_strategy(self):
-        suite = get_suite_by_name(self._command, self._suites)
+        suite = get_suite_by_name(self._command, self._program_data.suites)
 
-        return [suite(self._nose_config, self._test_loader, self._class_factory)]
+        return [suite(self._program_data)]
 
     def _collect_by_case_strategy(self):
         suite_name, case_name = self._command.split(':')
 
-        app_suite = get_suite_by_name(suite_name, self._suites)
+        app_suite = get_suite_by_name(suite_name, self._program_data.suites)
         app_suite.init_extensions()
 
         case = get_case_from_suite(case_name, app_suite)
 
         suite = BaseSuite(
-            config=self._nose_config,
+            config=self._program_data.config,
             handlers=app_suite.handlers,
         )
         suite.addTests(
-            self._test_loader.loadTestsFromTestCase(case),
+            self._program_data.test_loader.loadTestsFromTestCase(case),
         )
 
         return [suite]
@@ -131,7 +124,7 @@ class CollectSuite(object):
         suite_name, case_info = self._command.split(':')
         case_name, method_name = case_info.split('.')
 
-        app_suite = get_suite_by_name(suite_name, self._suites)
+        app_suite = get_suite_by_name(suite_name, self._program_data.suites)
         app_suite.init_extensions()
 
         case = get_case_from_suite(case_name, app_suite)
@@ -139,7 +132,7 @@ class CollectSuite(object):
         try:
             suite = BaseSuite(
                 tests=map(case, [method_name]),
-                config=self._nose_config,
+                config=self._program_data.config,
                 handlers=app_suite.handlers,
             )
         except ValueError:

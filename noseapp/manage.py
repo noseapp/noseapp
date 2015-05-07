@@ -14,6 +14,7 @@ import os
 import imp
 import sys
 import inspect
+import traceback
 from importlib import import_module
 from collections import OrderedDict
 
@@ -183,7 +184,11 @@ def run():
     try:
         command(*args, **kwargs)
     except TypeError:
-        _error('signature of command is invalid')
+        _error(
+            'signature of command is invalid.\n\n{}'.format(
+                traceback.format_exc(),
+            ),
+        )
 
 
 if __name__ == '__main__':

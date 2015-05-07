@@ -3,11 +3,15 @@
 import time
 
 
+WAITING_FOR_SLEEP = 0.5
+WAITING_FOR_TIMEOUT = 30
+
+
 class TimeoutException(BaseException):
     pass
 
 
-def waiting_for(func, timeout=30, sleep=0.5, args=None, kwargs=None):
+def waiting_for(func, timeout=None, sleep=None, args=None, kwargs=None):
     """
     :param func: callback function
     :param timeout: number of seconds for timeout
@@ -16,6 +20,9 @@ def waiting_for(func, timeout=30, sleep=0.5, args=None, kwargs=None):
     """
     args = args or tuple()
     kwargs = kwargs or {}
+
+    sleep = sleep or WAITING_FOR_SLEEP
+    timeout = timeout or WAITING_FOR_TIMEOUT
 
     t_start = time.time()
 

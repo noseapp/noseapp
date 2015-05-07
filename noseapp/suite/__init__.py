@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import unittest
 
 from noseapp.suite.mediator import TestCaseMediator
 
@@ -32,6 +33,18 @@ class Suite(object):
             _require = require
 
         self._mediator = self.mediator_class(require=_require)
+
+    @property
+    def skip(self):
+        return unittest.skip
+
+    @property
+    def skipIf(self):
+        return unittest.skipIf
+
+    @property
+    def skipUnless(self):
+        return unittest.skipUnless
 
     @property
     def name(self):

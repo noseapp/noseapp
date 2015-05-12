@@ -138,6 +138,8 @@ class DefaultCommands(object):
             except SystemExit as e:
                 if e.code > exit_code:
                     exit_code = e.code
+            except KeyboardInterrupt:
+                raise
 
         sys.exit(exit_code)
 

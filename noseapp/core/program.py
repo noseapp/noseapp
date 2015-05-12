@@ -102,9 +102,10 @@ class TestProgram(BaseTestProgram):
         if plug_runner is not None:
             self.testRunner = plug_runner
 
+        suites = self.data.build_suites()
         self.data.before_run_callback()
 
-        result = self.testRunner.run(self.data.build_suites())
+        result = self.testRunner.run(suites)
         self.success = result.wasSuccessful()
 
         self.data.after_run_callback()

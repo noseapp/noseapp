@@ -27,7 +27,8 @@ def is_package(path):
     May be path is python package?
     """
     if not os.path.isfile(os.path.join(path, '__init__.py')):
-        raise LoadSuitesError('"{}" is not python package'.format(path))
+        return False
+    return True
 
 
 def load_from_dir(path, import_base=None):
@@ -38,8 +39,8 @@ def load_from_dir(path, import_base=None):
     :param import_base: base import path
     :type import_base: str
     """
-    if import_base:
-        is_package(path)
+    if import_base and not is_package(path):
+        return []
 
     suites = []
 

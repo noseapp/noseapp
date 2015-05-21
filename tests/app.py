@@ -5,6 +5,7 @@ from unittest import TestCase
 
 from noseapp import Suite
 from noseapp.core import extensions
+from noseapp import TestCase as _TestCase
 from noseapp.app import NoseApp as _NoseApp
 
 
@@ -90,10 +91,25 @@ class TestBeforeAfterCallback(TestCase):
 
         noseapp.core.program.get_test_runner_class = get_test_runner_class
 
+    @staticmethod
+    def create_fake_suite():
+        suite = Suite('test')
+
+        class FakeTesCase(_TestCase):
+            def test(self):
+                pass
+
+        suite.register(FakeTesCase)
+
+        return suite
+
     def runTest(self):
         self.mock_test_runner()
 
         fake_app = self.create_fake_app()
+        fake_app.register_suite(
+            self.create_fake_suite(),
+        )
 
         try:
             fake_app.run()

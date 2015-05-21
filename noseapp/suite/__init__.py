@@ -96,11 +96,11 @@ class Suite(object):
         for case in self._mediator.test_cases:
             case.setup_extensions(self.require)
 
-    def __call__(self, program_data):
+    def __call__(self, program_data, **kwargs):
         """
         Build suite
         """
-        return self._mediator.create_suite(program_data)
+        return self._mediator.create_suite(program_data, **kwargs)
 
     def __repr__(self):
         return '<Suite {}>'.format(self._name)

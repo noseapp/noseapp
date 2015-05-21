@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import re
+from random import Random
 
 from noseapp.core.collector import console
 from noseapp.suite.bases.simple import BaseSuite
@@ -92,8 +93,18 @@ class CollectSuite(object):
         )
 
     def _collect_by_basic_strategy(self):
+        suite_kwargs = {}
+
+        if self._program_data.config.options.random:
+            random = Random(
+                self._program_data.config.options.random_seed,
+            )
+            random.shuffle(self._program_data.suites)
+
+            suite_kwargs.update(shuffle=random.shuffle)
+
         return [
-            suite(self._program_data)
+            suite(self._program_data, **suite_kwargs)
             for suite in self._program_data.suites
         ]
 

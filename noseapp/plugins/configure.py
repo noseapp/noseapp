@@ -1,6 +1,7 @@
 
 import os
 from optparse import OptionGroup
+import time
 
 from noseapp.plugins.base import AppPlugin
 
@@ -62,6 +63,19 @@ class AppConfigurePlugin(AppPlugin):
             default='',
             type=str,
             help='Test case or suite name for running.'
+        )
+        group.add_option(
+            '-r', '--random',
+            dest='random',
+            action='store_true',
+            default=False,
+            help='Random shuffle for cases'
+        )
+        group.add_option(
+            '--random-seed',
+            dest='random_seed',
+            default=int(time.time()),
+            help='Random shuffle for cases'
         )
 
         parser.add_option_group(group)

@@ -103,6 +103,10 @@ class TestProgram(BaseTestProgram):
             self.testRunner = plug_runner
 
         suites = self.data.build_suites()
+
+        if not suites:
+            raise RuntimeError('No suites for running')
+
         self.data.before_run_callback()
 
         result = self.testRunner.run(suites)

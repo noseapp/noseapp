@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import random
 import re
 
 from noseapp.core.collector import console
@@ -92,8 +93,13 @@ class CollectSuite(object):
         )
 
     def _collect_by_basic_strategy(self):
+        rand_shuffle = None
+        if self._program_data.config.options.random:
+            rand = random.Random(self._program_data.config.options.random_seed)
+            rand.shuffle(self._program_data.suites)
+            rand_shuffle = rand.shuffle
         return [
-            suite(self._program_data)
+            suite(self._program_data, rand_shuffle)
             for suite in self._program_data.suites
         ]
 

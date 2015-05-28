@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from threading import Lock
-from threading import Thread
 from Queue import Queue as TaskQueue
 
 from noseapp.utils.common import waiting_for
 from noseapp.runner.base import measure_time
 from noseapp.runner.base import BaseTestRunner
 from noseapp.utils.common import TimeoutException
+
+
+PROCESS_TIMEOUT = 1800  # TODO: move to command line options
 
 
 Process = ResultQueue = cpu_count = None
@@ -54,16 +55,9 @@ def run(processor, queue_handler):
     """
     Go, go, go!
     """
-    workers = [
-        Thread(target=processor.serve),
-        Thread(target=queue_handler.handle),
-    ]
-
     try:
-        for worker in workers:
-            worker.start()
-        for worker in workers:
-            worker.join()
+        processor.serve()
+        queue_handler.handle()
     except KeyboardInterrupt:
         processor.destroy()
     finally:
@@ -83,8 +77,6 @@ class ResultQueueHandler(object):
         self._length_suites = 0
 
         self._match(suites)
-
-        self._counter_lock = Lock()
 
     def _match(self, suites):
         """
@@ -143,9 +135,8 @@ class ResultQueueHandler(object):
             self._add_errors(errors)
             self._add_skipped(skipped)
 
-            with self._counter_lock:
-                self._result.testsRun += tests_run
-                self._counter += 1
+            self._result.testsRun += tests_run
+            self._counter += 1
 
 
 class TaskProcessor(object):
@@ -153,7 +144,7 @@ class TaskProcessor(object):
     Collect tasks and run with multiprocessing.Process
     """
 
-    def __init__(self, processes, process_timeout=1800):
+    def __init__(self, processes, process_timeout):
         """
         :param processes: nun processes
         :type processes: int
@@ -172,6 +163,7 @@ class TaskProcessor(object):
         for process in self._current:
             if not process.is_alive():
                 process.terminate()
+                process.join()
                 self._current.remove(process)
                 return True
 
@@ -224,7 +216,7 @@ class MultiprocessingTestRunner(BaseTestRunner):
         _import_mp()
 
         result_queue = ResultQueue()
-        processor = TaskProcessor(self.config.options.app_processes)
+        processor = TaskProcessor(self.config.options.async_suites, PROCESS_TIMEOUT)
         queue_handler = ResultQueueHandler(suites, result, result_queue)
 
         for suite in suites:

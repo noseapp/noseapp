@@ -114,7 +114,7 @@ class DefaultCommands(object):
         :kwargs: kwargs of create application function
         """
         for argv in sys.argv:
-            if '--gevent' == argv:
+            if 'gevent' in argv:
                 from gevent.monkey import patch_all
                 patch_all()
                 break

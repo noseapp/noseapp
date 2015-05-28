@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from noseapp.runner.base import BaseTestRunner
+from noseapp.core.constants import RunStrategy
 from noseapp.suite.bases.simple import BaseSuite
 
 
@@ -37,16 +38,21 @@ class ClassFactory(object):
         Create class for building suite
         """
         try:
-            if not self._options.app_processes and self._options.gevent_greenlets:
+            if self._options.run_strategy == RunStrategy.GEVENT and self._options.async_tests:
                 from noseapp.suite.bases.gevent_suite import GeventSuite
                 self._current_suite_class = GeventSuite
 
-            elif self._options.app_processes and self._options.thread_pool:
+            elif self._options.run_strategy in (RunStrategy.MULTIPROCESSING, RunStrategy.THREADING)\
+                    and self._options.async_tests:
                 from noseapp.suite.bases.threading_suite import ThreadSuite
                 self._current_suite_class = ThreadSuite
 
             else:
-                self._current_suite_class = BaseSuite
+                if self._options.async_tests:
+                    from noseapp.suite.bases.threading_suite import ThreadSuite
+                    self._current_suite_class = ThreadSuite
+                else:
+                    self._current_suite_class = BaseSuite
         except AttributeError:
             self._current_suite_class = BaseSuite
 
@@ -57,15 +63,16 @@ class ClassFactory(object):
         Create test runner class
         """
         try:
-            if self._options.app_processes:
+            if self._options.run_strategy == RunStrategy.MULTIPROCESSING\
+                    or (self._options.run_strategy == RunStrategy.SIMPLE and self._options.async_suites):
                 from noseapp.runner.multiprocessing_runner import MultiprocessingTestRunner
                 self._current_runner_class = MultiprocessingTestRunner
 
-            elif self._options.gevent_pool:
+            elif self._options.run_strategy == RunStrategy.GEVENT:
                 from noseapp.runner.gevent_runner import GeventTestRunner
                 self._current_runner_class = GeventTestRunner
 
-            elif self._options.thread_pool:
+            elif self._options.run_strategy == RunStrategy.THREADING:
                 from noseapp.runner.threading_runner import ThreadingTestRunner
                 self._current_runner_class = ThreadingTestRunner
 

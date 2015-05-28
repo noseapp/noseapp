@@ -23,7 +23,7 @@ class ThreadingTestRunner(BaseTestRunner):
 
         result = self._makeResult()
 
-        size = self.config.options.thread_pool
+        size = self.config.options.async_suites
         if size < 0:
             size = cpu_count()
 

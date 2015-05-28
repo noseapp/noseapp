@@ -12,7 +12,7 @@ class ThreadSuite(BaseSuite):
     """
 
     def _run_suite_handler(self, result, orig):
-        size = self.config.options.thread_pool
+        size = self.config.options.async_tests
 
         if size < 0:
             size = cpu_count() / 2

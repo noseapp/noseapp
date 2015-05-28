@@ -25,6 +25,7 @@ class TestClassFactory(TestCase):
 
     def runTest(self):
         from noseapp.runner.base import BaseTestRunner
+        from noseapp.core.constants import RunStrategy
         from noseapp.suite.bases.simple import BaseSuite
         from noseapp.suite.bases.threading_suite import ThreadSuite
         from noseapp.runner.threading_runner import ThreadingTestRunner
@@ -34,32 +35,69 @@ class TestClassFactory(TestCase):
 
         class MockOptions(object):
             def __init__(self, **kw):
-                self.thread_pool = kw.pop('thread_pool', 0)
-                self.app_processes = kw.pop('app_processes', 0)
-                self.gevent_greenlets = kw.pop('gevent_greenlets', 0)
-                self.gevent_pool = kw.pop('gevent_pool', 0)
+                self.run_strategy = kw.pop('run_strategy', RunStrategy.SIMPLE)
+                self.async_suites = kw.pop('async_suites', 0)
+                self.async_tests = kw.pop('async_tests', 0)
 
         factory = ClassFactory(MockOptions())
 
         self.assertEqual(factory.suite_class, BaseSuite)
         self.assertEqual(factory.runner_class, BaseTestRunner)
 
-        factory = ClassFactory(MockOptions(app_processes=2))
+        factory = ClassFactory(MockOptions(async_suites=2))
 
         self.assertEqual(factory.suite_class, BaseSuite)
         self.assertEqual(factory.runner_class, MultiprocessingTestRunner)
 
-        factory = ClassFactory(MockOptions(thread_pool=2))
-
-        self.assertEqual(factory.suite_class, BaseSuite)
-        self.assertEqual(factory.runner_class, ThreadingTestRunner)
-
-        factory = ClassFactory(MockOptions(app_processes=2, thread_pool=2))
+        factory = ClassFactory(MockOptions(async_suites=2, async_tests=2))
 
         self.assertEqual(factory.suite_class, ThreadSuite)
         self.assertEqual(factory.runner_class, MultiprocessingTestRunner)
 
-        factory = ClassFactory(MockOptions(app_processes=2, gevent_greenlets=2))
+        factory = ClassFactory(
+            MockOptions(run_strategy=RunStrategy.MULTIPROCESSING, async_suites=2),
+        )
 
         self.assertEqual(factory.suite_class, BaseSuite)
         self.assertEqual(factory.runner_class, MultiprocessingTestRunner)
+
+        factory = ClassFactory(
+            MockOptions(run_strategy=RunStrategy.MULTIPROCESSING, async_suites=2, async_tests=2),
+        )
+
+        self.assertEqual(factory.suite_class, ThreadSuite)
+        self.assertEqual(factory.runner_class, MultiprocessingTestRunner)
+
+        factory = ClassFactory(
+            MockOptions(run_strategy=RunStrategy.THREADING, async_suites=2),
+        )
+
+        self.assertEqual(factory.suite_class, BaseSuite)
+        self.assertEqual(factory.runner_class, ThreadingTestRunner)
+
+        factory = ClassFactory(
+            MockOptions(run_strategy=RunStrategy.THREADING, async_suites=2, async_tests=2),
+        )
+
+        self.assertEqual(factory.suite_class, ThreadSuite)
+        self.assertEqual(factory.runner_class, ThreadingTestRunner)
+
+        try:  # if gevent installed only
+            from noseapp.suite.bases.gevent_suite import GeventSuite
+            from noseapp.runner.gevent_runner import GeventTestRunner
+
+            factory = ClassFactory(
+                MockOptions(run_strategy=RunStrategy.GEVENT, async_suites=2),
+            )
+
+            self.assertEqual(factory.suite_class, BaseSuite)
+            self.assertEqual(factory.runner_class, GeventTestRunner)
+
+            factory = ClassFactory(
+                MockOptions(run_strategy=RunStrategy.GEVENT, async_suites=2, async_tests=2),
+            )
+
+            self.assertEqual(factory.suite_class, GeventSuite)
+            self.assertEqual(factory.runner_class, GeventTestRunner)
+        except ImportError:
+            pass

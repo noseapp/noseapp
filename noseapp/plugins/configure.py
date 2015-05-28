@@ -4,6 +4,7 @@ import time
 from optparse import OptionGroup
 
 from noseapp.plugins.base import AppPlugin
+from noseapp.core.constants import RunStrategy
 
 
 class AppConfigurePlugin(AppPlugin):
@@ -15,33 +16,25 @@ class AppConfigurePlugin(AppPlugin):
         group = OptionGroup(parser, 'NoseApp base options')
 
         group.add_option(
-            '--app-processes',
-            dest='app_processes',
-            default=0,
-            type=int,
-            help='Num of processes for running. one process == one suite.'
+            '--run-strategy',
+            dest='run_strategy',
+            default=RunStrategy.SIMPLE,
+            type=str,
+            help='Can be in ({})'.format(', '.join(RunStrategy.ALL)),
         )
         group.add_option(
-            '--gevent',
-            dest='gevent_pool',
+            '--async-suites',
+            dest='async_suites',
             default=0,
             type=int,
-            help='Num of greenlets for running. One greenlet == one suite.'
+            help='Num of suites to async run.',
         )
         group.add_option(
-            '--greenlets',
-            dest='gevent_greenlets',
+            '--async-tests',
+            dest='async_tests',
             default=0,
             type=int,
-            help='Num of greenlets for running. One greenlet == one test case.'
-        )
-        group.add_option(
-            '--threads',
-            dest='thread_pool',
-            default=0,
-            type=int,
-            help='Num of threads for running. If app processes is set, one thread == one test case, '
-                 'else one thread == one suite.'
+            help='Num of tests to async run. Sets limit inside suite.',
         )
         group.add_option(
             '--ls',

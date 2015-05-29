@@ -10,21 +10,21 @@ class TestCaseMediator(object):
     """
 
     def __init__(self, require):
+        self._handlers = []
         self._test_cases = []
         self._require = require
-        self._handlers = []
 
     @property
     def require(self):
         return self._require
 
     @property
-    def test_cases(self):
-        return self._test_cases
-
-    @property
     def handlers(self):
         return self._handlers
+
+    @property
+    def test_cases(self):
+        return self._test_cases
 
     def create_map(self):
         """

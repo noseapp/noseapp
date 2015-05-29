@@ -9,48 +9,30 @@ You can run application with making run method
     app = create_app()
     app.run()
 
-NoseApp support three async run type:
 
- * multiprocessing
- * threading
- * gevent
-
-
-Processes and threads
----------------------
-
-Two processes (one suite == one process)
+Run application
+---------------
 
 ::
 
-    runner.py --app-processes 2
+    noseapp-manage run myproject.app:create_app
 
 
-Two processes, two treads (one suite == one process, one test == one thread)
+Run strategy
+------------
 
-::
+* multiprocessing:
+noseapp-manage run myproject.app:create_app --run-strategy multiprocessing --async-suites 4 --async-tests 2
 
-    runner.py --app-processes 2 --threads 2
+* threading:
+noseapp-manage run myproject.app:create_app --run-strategy threading --async-suites 4 --async-tests 2
 
-
-Two threads (one suite == one thread)
-
-::
-
-    runner.py --threads 2 (one suite == one thread)
+* gevent:
+noseapp-manage run myproject.app:create_app --run-strategy gevent --async-suites 4 --async-tests 2
 
 
-Gevent
-------
-
-Two greenlets (one suite == one greenlet)
+Run one test or suite:
 
 ::
 
-    runner.py --gevent 2
-
-Four greenlets (one suite == one greenlet, one test == one greenlet)
-
-::
-
-    runner.py --gevent 2 --greenlets 2
+  noseapp-manage run myproject.app:create_app -t package.module:TestCase

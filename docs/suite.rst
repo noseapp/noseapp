@@ -43,6 +43,36 @@ If all suites have same require, then create base class and use DEFAULT_REQUIRE 
     suite = MySuite(__name__, require=['something_else'])
 
 
+Call skip decorators through suite instance
+-------------------------------------------
+
+::
+
+    suite = Suite(__name__)
+
+
+    @suite.skip('TODO: ...')  # skipIf, skipUnless
+    @suite.register
+    class MyTestCase(TestCase):
+        pass
+
+
+Add handler for test running
+----------------------------
+
+::
+
+    suite = Suite(__name__)
+
+
+    @suite.add_handler
+    def run_test_handler(test):
+        """
+        :param test: instance of test case class
+        """
+        pass
+
+
 Mediator class
 --------------
 

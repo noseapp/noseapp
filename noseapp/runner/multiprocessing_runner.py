@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from threading import Lock
-from threading import Thread
 from Queue import Queue as TaskQueue
 
 from noseapp.utils.common import waiting_for
@@ -50,26 +48,6 @@ def task(suite, result, result_queue):
     result_queue.put_nowait([failures, errors, skipped, result.testsRun])
 
 
-def run(processor, queue_handler):
-    """
-    Go, go, go!
-    """
-    workers = [
-        Thread(target=processor.serve),
-        Thread(target=queue_handler.handle),
-    ]
-
-    try:
-        for worker in workers:
-            worker.start()
-        for worker in workers:
-            worker.join()
-    except KeyboardInterrupt:
-        processor.destroy()
-    finally:
-        processor.close()
-
-
 class ResultQueueHandler(object):
 
     TEST_REPR = 'Test({})'
@@ -83,8 +61,6 @@ class ResultQueueHandler(object):
         self._length_suites = 0
 
         self._match(suites)
-
-        self._counter_lock = Lock()
 
     def _match(self, suites):
         """
@@ -143,9 +119,8 @@ class ResultQueueHandler(object):
             self._add_errors(errors)
             self._add_skipped(skipped)
 
-            with self._counter_lock:
-                self._result.testsRun += tests_run
-                self._counter += 1
+            self._result.testsRun += tests_run
+            self._counter += 1
 
 
 class TaskProcessor(object):
@@ -153,17 +128,19 @@ class TaskProcessor(object):
     Collect tasks and run with multiprocessing.Process
     """
 
-    def __init__(self, processes, process_timeout=1800):
+    def __init__(self, processes, process_timeout, result_queue_handler):
         """
         :param processes: nun processes
         :type processes: int
         :param process_timeout: number of seconds for process timeout
         :type process_timeout: int, float
+        :param result_queue_handler: handler for result queue
         """
         self._processes = processes if processes > 0 else cpu_count()
         self._current = []
         self._queue = TaskQueue()
         self._process_timeout = process_timeout
+        self._result_queue_handler = result_queue_handler
 
     def _is_release(self):
         if len(self._current) < self._processes:
@@ -172,6 +149,7 @@ class TaskProcessor(object):
         for process in self._current:
             if not process.is_alive():
                 process.terminate()
+                process.join()
                 self._current.remove(process)
                 return True
 
@@ -192,6 +170,8 @@ class TaskProcessor(object):
             process = Process(target=target, args=args, kwargs=kwargs)
             process.start()
             self._current.append(process)
+
+        self._result_queue_handler.handle()
 
     def destroy(self):
         """
@@ -224,14 +204,22 @@ class MultiprocessingTestRunner(BaseTestRunner):
         _import_mp()
 
         result_queue = ResultQueue()
-        processor = TaskProcessor(self.config.options.app_processes)
-        queue_handler = ResultQueueHandler(suites, result, result_queue)
+        processor = TaskProcessor(
+            self.config.options.async_suites,
+            self.config.options.multiprocessing_timeout,
+            ResultQueueHandler(suites, result, result_queue),
+        )
 
         for suite in suites:
             processor.add_task(task, args=(suite, result, result_queue))
 
         with measure_time(result):
-            run(processor, queue_handler)
+            try:
+                processor.serve()
+            except KeyboardInterrupt:
+                processor.destroy()
+            finally:
+                processor.close()
 
         self.config.plugins.finalize(result)
 

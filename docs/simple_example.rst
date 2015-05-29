@@ -114,13 +114,3 @@ TestCase
 
         # @step(2, 'description')
         # def ...
-
-
-Runner
-------
-
-::
-
-    app = create_app(config='etc.base')  # Let's config file, so...., is etc.base module :)
-    app.register_suite(suite)
-    app.run()

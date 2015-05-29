@@ -191,21 +191,14 @@ Quick start
 Usage noseapp runners
 =====================
 
-With multiprocessing:
-  * processes:
-    noseapp-manage run myproject.app:create_app --app-processes 2 (one suite === one process)
+* processes:
+noseapp-manage run myproject.app:create_app --run-strategy multiprocessing --async-suites 4 --async-tests 2
 
-  * processes and threads:
-    noseapp-manage run myproject.app:create_app --app-processes 4 --threads 2 (one suite == one process, one test == one thread)
+* threading:
+noseapp-manage run myproject.app:create_app --run-strategy threading --async-suites 4 --async-tests 2
 
-  * threads only:
-    noseapp-manage run myproject.app:create_app --threads 2 (one suite == one thread)
-
-
-With gevent:
-  * noseapp-manage run myproject.app:create_app --gevent 4 (one suite == one greenlet)
-
-  * noseapp-manage run myproject.app:create_app --gevent 4 --greenlets 2 (one suite == one greenlet, one test == one greenlet)
+* gevent:
+noseapp-manage run myproject.app:create_app --run-strategy gevent --async-suites 4 --async-tests 2
 
 
 Run one test or suite:
@@ -214,7 +207,7 @@ Run one test or suite:
 
   noseapp-manage run myproject.app:create_app -t package.module:TestCase
 
-Use --ls option for suite tree to console
+For suite tree to console use --ls option
 
 
 ============================

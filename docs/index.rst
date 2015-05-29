@@ -9,6 +9,7 @@ NoseApp
     suite
     case
     runner
+    manage
     extensions
     simple_example
 
@@ -65,4 +66,4 @@ Async
 
 * multiprocessing
 * threading
-* gevent event loop
+* gevent

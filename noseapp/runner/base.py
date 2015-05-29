@@ -17,5 +17,6 @@ def measure_time(result):
 
 
 __all__ = (
+    measure_time,
     BaseTestRunner,
 )

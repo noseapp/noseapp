@@ -14,6 +14,11 @@ class ClassFactory(object):
         """
         :param options: nose config options
         """
+        if options.run_strategy not in RunStrategy.ALL:
+            raise ValueError(
+                'Incorrect run strategy: "{}"'.format(options.run_strategy),
+            )
+
         self._options = options
 
         self._current_suite_class = None

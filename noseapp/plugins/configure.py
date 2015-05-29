@@ -37,6 +37,13 @@ class AppConfigurePlugin(AppPlugin):
             help='Num of tests to async run. Sets limit inside suite.',
         )
         group.add_option(
+            '--multiprocessing-timeout',
+            dest='multiprocessing_timeout',
+            default=1800,
+            type=int,
+            help='Process timeout. With multiprocessing strategy only.',
+        )
+        group.add_option(
             '--ls',
             dest='ls',
             action='store_true',

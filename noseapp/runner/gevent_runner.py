@@ -36,4 +36,5 @@ class GeventTestRunner(BaseTestRunner):
             pool.join()
 
         self.config.plugins.finalize(result)
+
         return result

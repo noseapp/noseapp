@@ -8,9 +8,6 @@ from noseapp.runner.base import BaseTestRunner
 from noseapp.utils.common import TimeoutException
 
 
-PROCESS_TIMEOUT = 1800  # TODO: move to command line options
-
-
 Process = ResultQueue = cpu_count = None
 
 
@@ -49,19 +46,6 @@ def task(suite, result, result_queue):
     skipped = [[get_value(v) for v in s] for s in result.skipped]
 
     result_queue.put_nowait([failures, errors, skipped, result.testsRun])
-
-
-def run(processor, queue_handler):
-    """
-    Go, go, go!
-    """
-    try:
-        processor.serve()
-        queue_handler.handle()
-    except KeyboardInterrupt:
-        processor.destroy()
-    finally:
-        processor.close()
 
 
 class ResultQueueHandler(object):
@@ -144,17 +128,19 @@ class TaskProcessor(object):
     Collect tasks and run with multiprocessing.Process
     """
 
-    def __init__(self, processes, process_timeout):
+    def __init__(self, processes, process_timeout, result_queue_handler):
         """
         :param processes: nun processes
         :type processes: int
         :param process_timeout: number of seconds for process timeout
         :type process_timeout: int, float
+        :param result_queue_handler: handler for result queue
         """
         self._processes = processes if processes > 0 else cpu_count()
         self._current = []
         self._queue = TaskQueue()
         self._process_timeout = process_timeout
+        self._result_queue_handler = result_queue_handler
 
     def _is_release(self):
         if len(self._current) < self._processes:
@@ -184,6 +170,8 @@ class TaskProcessor(object):
             process = Process(target=target, args=args, kwargs=kwargs)
             process.start()
             self._current.append(process)
+
+        self._result_queue_handler.handle()
 
     def destroy(self):
         """
@@ -216,14 +204,22 @@ class MultiprocessingTestRunner(BaseTestRunner):
         _import_mp()
 
         result_queue = ResultQueue()
-        processor = TaskProcessor(self.config.options.async_suites, PROCESS_TIMEOUT)
-        queue_handler = ResultQueueHandler(suites, result, result_queue)
+        processor = TaskProcessor(
+            self.config.options.async_suites,
+            self.config.options.multiprocessing_timeout,
+            ResultQueueHandler(suites, result, result_queue),
+        )
 
         for suite in suites:
             processor.add_task(task, args=(suite, result, result_queue))
 
         with measure_time(result):
-            run(processor, queue_handler)
+            try:
+                processor.serve()
+            except KeyboardInterrupt:
+                processor.destroy()
+            finally:
+                processor.close()
 
         self.config.plugins.finalize(result)
 

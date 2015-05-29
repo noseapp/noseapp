@@ -76,7 +76,7 @@ class Suite(object):
 
         :type cls: noseapp.case.TestCase
         """
-        logger.debug('Registering test case "{}" in {} '.format(cls.__name__, repr(self)))
+        logger.debug('Register test case "{}" in {} '.format(cls.__name__, repr(self)))
 
         self._mediator.add_test_case(cls)
         return cls

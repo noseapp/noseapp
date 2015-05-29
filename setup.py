@@ -26,10 +26,9 @@ if __name__ == '__main__':
             'nose==1.3.4',
         ],
         entry_points={
-            'console_scripts':
-                [
-                    'noseapp-manage = noseapp.manage:run',
-                ],
+            'console_scripts': [
+                'noseapp-manage = noseapp.manage:run',
+            ],
         },
         test_suite='tests',
         classifiers=[

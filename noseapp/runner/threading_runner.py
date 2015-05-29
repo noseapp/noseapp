@@ -38,4 +38,5 @@ class ThreadingTestRunner(BaseTestRunner):
             pool.join()
 
         self.config.plugins.finalize(result)
+
         return result

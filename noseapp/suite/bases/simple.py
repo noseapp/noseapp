@@ -3,34 +3,53 @@
 from nose.suite import ContextSuite
 
 
+class RunSuite(object):
+
+    def __init__(self, suite, result, orig):
+        self._orig = orig
+        self._suite = suite
+        self._result = result
+
+    def run_test(self, test):
+        for handler in self._suite.handlers:
+            try:
+                handler(test.test)
+            except KeyboardInterrupt:
+                raise
+            except:
+                self._suite.error_context = 'setup'
+                self._orig.addError(self, self._suite._exc_info())
+                return
+
+        test(self._orig)
+
+    def perform(self):
+        for test in self._suite.tests:
+            if self._result.shouldStop:
+                break
+
+            self.run_test(test)
+
+
 class BaseSuite(ContextSuite):
     """
     Base suite
     """
+
+    run_suite_class = RunSuite
 
     def __init__(self, *args, **kwargs):
         self._handlers = kwargs.pop('handlers', [])
 
         super(BaseSuite, self).__init__(*args, **kwargs)
 
-    def _run_suite_handler(self, result, orig):
-        for test in self._tests:
-                if result.shouldStop:
-                    break
-                self._run_test_handler(test, orig)
+    @property
+    def tests(self):
+        return self._tests
 
-    def _run_test_handler(self, test, orig):
-        for handler in self._handlers:
-            try:
-                handler(test.test)
-            except KeyboardInterrupt:
-                raise
-            except:
-                self.error_context = 'setup'
-                orig.addError(self, self._exc_info())
-                return
-
-        test(orig)
+    @property
+    def handlers(self):
+        return self._handlers
 
     def run(self, result):
         if self.resultProxy:
@@ -48,7 +67,8 @@ class BaseSuite(ContextSuite):
             return
 
         try:
-            self._run_suite_handler(result, orig)
+            runner = self.run_suite_class(self, result, orig)
+            runner.perform()
         finally:
             self.has_run = True
 

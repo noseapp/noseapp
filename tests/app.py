@@ -261,9 +261,9 @@ class TestInitConfig(TestCase):
     def test_config_from_py_file(self):
         path = os.path.abspath(
             os.path.join(
-              os.path.dirname(__file__),
-              'fake_suites',
-              'one.py',
+                os.path.dirname(__file__),
+                'fake_suites',
+                'one.py',
             ),
         )
         app = NoseApp()

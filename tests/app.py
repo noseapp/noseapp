@@ -261,12 +261,29 @@ class TestInitConfig(TestCase):
     def test_config_from_py_file(self):
         path = os.path.abspath(
             os.path.join(
-              os.path.dirname(__file__),
-              'fake_suites',
-              'one.py',
+                os.path.dirname(__file__),
+                'fake_suites',
+                'one.py',
             ),
         )
         app = NoseApp()
         app.config.from_py_file(path)
 
         self.assertIsInstance(app.config.suite1, Suite)
+
+
+class TestAddOptionCallback(TestCase):
+    """
+    Test add option callback
+    """
+
+    def runTest(self):
+        class FakeApp(NoseApp):
+            IS_CALLED = False
+            @staticmethod
+            def add_options(parser):
+                FakeApp.IS_CALLED = True
+                from optparse import OptionParser
+                self.assertIsInstance(parser, OptionParser)
+
+        self.assertTrue(FakeApp().IS_CALLED)

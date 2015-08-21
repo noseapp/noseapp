@@ -83,7 +83,6 @@ class AppConfigurePlugin(AppPlugin):
 
         try:  # if app instance does not pushed to plugin,
             # AttributeError will be passed.
-            self.app.parser = parser
-            self.app.add_options()
+            self.app.add_options(parser)
         except AttributeError:
             pass

@@ -13,8 +13,6 @@ import sys
 import logging
 from argparse import ArgumentError
 
-from optparse import OptionParser
-
 from noseapp.core import extensions
 from noseapp.core import TestProgram
 from noseapp.plugins.base import AppPlugin
@@ -79,8 +77,6 @@ class NoseApp(object):
         # List suites. After register suite will be here.
         self._suites = []
 
-        # Options parser. Will be set after test program initialization.
-        self.__parser = None
         # Command line options. Will be set after test program initialization.
         self.__options = None
 
@@ -100,22 +96,6 @@ class NoseApp(object):
             argv=prepare_argv(argv, add_plugins),
             addplugins=add_plugins,
         )
-
-    @property
-    def parser(self):
-        if self.__parser is None:
-            raise RuntimeError(
-                'Parser not found. Maybe you ignored noseapp.plugins.configure.AppConfigurePlugin?',
-            )
-
-        return self.__parser
-
-    @parser.setter
-    def parser(self, value):
-        assert isinstance(value, OptionParser), \
-            'parser is not instance of "optparse.OptionParser"'
-
-        self.__parser = value
 
     @property
     def options(self):
@@ -153,19 +133,11 @@ class NoseApp(object):
         """
         pass
 
-    def add_options(self):
+    def add_options(self, parser):
         """
-        Add options to command line interface.
+        Add options to command line interface
 
-        Usage ::
-
-            def add_options(self):
-                self.parser.add_option(
-                    '--project-url',
-                    dest='project_url',
-                    default='http://my-site.com',
-                    help='Project URL',
-                )
+        :type parser: optparse.OptionParser
         """
         pass
 

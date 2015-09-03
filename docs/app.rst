@@ -2,20 +2,15 @@
 Application
 ===========
 
-Application is initialization point for service test cases through suites, as well for prepare test infrastructure.
-
- :And so...:
-
- What are the objectives decided with Application?
-
- * expand cases with extensions
- * prepare test infrastructure
+Application is only one initialization point of collect suites prepare infrastructure. And so...
 
 
 Initialization
 --------------
 
-For initialization your application, base class implemented "initialize" callback method.
+You must implemented initialization method on you application class. This is will be your constructor. Original method is busy other job.
+I would like to save usage __init__ method, but it's not easy.
+
 
 ::
 
@@ -31,11 +26,11 @@ For initialization your application, base class implemented "initialize" callbac
 Configuration
 -------------
 
-Use python module as configuration storage
+You may use python module as configuration storage
 
 ::
 
-    # this file as etc.base
+    # this is file etc.base(etc/base.py)
 
     DEBUG = False
     # ...
@@ -47,14 +42,14 @@ Use python module as configuration storage
     # or by file path
     app = MyTestApplication(config='/home/user/project/etc/base.py')
 
-Use config property inside application class. Config will build before call initialize method.
+
+Config property will be have data from python file.
 
 
 Shared extensions
 -----------------
 
-You can expand test cases from application. Extension must be class or function. After calling extension result will be
-available by name in your test case as property.
+You may expand test cases from application. Extension must be callable object. Extension will be available by name as property.
 
 ::
 
@@ -90,8 +85,7 @@ available by name in your test case as property.
 Shared data
 -----------
 
-Sometimes, may be needed configuration for test cases from application. You can shared dictionary, list, tuple
-or your data structures. Data will be copied during installation.
+Sometimes, may be needed to create configuration for test cases. You can this from application. Data will be copied during installation.
 
 ::
 
@@ -110,10 +104,40 @@ or your data structures. Data will be copied during installation.
             self.shared_data('settings', case_settings)
 
 
-Callbacks
----------
+We are recommended do it well
 
-You can use callback methods for prepare test infrastructure.
+::
+
+    from noseapp.case import TestCaseSettings
+
+    settings = TestCaseSettings(
+        debug=True,
+        project_url='http://...',
+    )
+    settings.install(app)
+
+
+App options to command line
+---------------------------
+
+NoseApp class have callback method for this.
+
+::
+
+
+    def add_options(self, parser):
+        parser.add_option(
+            '--project-url',
+            dest='project_url',
+            default='http://my-site.com',
+            help='Project URL',
+        )
+
+
+Callbacks for prepare
+---------------------
+
+You would like use this, i'm sure... :)
 
 ::
 
@@ -134,7 +158,7 @@ You can use callback methods for prepare test infrastructure.
 Register suites
 ---------------
 
-Application must know about suites. Register suites is required procedure for your application.
+Suite like single blueprint and application don't know about him, so, register suites is required procedure.
 There are several ways...
 
 ::
@@ -143,9 +167,9 @@ There are several ways...
 
     # method one. import your suite and register.
     app.register_suite(suite)
-    # method two. register list suites.
+    # method two. register suites list.
     app.register_suites([suite])
-    # method three. Auto load suites from path.
+    # method three. Auto load suites by path.
     # path can be package or simple dir.
     app.load_suites('/absolute/path/to/dir')
 
@@ -153,8 +177,7 @@ There are several ways...
 Recommend
 ---------
 
-* Ideal case if your application class contains setup methods only.
-* Try create application instance through function wrapper. This is a sign of good manners :)
+We do recommend to create application instance with wrapper function. This is a sign of good manners :)
 
 ::
 

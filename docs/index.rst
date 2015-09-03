@@ -17,9 +17,8 @@ NoseApp
 About
 =====
 
-This is framework for test development with complex logic based on nose library.
-Build your regression testing process with noseapp library.
-
+This is framework for test development with complex logic around, well, based on nose library.
+You will can to build your regression testing on base noseapp library and will create your own extensions.
 
 Installation
 ------------
@@ -32,7 +31,7 @@ Installation
 Motivation
 ==========
 
-Why noseapp? What i can get from usage?
+Why noseapp? What i can take from usage?
 
 
 Background Initialization
@@ -45,20 +44,20 @@ Flexibility and control
 -----------------------
 
 * application is only one service point
-* require extensions for test case through suite initialization
-* opportunity set default require on your base suite class
-* support nose plugins (noseapp.AppPlugin)
-* creation of application configuration
-* before, after callbacks on base application class
+* connect extensions, you can require extension by name for suite initialization.
+* support original nose plugins (and noseapp.AppPlugin)
+* you will can create common configuration of your application
+* NoseApp class is implemented before, after callbacks methods
+* you may create constructor of application(this is required procedure in reality). use initialize callback method for this.
 
 
-Implementation by steps for test case
--------------------------------------
+Implementation by steps on test case class
+------------------------------------------
 
-* memorized steps for exception info
-* before, finalize callbacks on base test case class
+* comfortable error messages in traceback
+* before, finalize callback methods on base test case class
 * interactive debug mode
-* parametrize step flow
+* parametrize for flow of steps
 
 
 Async

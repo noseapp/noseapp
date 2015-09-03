@@ -2,8 +2,8 @@
 TestCase
 ========
 
-Noseapp support own case classes only! Why? Because TestCase class must have "with_require" method. This method
-is class wrapper for extension installation.
+noseapp is supporting own test case class only!
+In order to your test case class will be have support of noseapp, you are must to inherit mixin class noseapp.case.base.ToNoseAppTestCase
 
 
 Simple Example
@@ -25,10 +25,8 @@ Simple Example
             pass
 
 
-Implements step by step
------------------------
-
-Realizing test script by steps.
+Implement step by step
+----------------------
 
 ::
 
@@ -52,8 +50,8 @@ Realizing test script by steps.
             print 'Just saying hi'
 
 
-Use begin, finalize callbacks.
-If exception in step method be raised, this method can not be called!
+Base class give you callback method.
+If exception in step method will be raised, finalize method can not be called!
 
 ::
 
@@ -75,21 +73,21 @@ If exception in step method be raised, this method can not be called!
             print('do something')
 
 
-You can parametrize test flows.
+You can parametrize flow step.
 
 ::
 
-    from noseapp.datastructures import ModifyDict as TestContext
+    from noseapp.datastructures import Context
 
 
     @suite.register
     class MyTestCase(ScreenPlayCase):
 
         FLOWS = (
-            TestContext(
+            Context(
                 name='NoseApp',
             ),
-            TestContext(
+            Context(
                 name='Tester',
             ),
         )
@@ -103,7 +101,7 @@ You can parametrize test flows.
             print 'Just saying hi, {}'.format(ctx.name)
 
 
-Enable debug for steps.
+Debug for steps.
 
 ::
 
@@ -118,7 +116,8 @@ Enable debug for steps.
             self.USE_PROMPT = True
 
 
-ScreenPlayCase have error handle and formatting exception info. Exception message template:
+Exception message format. You can change it. Use ScreenPlayCase.EXCEPTION_MESSAGE_FORMAT.
+This is default template.
 
 ::
 

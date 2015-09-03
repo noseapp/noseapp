@@ -27,3 +27,7 @@ class ModifyDict(dict):
             raise AttributeError(
                 '"{}" does not have "{}" attribute.'.format(self.__class__.__name__, item),
             )
+
+
+class Context(ModifyDict):
+    pass

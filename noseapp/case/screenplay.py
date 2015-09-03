@@ -196,7 +196,7 @@ def run_step(case, method, flow=None):
         exc_cls_name = e.__class__.__name__
 
         try:
-            msg = ERROR_INFO_PATTERN.format(
+            msg = case.EXCEPTION_MESSAGE_FORMAT.format(
                 history=history,
                 case=case_name,
                 method=method_name,
@@ -208,7 +208,7 @@ def run_step(case, method, flow=None):
                 traceback=orig_tb,
             ).encode('utf-8', 'replace')
         except UnicodeDecodeError:
-            msg = ERROR_INFO_PATTERN.format(
+            msg = case.EXCEPTION_MESSAGE_FORMAT.format(
                 history=history,
                 case=case_name,
                 method=method_name,
@@ -302,6 +302,7 @@ class ScreenPlayCase(TestCase):
 
     FLOWS = None
     USE_PROMPT = False
+    EXCEPTION_MESSAGE_FORMAT = ERROR_INFO_PATTERN
 
     def begin(self):
         """

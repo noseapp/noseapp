@@ -2,7 +2,7 @@
 Suite
 =====
 
-Suite class is nose ContextSuite provider. Major task is collect test cases and build suite for TestRunner.
+Suite class is provider for nose ContextSuite. Major task is collect test cases and construction suite for run.
 
 
 Simple example
@@ -19,7 +19,7 @@ Simple example
 Require extensions
 ------------------
 
-You can extend TestCase class through suite. Use require param.
+You can extend TestCase class by extension. Use require param.
 
 ::
 
@@ -29,7 +29,7 @@ You can extend TestCase class through suite. Use require param.
 Set default require
 -------------------
 
-If all suites have same require, then create base class and use DEFAULT_REQUIRE constant.
+If all suites must have common require, then you can create own base class and use DEFAULT_REQUIRE constant.
 
 ::
 
@@ -43,8 +43,8 @@ If all suites have same require, then create base class and use DEFAULT_REQUIRE 
     suite = MySuite(__name__, require=['something_else'])
 
 
-Call skip decorators through suite instance
--------------------------------------------
+Usage skip decorators from suite instance
+-----------------------------------------
 
 ::
 
@@ -57,8 +57,10 @@ Call skip decorators through suite instance
         pass
 
 
-Add handler for test running
-----------------------------
+Add handler for test cases
+--------------------------
+
+Handler will be called before run
 
 ::
 
@@ -73,10 +75,13 @@ Add handler for test running
         pass
 
 
+them maybe more...
+
+
 Mediator class
 --------------
 
-If is need change communication with nose library, you can set own mediator class.
+If you want to change communication with nose library, so you can change mediator class.
 
 
 ::

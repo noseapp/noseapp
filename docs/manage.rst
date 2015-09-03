@@ -8,7 +8,7 @@ You will can create your command for command line interface noseapp-manage
 Create my manage.py
 -------------------
 
-Create manage.py file. Run nosepp-manage command in context directory with you manage file.
+Create manage.py file. Run nosepp-manage command in context of directory with your manage file.
 
 
 Create and register command

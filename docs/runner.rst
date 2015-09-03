@@ -2,7 +2,7 @@
 Runner
 ======
 
-You can run application with making run method
+You can run application with run method call. But it's not good idea.
 
 ::
 
@@ -13,9 +13,14 @@ You can run application with making run method
 Run application
 ---------------
 
+We do it so
+
 ::
 
     noseapp-manage run myproject.app:create_app
+
+
+Where "myproject.app:create_app" is path to import of callable object
 
 
 Run strategy
@@ -31,8 +36,9 @@ noseapp-manage run myproject.app:create_app --run-strategy threading --async-sui
 noseapp-manage run myproject.app:create_app --run-strategy gevent --async-suites 4 --async-tests 2
 
 
-Run one test or suite:
+One test or suite to run:
 
 ::
 
   noseapp-manage run myproject.app:create_app -t package.module:TestCase
+

@@ -5,6 +5,7 @@ from Queue import Queue as TaskQueue
 from noseapp.utils.common import waiting_for
 from noseapp.runner.base import measure_time
 from noseapp.runner.base import BaseTestRunner
+from noseapp.suite.bases.simple import BaseSuite
 from noseapp.utils.common import TimeoutException
 
 
@@ -34,8 +35,6 @@ def task(suite, result, result_queue):
     """
     suite(result)
 
-    del suite
-
     def get_value(value):
         if isinstance(value, basestring):
             return value
@@ -50,11 +49,9 @@ def task(suite, result, result_queue):
 
 class ResultQueueHandler(object):
 
-    TEST_REPR = 'Test({})'
-
     def __init__(self, suites, result, result_queue):
         self._result = result
-        self._comparison = {}
+        self._repr_to_test = {}
         self._result_queue = result_queue
 
         self._counter = 0
@@ -66,50 +63,40 @@ class ResultQueueHandler(object):
         """
         Create dict: repr -> test
         """
-        suite_list = [s for s in suites]
-        self._length_suites = len(suite_list)
+        self._length_suites = len([s for s in suites])
 
-        for suite in suite_list:
-            for test in suite:
-                key = self.TEST_REPR.format(
-                    repr(test.test),
-                )
+        def test_cases(suite=suites):
+            tests = []
 
-                if key in self._comparison:
-                    raise ValueError('Test __repr__ "{}" already exist'.format(key))
+            for test in suite.tests:
+                if isinstance(test, BaseSuite):
+                    tests.extend(test_cases(test))
+                else:
+                    tests.append(test)
 
-                self._comparison[key] = test.test
+            return tests
+
+        for test in test_cases(suites):
+            self._repr_to_test[repr(test.test)] = test
 
     def _create_result(self, data):
         _repr, messages = data[0], data[1:]
-
-        try:
-            test = self._comparison[_repr]
-        except KeyError:
-            return None
-
-        return tuple([test] + messages)
+        return tuple([self._repr_to_test[_repr]] + messages)
 
     def _add_failures(self, failures):
         for fail in failures:
             result = self._create_result(fail)
-
-            if result:
-                self._result.failures.append(result)
+            self._result.failures.append(result)
 
     def _add_errors(self, errors):
         for err in errors:
             result = self._create_result(err)
-
-            if result:
-                self._result.failures.append(result)
+            self._result.failures.append(result)
 
     def _add_skipped(self, skipped):
         for skip in skipped:
             result = self._create_result(skip)
-
-            if result:
-                self._result.failures.append(result)
+            self._result.failures.append(result)
 
     def handle(self):
         while self._counter < self._length_suites:

@@ -13,6 +13,7 @@ class AppConfigurePlugin(AppPlugin):
 
     def options(self, parser, env=os.environ):
         super(AppConfigurePlugin, self).options(parser, env=env)
+
         group = OptionGroup(parser, 'NoseApp base options')
 
         group.add_option(

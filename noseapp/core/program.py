@@ -4,16 +4,15 @@ import sys
 
 from nose.core import TestProgram as BaseTestProgram
 
-from noseapp.app import config
-from noseapp.core import extensions
-
 
 class ProgramData(object):
     """
-    Merging data of test program and application
+    Class is merging data of test program and application
     """
 
     def __init__(self, program, app, argv=None):
+        from noseapp.app import config
+
         # Push options from parser to application
         app.options = app.config_class(
             config.load(program.config.options),
@@ -37,10 +36,6 @@ class ProgramData(object):
         return self.__app.suites
 
     @property
-    def test_loader(self):
-        return self.__program.testLoader
-
-    @property
     def config(self):
         return self.__program.config
 
@@ -58,14 +53,25 @@ class ProgramData(object):
     def after_run_callback(self):
         self.__app.after()
 
-    def build_suites(self):
+    def build_suite(self):
         """
         Collect and build suites
         """
-        collector = self.__app.collector_class(self)
-        suites = collector.make_result()
+        from noseapp.core import collector
+        from noseapp.core import extensions
+
+        suites = collector.collect(
+            self,
+            collector_class=self.__app.collector_class,
+        )
+
         extensions.clear()
-        return suites
+
+        return self.suite_class(
+            suites,
+            config=self.config,
+            context=self.__app.context,
+        )
 
 
 class TestProgram(BaseTestProgram):
@@ -74,6 +80,8 @@ class TestProgram(BaseTestProgram):
         app = kwargs.pop('app')
 
         super(TestProgram, self).__init__(*args, **kwargs)
+
+        self.testLoader = None  # We are not use that
 
         self.data = ProgramData(
             self, app,
@@ -102,7 +110,7 @@ class TestProgram(BaseTestProgram):
         if plug_runner is not None:
             self.testRunner = plug_runner
 
-        suites = self.data.build_suites()
+        suites = self.data.build_suite()
 
         if not suites:
             raise RuntimeError('No suites for running')

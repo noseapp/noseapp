@@ -1,28 +1,43 @@
 # -*- coding: utf8 -*-
 
+import logging
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 
-from noseapp.suite.bases.simple import RunSuite
+from noseapp.suite.bases.simple import run_test
 from noseapp.suite.bases.simple import BaseSuite
 
 
-class ThreadingRunSuite(RunSuite):
+logger = logging.getLogger(__name__)
 
-    def perform(self):
-        size = self._suite.config.options.async_tests
 
-        if size < 0:
-            size = cpu_count() / 2
+def perform_chain(suite, result, orig, pool=None):
+    self_pool = not bool(pool)
+    size = suite.config.options.async_tests
 
-        pool = ThreadPool(int(round(size)) or 2)
+    logger.debug(
+        'Perform chain of {}. Pool: {}, Max size: {}'.format(
+            suite, pool, size,
+        ),
+    )
 
-        for test in self._suite.tests:
-            if self._result.shouldStop:
-                break
+    if size < 0:
+        size = cpu_count() / 2
 
-            pool.apply_async(self.run_test, args=(test,))
+    if self_pool:
+        pool = pool or ThreadPool(int(round(size)) or 2)
 
+    for test in suite.tests:
+        if result.shouldStop:
+            break
+
+        if isinstance(test, BaseSuite):
+            test.run(result, pool=pool)
+            continue
+
+        pool.apply_async(run_test, args=(suite, test, orig))
+
+    if self_pool:
         pool.close()
         pool.join()
 
@@ -32,4 +47,4 @@ class ThreadSuite(BaseSuite):
     Run tests with multiprocessing.pool.ThreadPool
     """
 
-    run_suite_class = ThreadingRunSuite
+    perform_chain = perform_chain

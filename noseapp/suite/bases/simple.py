@@ -3,32 +3,30 @@
 from nose.suite import ContextSuite
 
 
-class RunSuite(object):
+def run_test(suite, test, orig):
+    for handler in suite.handlers:
+        try:
+            handler(test.test)
+        except KeyboardInterrupt:
+            raise
+        except:
+            suite.error_context = 'setup'
+            orig.addError(suite, suite.exc_info())
+            return
 
-    def __init__(self, suite, result, orig):
-        self._orig = orig
-        self._suite = suite
-        self._result = result
+    test(orig)
 
-    def run_test(self, test):
-        for handler in self._suite.handlers:
-            try:
-                handler(test.test)
-            except KeyboardInterrupt:
-                raise
-            except:
-                self._suite.error_context = 'setup'
-                self._orig.addError(self, self._suite._exc_info())
-                return
 
-        test(self._orig)
+def perform_chain(suite, result, orig, pool=None):
+    for test in suite.tests:
+        if result.shouldStop:
+            break
 
-    def perform(self):
-        for test in self._suite.tests:
-            if self._result.shouldStop:
-                break
+        if isinstance(test, BaseSuite):
+            test.run(result, pool=pool)
+            continue
 
-            self.run_test(test)
+        run_test(suite, test, orig)
 
 
 class BaseSuite(ContextSuite):
@@ -36,7 +34,7 @@ class BaseSuite(ContextSuite):
     Base suite
     """
 
-    run_suite_class = RunSuite
+    perform_chain = perform_chain
 
     def __init__(self, *args, **kwargs):
         self._handlers = kwargs.pop('handlers', [])
@@ -51,7 +49,10 @@ class BaseSuite(ContextSuite):
     def handlers(self):
         return self._handlers
 
-    def run(self, result):
+    def exc_info(self):
+        return self._exc_info()
+
+    def run(self, result, pool=None):
         if self.resultProxy:
             result, orig = self.resultProxy(result, self), result
         else:
@@ -67,8 +68,7 @@ class BaseSuite(ContextSuite):
             return
 
         try:
-            runner = self.run_suite_class(self, result, orig)
-            runner.perform()
+            self.perform_chain(result, orig, pool=pool)
         finally:
             self.has_run = True
 

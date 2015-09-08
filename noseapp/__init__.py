@@ -1,14 +1,26 @@
 # -*- coding: utf-8 -*-
 
+"""
+A powerful, extensible, and easy to use framework for test development
 
-from noseapp.suite import Suite
+By Trifonov Mikhail
+
+For support, use the https://github.com/noseapp/noseapp/issues tracker
+"""
+
 from noseapp.app import NoseApp
+
+from noseapp.suite.base import Suite
+
+from noseapp.case import step
 from noseapp.case import TestCase
-from noseapp.plugins import AppPlugin
 from noseapp.case import ScreenPlayCase
+
+from noseapp.plugins import AppPlugin
 
 
 __all__ = (
+    step,
     Suite,
     NoseApp,
     TestCase,

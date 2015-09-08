@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 
 import re
+import logging
 from random import Random
 
+from noseapp.core import loader
 from noseapp.core.collector import console
-from noseapp.suite.bases.simple import BaseSuite
+
+
+logger = logging.getLogger(__name__)
 
 
 CASE_COLLECT_STRATEGY = 'case'
@@ -17,11 +21,17 @@ COLLECT_CASE_COMMAND_PATTERN = re.compile(r'^.*\:')
 COLLECT_METHOD_COMMAND_PATTERN = re.compile(r'^.*\:.*\..*')
 
 
-class CollectError(BaseException):
-    pass
+def get_command(program_data):
+    if program_data.config.options.run_test:
+        return program_data.config.options.run_test
+
+    if len(program_data.argv) > 2:
+        return program_data.argv[1]
+
+    return None
 
 
-def get_collector_strategy(command):
+def get_strategy(command):
     if command and COLLECTOR_COMMAND_PATTERN.search(command) is not None:
 
         if COLLECT_METHOD_COMMAND_PATTERN.search(command) is not None:
@@ -35,25 +45,6 @@ def get_collector_strategy(command):
     return BASIC_COLLECT_STRATEGY
 
 
-def get_suite_by_name(name, suites):
-    for suite in suites:
-
-        if suite.name == name:
-            return suite
-
-    else:
-        raise CollectError(
-            'Suite "{}" is not found'.format(name),
-        )
-
-
-def get_case_from_suite(case_name, suite):
-    try:
-        return suite.get_map()[case_name]['cls']
-    except KeyError:
-        raise CollectError('TestCase "{}" is not found'.format(case_name))
-
-
 class CollectSuite(object):
     """
     Collect suite for test runner
@@ -63,92 +54,96 @@ class CollectSuite(object):
         if program_data.config.options.ls:
             console.tree(program_data.suites, show_docs=program_data.config.options.doc)
 
-        if program_data.config.options.run_test:
-            self._command = program_data.config.options.run_test
-        elif len(program_data.argv) > 2:
-            self._command = program_data.argv[1]
-        else:
-            self._command = None
+        self.__program_data = program_data
+        self.__command = get_command(self.__program_data)
+        self.__strategy = get_strategy(self.__command)
 
-        self._program_data = program_data
+    def __collect_by_basic_strategy__(self):
+        kwargs = {}
+
+        if self.__program_data.config.options.random:
+            random = Random(
+                self.__program_data.config.options.random_seed,
+            )
+            random.shuffle(self.__program_data.suites)
+
+            kwargs.update(shuffle=random.shuffle)
+
+        return [
+            suite(
+                self.__program_data,
+                **kwargs
+            )
+            for suite in self.__program_data.suites
+        ]
+
+    def __collect_by_suite_strategy__(self):
+        suite = loader.load_suite_by_name(
+            self.__command,
+            self.__program_data.suites,
+        )
+
+        return [suite(self.__program_data)]
+
+    def __collect_by_case_strategy__(self):
+        suite_name, case_name = self.__command.split(':')
+        suite = loader.load_suite_by_name(
+            suite_name,
+            self.__program_data.suites,
+        )
+
+        return [
+            suite(
+                self.__program_data,
+                case_name=case_name,
+            ),
+        ]
+
+    def __collect_by_method_strategy__(self):
+        suite_name, case_info = self.__command.split(':')
+        case_name, method_name = case_info.split('.')
+        suite = loader.load_suite_by_name(
+            suite_name,
+            self.__program_data.suites,
+        )
+
+        return [
+            suite(
+                self.__program_data,
+                case_name=case_name,
+                method_name=method_name,
+            ),
+        ]
 
     @property
     def command(self):
-        return self._command
+        return self.__command
 
     @property
-    def collect(self):  # sugar of syntax :)
+    def strategy(self):
+        return self.__strategy
+
+    @property
+    def program_data(self):
+        return self.__program_data
+
+    @property
+    def collect(self):
         strategy_to_method = {
-            CASE_COLLECT_STRATEGY: self._collect_by_case_strategy,
-            BASIC_COLLECT_STRATEGY: self._collect_by_basic_strategy,
-            SUITE_COLLECT_STRATEGY: self._collect_by_suite_strategy,
-            METHOD_COLLECT_STRATEGY: self._collect_by_method_strategy,
+            CASE_COLLECT_STRATEGY: self.__collect_by_case_strategy__,
+            BASIC_COLLECT_STRATEGY: self.__collect_by_basic_strategy__,
+            SUITE_COLLECT_STRATEGY: self.__collect_by_suite_strategy__,
+            METHOD_COLLECT_STRATEGY: self.__collect_by_method_strategy__,
         }
 
-        return strategy_to_method[get_collector_strategy(self._command)]
+        logger.debug('Strategy for collect suites is "%s"', self.__strategy)
 
-    def make_result(self):
-        return self._program_data.test_loader.suiteClass(
-            self.collect(),
-        )
+        return strategy_to_method[self.__strategy]
 
-    def _collect_by_basic_strategy(self):
-        suite_kwargs = {}
 
-        if self._program_data.config.options.random:
-            random = Random(
-                self._program_data.config.options.random_seed,
-            )
-            random.shuffle(self._program_data.suites)
-
-            suite_kwargs.update(shuffle=random.shuffle)
-
-        return [
-            suite(self._program_data, **suite_kwargs)
-            for suite in self._program_data.suites
-        ]
-
-    def _collect_by_suite_strategy(self):
-        suite = get_suite_by_name(self._command, self._program_data.suites)
-
-        return [suite(self._program_data)]
-
-    def _collect_by_case_strategy(self):
-        suite_name, case_name = self._command.split(':')
-
-        app_suite = get_suite_by_name(suite_name, self._program_data.suites)
-        app_suite.init_extensions()
-
-        case = get_case_from_suite(case_name, app_suite)
-
-        suite = BaseSuite(
-            config=self._program_data.config,
-            handlers=app_suite.handlers,
-        )
-        suite.addTests(
-            self._program_data.test_loader.loadTestsFromTestCase(case),
-        )
-
-        return [suite]
-
-    def _collect_by_method_strategy(self):
-        suite_name, case_info = self._command.split(':')
-        case_name, method_name = case_info.split('.')
-
-        app_suite = get_suite_by_name(suite_name, self._program_data.suites)
-        app_suite.init_extensions()
-
-        case = get_case_from_suite(case_name, app_suite)
-
-        try:
-            suite = BaseSuite(
-                tests=map(case, [method_name]),
-                config=self._program_data.config,
-                handlers=app_suite.handlers,
-            )
-        except ValueError:
-            raise CollectError(
-                'Method "{}" of class "{}" is not found'.format(method_name, case_name)
-            )
-
-        return [suite]
+def collect(program_data, collector_class=CollectSuite):
+    """
+    Function is wrapper for calling to collector class
+    """
+    collector = collector_class(program_data)
+    return collector.collect()

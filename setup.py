@@ -12,7 +12,7 @@ if __name__ == '__main__':
         name='noseapp',
         version=__version__,
         url='https://github.com/trifonovmixail/noseapp',
-        packages=find_packages(),
+        packages=find_packages(include=('noseapp', )),
         author='Mikhail Trifonov',
         author_email='mikhail.trifonov@corp.mail.ru',
         license='GNU LGPL',

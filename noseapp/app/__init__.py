@@ -4,8 +4,8 @@
 Base application for your test program.
 
 You must implementation initialize method on base your application class.
-Use add_options method for add option to command line interface.
-Use noseapp-manage run command for running your application.
+If you want add option to command line so use add_options method on base your application class.
+When you have wish to run application, use noseapp-manage run command for that.
 """
 
 import os
@@ -13,15 +13,14 @@ import sys
 import logging
 from argparse import ArgumentError
 
+from noseapp.core import loader
 from noseapp.core import extensions
 from noseapp.core import TestProgram
 from noseapp.plugins.base import AppPlugin
 from noseapp.core.factory import ClassFactory
-from noseapp.core import load_suites_from_path
 from noseapp.core.collector import CollectSuite
 from noseapp.app.config import Config as AppConfig
 from noseapp.plugins.configure import AppConfigurePlugin
-from noseapp.core.loader import load_from_dir as load_suites_from_dir
 
 
 logger = logging.getLogger(__name__)
@@ -30,6 +29,8 @@ logger = logging.getLogger(__name__)
 DEFAULT_PLUGINS = [
     AppConfigurePlugin(),
 ]
+
+DEFAULT_CONFIG = os.getenv('NOSEAPP_CONFIG', None)
 
 
 def prepare_argv(argv, plugins):
@@ -59,28 +60,32 @@ class NoseApp(object):
     class_factory = ClassFactory
     collector_class = CollectSuite
 
-    def __init__(self, config=None, plugins=None, argv=None):
+    def __init__(self,
+                 config=None,
+                 plugins=None,
+                 context=None,
+                 argv=None,
+                 exit=True):
         """
         :type config: str
         :type plugins: list
         :type argv: list
+        :type exit: bool
+        :type context: object
         """
         # Initialization config storage
-        self.config = self.config_class()
+        self.config = self.config_class.try_for_path(config or DEFAULT_CONFIG)
 
-        if config:  # Parse config module. You can do it later.
-            if os.path.isfile(config):
-                self.config.from_py_file(config)
-            else:
-                self.config.from_module(config)
-
-        # List suites. After register suite will be here.
-        self._suites = []
+        # List suites. Suite will be here after register.
+        self.__suites = []
 
         # Command line options. Will be set after test program initialization.
         self.__options = None
 
-        # Init plugins. Saving support nose plugins and add supporting self plugins.
+        # Context will be inject to nose suite
+        self.__context = context
+
+        # Init plugins. Saved support nose plugins and add supported self plugins.
         add_plugins = []
 
         for plugin in (DEFAULT_PLUGINS + (plugins or [])):
@@ -92,9 +97,9 @@ class NoseApp(object):
         # Program object initialization. Will be run later.
         self.__test_program = self.program_class(
             app=self,
-            exit=True,
-            argv=prepare_argv(argv, add_plugins),
+            exit=exit,
             addplugins=add_plugins,
+            argv=prepare_argv(argv, add_plugins),
         )
 
     @property
@@ -110,6 +115,10 @@ class NoseApp(object):
             'options is not instance of "{}"'.format(self.config_class.__name__)
 
         self.__options = value
+
+    @property
+    def context(self):
+        return self.__context
 
     def initialize(self):
         """
@@ -144,7 +153,8 @@ class NoseApp(object):
     @staticmethod
     def shared_extension(name=None, cls=None, args=None, kwargs=None):
         """
-        Shared extension to TestCase classes. Use require param in noseapp.Suite class.
+        Shared extension to TestCase classes.
+        Use require param in noseapp.suite.Suite class for connect.
 
         :param name: extension name. this is property name in case class.
         :type name: str
@@ -173,7 +183,7 @@ class NoseApp(object):
         Shared extension to TestCase classes.
         Data will be copied during installation.
 
-        :param name: this is property name in case class
+        :param name: this is property name of case class
         :type name: str
         :param data: any object
         """
@@ -183,26 +193,29 @@ class NoseApp(object):
 
     @property
     def suites(self):
-        return self._suites
+        return self.__suites
 
     def register_suite(self, suite):
         """
         Add suite in application
 
-        :type suite: app.suite.Suite
+        :type suite: noseapp.suite.base.Suite
         """
         logger.debug('Register suite "%s"', suite.name)
 
-        self._suites.append(suite)
+        suite.current_app = self
+        suite.initialize()
 
-    def register_suites(self, suite):
+        self.__suites.append(suite)
+
+    def register_suites(self, suites):
         """
         App suite list in application
 
-        :type suite: list, tuple
+        :type suites: list, tuple
         """
-        for s in suite:
-            self.register_suite(s)
+        for suite in suites:
+            self.register_suite(suite)
 
     def load_suites(self, path, recursive=True):
         """
@@ -213,12 +226,13 @@ class NoseApp(object):
         :param recursive: recursive load from path or load from simple dir
         :type recursive: bool
         """
-        sys.path.append(path)
+        if path not in sys.path:
+            sys.path.append(path)
 
         if recursive:
-            suites = load_suites_from_path(path)
+            suites = loader.load_suites_from_path(path)
         else:
-            suites = load_suites_from_dir(path)
+            suites = loader.load_suites_from_dir(path)
 
         self.register_suites(suites)
 

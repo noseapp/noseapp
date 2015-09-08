@@ -26,6 +26,32 @@ class Config(BaseConfig):
     App config storage
     """
 
+    @classmethod
+    def try_for_path(cls, path=None):
+        """
+        Create instance and try to parse config by path
+
+        :param path: import path or file path
+        :type path: str
+
+        :rtype: Config
+        """
+        config = cls()
+
+        def is_import_path(path):
+            is_dot = '.' in path
+            is_py_ex = path.endswith('.py')
+
+            return is_dot and not is_py_ex
+
+        if path:
+            if is_import_path(path):
+                config.from_module(path)
+            else:
+                config.from_py_file(path)
+
+        return config
+
     def from_module(self, module):
         """
         Init configuration from python module
@@ -54,7 +80,7 @@ class Config(BaseConfig):
         logger.debug('Init config from py file "%s"', file_path)
 
         if not os.path.isfile(file_path):
-            raise ConfigError('config file does not exist "{}"'.format(file_path))
+            raise ConfigError('config file does not exist at path "{}"'.format(file_path))
 
         elif not file_path.endswith('.py'):
             raise ConfigError('config file is not python file')

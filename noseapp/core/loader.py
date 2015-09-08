@@ -7,10 +7,12 @@ Auto load suites for register in noseapp.NoseApp
 import os
 from importlib import import_module
 
-from noseapp.suite import Suite
+
+TEST_NAME_PREFIX = 'test'
+DEFAULT_TEST_NAME = 'runTest'
 
 
-class LoadSuitesError(BaseException):
+class LoaderError(BaseException):
     pass
 
 
@@ -19,7 +21,7 @@ def is_exist(path):
     Check exist path
     """
     if not os.path.exists(path):
-        raise LoadSuitesError('Dir "{}" does not exist'.format(path))
+        raise LoaderError('Dir "{}" is not exist'.format(path))
 
 
 def is_package(path):
@@ -31,7 +33,7 @@ def is_package(path):
     return True
 
 
-def load_from_dir(path, import_base=None):
+def load_suites_from_dir(path, import_base=None):
     """
     Load suites from dir
 
@@ -39,6 +41,8 @@ def load_from_dir(path, import_base=None):
     :param import_base: base import path
     :type import_base: str
     """
+    from noseapp.suite.base import Suite
+
     if import_base and not is_package(path):
         return []
 
@@ -85,7 +89,9 @@ def load_suites_from_path(path, import_base=None):
 
     copy_import_base = import_base
 
-    suites.extend(load_from_dir(path, import_base=import_base))
+    suites.extend(
+        load_suites_from_dir(path, import_base=import_base),
+    )
 
     for root, dirs, files in os.walk(path):
 
@@ -107,3 +113,62 @@ def load_suites_from_path(path, import_base=None):
             import_base = copy_import_base
 
     return suites
+
+
+def load_tests_from_test_case(
+        test_case_class,
+        method_name=None,
+        test_name_prefix=TEST_NAME_PREFIX,
+        default_test_name=DEFAULT_TEST_NAME):
+    """
+    Create instances of test_case_class by test names
+    """
+    cls_dir = dir(test_case_class)
+
+    if method_name:
+        if method_name not in cls_dir:
+            raise LoaderError(
+                'Method "{}" of "{}" class is not found'.format(
+                    method_name, test_case_class.__name__,
+                ),
+            )
+        return map(test_case_class, [method_name])
+
+    def is_test_name(name):
+        return name.startswith(test_name_prefix) \
+            or \
+            name == default_test_name
+
+    return map(test_case_class, filter(is_test_name, cls_dir))
+
+
+def load_suite_by_name(name, suites):
+    """
+    Find suite in list by name
+
+    :param name: suite name
+    :param suites: suites list
+    """
+    for suite in suites:
+        if suite.name == name:
+            return suite
+    else:
+        raise LoaderError(
+            'Suite "{}" is not found'.format(name),
+        )
+
+
+def load_case_from_suite(class_name, suite):
+    """
+    Find test case class by class name in suite or suite mediator
+
+    :param class_name: class name
+    :param suite: suite or suite mediator instance
+    """
+    for case in suite.test_cases:
+        if case.__name__ == class_name:
+            return case
+    else:
+        raise LoaderError(
+            'Test case "{}" is not found'.format(class_name),
+        )

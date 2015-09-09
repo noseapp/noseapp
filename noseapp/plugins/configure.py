@@ -5,6 +5,7 @@ from optparse import OptionGroup
 
 from noseapp.plugins.base import AppPlugin
 from noseapp.core.constants import RunStrategy
+from noseapp.core.provider import FromNoseToApp
 
 
 class AppConfigurePlugin(AppPlugin):
@@ -49,41 +50,38 @@ class AppConfigurePlugin(AppPlugin):
             dest='ls',
             action='store_true',
             default=False,
-            help='Show suites tree.'
+            help='Show suites tree.',
         )
         group.add_option(
             '--doc',
             dest='doc',
             action='store_true',
             default=False,
-            help='Show docstring of test cases.'
+            help='Show docstring of test cases.',
         )
         group.add_option(
             '-t', '--test',
             dest='run_test',
             default='',
             type=str,
-            help='Test case or suite name for running.'
+            help='Test case or suite name for running.',
         )
         group.add_option(
             '--random',
             dest='random',
             action='store_true',
             default=False,
-            help='Random shuffle for cases'
+            help='Random shuffle for cases',
         )
         group.add_option(
             '--random-seed',
             dest='random_seed',
             default=int(time.time()),
             type=int,
-            help='Seed of random shuffle. Using with random option only.'
+            help='Seed of random shuffle. Using with random option only.',
         )
 
         parser.add_option_group(group)
 
-        try:  # if app instance does not pushed to plugin,
-            # AttributeError will be passed.
-            self.app.add_options(parser)
-        except AttributeError:
-            pass
+        if self.app:
+            FromNoseToApp(self.app).add_options(parser)

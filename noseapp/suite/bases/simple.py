@@ -37,7 +37,7 @@ class BaseSuite(ContextSuite):
     perform_chain = perform_chain
 
     def __init__(self, *args, **kwargs):
-        self._handlers = kwargs.pop('handlers', [])
+        self.__handlers = kwargs.pop('handlers', [])
 
         super(BaseSuite, self).__init__(*args, **kwargs)
 
@@ -47,7 +47,7 @@ class BaseSuite(ContextSuite):
 
     @property
     def handlers(self):
-        return self._handlers
+        return self.__handlers
 
     def exc_info(self):
         return self._exc_info()

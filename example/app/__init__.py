@@ -16,16 +16,25 @@ CONFIG_PATH = 'example.etc.{}'.format(CURRENT_CONFIG)
 
 
 def create_app():
-    app = ExampleTestApp(
-        config=CONFIG_PATH,
-        plugins=PLUGINS,
-    )
     path_to_suites = os.path.abspath(
         os.path.join(
             os.path.dirname(__file__),
             '..',
             'suites',
         ),
+    )
+
+    app1 = ExampleTestApp(
+        config=CONFIG_PATH,
+        plugins=PLUGINS,
+        is_sub_app=True,
+    )
+    app1.load_suites(path_to_suites)
+
+    app = ExampleTestApp(
+        config=CONFIG_PATH,
+        plugins=PLUGINS,
+        sub_apps=[app1],
     )
     app.load_suites(path_to_suites)
     return app
@@ -34,8 +43,9 @@ def create_app():
 class ExampleTestApp(NoseApp):
 
     def initialize(self):
-        self.install_example_random()
-        self.install_test_case_settings()
+        if self.is_sub_app:
+            self.install_example_random()
+            self.install_test_case_settings()
 
     def install_example_random(self):
         ExampleRandom.install(self)

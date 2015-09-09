@@ -10,25 +10,20 @@ class SuiteMediator(object):
     Mediator class between noseapp.suite.base.Suite and nose.suite.ContextSuite
     """
 
-    def __init__(self, require):
-        self.__require = require
-
-        self.__setup = []
-        self.__teardown = []
-        self.__handlers = []
-        self.__test_cases = []
-
-    @property
-    def require(self):
-        return self.__require
+    def __init__(self, context):
+        """
+        :type require: list
+        :type context: noseapp.suite.context.SuiteContext
+        """
+        self.__context = context
 
     @property
-    def handlers(self):
-        return self.__handlers
+    def context(self):
+        return self.__context
 
     @property
     def test_cases(self):
-        return self.__test_cases
+        return self.__context.test_cases
 
     def create_map(self):
         """
@@ -45,7 +40,7 @@ class SuiteMediator(object):
         """
         mp = {}
 
-        for case in self.__test_cases:
+        for case in self.__context.test_cases:
             mp[case.__name__] = {
                 'cls': case,
                 'tests': dict(
@@ -63,42 +58,28 @@ class SuiteMediator(object):
         """
         Remember test case class
         """
-        self.__test_cases.append(test_case)
+        self.__context.add_test_case(test_case)
 
     def add_handler(self, f):
         """
         Add run test handler
         """
-        self.__handlers.append(f)
+        self.__context.add_handler(f)
         return wraps(f)
 
     def add_setup(self, f):
         """
         Add setup suite callback
         """
-        self.__setup.append(f)
+        self.__context.add_setup(f)
         return wraps(f)
 
     def add_teardown(self, f):
         """
         Add teardown callback
         """
-        self.__teardown.append(f)
+        self.__context.add_teardown(f)
         return wraps(f)
-
-    def setup(self):
-        """
-        Callback for nose context
-        """
-        for callback in self.__setup:
-            callback()
-
-    def teardown(self):
-        """
-        Callback for nose context
-        """
-        for callback in self.__teardown:
-            callback()
 
     def create_suite(self,
                      program_data,
@@ -109,7 +90,7 @@ class SuiteMediator(object):
         Create suite instance
         """
         if callable(shuffle):
-            shuffle(self.__test_cases)
+            shuffle(self.__context.test_cases)
 
         def make_suites():
             suites = []
@@ -117,7 +98,7 @@ class SuiteMediator(object):
             if case_name:
                 case = loader.load_case_from_suite(case_name, self)
                 tests = loader.load_tests_from_test_case(
-                    case.setup_extensions(self.__require),
+                    case.setup_extensions(self.__context.require),
                     method_name=method_name,
                 )
 
@@ -125,22 +106,22 @@ class SuiteMediator(object):
                     program_data.suite_class(
                         tests,
                         context=case,
-                        handlers=self.__handlers,
                         config=program_data.config,
+                        handlers=self.__context.handlers,
                     ),
                 )
             else:
-                for case in self.__test_cases:
+                for case in self.__context.test_cases:
                     tests = loader.load_tests_from_test_case(
-                        case.setup_extensions(self.__require),
+                        case.setup_extensions(self.__context.require),
                     )
 
                     suites.append(
                         program_data.suite_class(
                             tests,
                             context=case,
-                            handlers=self.__handlers,
                             config=program_data.config,
+                            handlers=self.__context.handlers,
                         ),
                     )
 
@@ -148,6 +129,6 @@ class SuiteMediator(object):
 
         return program_data.suite_class(
             make_suites(),
-            context=self,
+            context=self.__context,
             config=program_data.config,
         )

@@ -30,10 +30,10 @@ DEFAULT_PLUGINS = [
     AppConfigurePlugin(),
 ]
 
-DEFAULT_CONFIG = os.getenv('NOSEAPP_CONFIG', None)
+APP_CONFIG = os.getenv('NOSEAPP_CONFIG', None)
 
 
-def prepare_argv(argv, plugins):
+def _prepare_argv(argv, plugins):
     """
     :type argv: list
     """
@@ -61,23 +61,38 @@ class NoseApp(object):
     collector_class = CollectSuite
 
     def __init__(self,
+                 argv=None,
+                 exit=True,
                  config=None,
                  plugins=None,
                  context=None,
-                 argv=None,
-                 exit=True):
+                 sub_apps=None,
+                 is_sub_app=False):
         """
-        :type config: str
-        :type plugins: list
         :type argv: list
         :type exit: bool
+        :type config: str
+        :type plugins: list
         :type context: object
+        :type is_sub_app: bool
+        :type sub_apps: list or tuple
         """
+        if sub_apps and is_sub_app:
+            raise RuntimeError(
+                '"{}" can not be maser app. it is sub app.'.format(self),
+            )
+
         # Initialization config storage
-        self.config = self.config_class.try_for_path(config or DEFAULT_CONFIG)
+        self.config = self.config_class.from_path(APP_CONFIG or config)
+
+        # If app is sub app that's True else False
+        self.__is_sub_app = is_sub_app
 
         # List suites. Suite will be here after register.
         self.__suites = []
+
+        # Sub application list
+        self.__sub_apps = list(sub_apps or [])
 
         # Command line options. Will be set after test program initialization.
         self.__options = None
@@ -85,40 +100,51 @@ class NoseApp(object):
         # Context will be inject to nose suite
         self.__context = context
 
-        # Init plugins. Saved support nose plugins and add supported self plugins.
-        add_plugins = []
+        # Plugins of the application only.
+        # Saved support nose plugins and add supported self plugins.
+        self.__plugins = list(plugins or [])
 
-        for plugin in (DEFAULT_PLUGINS + (plugins or [])):
-            if isinstance(plugin, AppPlugin):
-                add_plugins.append(plugin(self))
-            else:
-                add_plugins.append(plugin)
+        if not self.__is_sub_app:
+            for sub_app in self.sub_apps:
+                self.__suites.extend(sub_app.suites)
+                self.__plugins.extend(sub_app.plugins)
 
-        # Program object initialization. Will be run later.
-        self.__test_program = self.program_class(
-            app=self,
-            exit=exit,
-            addplugins=add_plugins,
-            argv=prepare_argv(argv, add_plugins),
-        )
+            add_plugins = []
 
-    @property
-    def options(self):
-        if self.__options is None:
-            raise RuntimeError('Options not found. Working outside initialize callback.')
+            for plugin in (DEFAULT_PLUGINS + (self.__plugins or [])):
+                if isinstance(plugin, AppPlugin):
+                    plugin.init_app(self)
+                    add_plugins.append(plugin)
+                else:
+                    add_plugins.append(plugin)
 
-        return self.__options
+            # Program object initialization. Will be run later.
+            self.__test_program = self.program_class(
+                app=self,
+                exit=exit,
+                addplugins=add_plugins,
+                argv=_prepare_argv(argv, add_plugins),
+            )
 
-    @options.setter
-    def options(self, value):
-        assert isinstance(value, self.config_class),\
-            'options is not instance of "{}"'.format(self.config_class.__name__)
+    @classmethod
+    def as_master_app(cls, *sub_apps, **kwargs):
+        """
+        Create application as master application
+        """
+        kwargs.update(is_sub_app=False)
+        kwargs.setdefault('sub_apps', sub_apps)
 
-        self.__options = value
+        return cls(**kwargs)
 
-    @property
-    def context(self):
-        return self.__context
+    @classmethod
+    def as_sub_app(cls, **kwargs):
+        """
+        Create application as sub application
+        """
+        kwargs.update(is_sub_app=True)
+        kwargs.update('sub_apps', None)
+
+        return cls(**kwargs)
 
     def initialize(self):
         """
@@ -149,6 +175,42 @@ class NoseApp(object):
         :type parser: optparse.OptionParser
         """
         pass
+
+    @property
+    def options(self):
+        if self.__options is None:
+            raise RuntimeError(
+                'Options not found. Working outside initialize callback.',
+            )
+
+        return self.__options
+
+    @options.setter
+    def options(self, value):
+        assert isinstance(value, self.config_class),\
+            'options is not instance of "{}"'.format(self.config_class.__name__)
+
+        self.__options = value
+
+    @property
+    def context(self):
+        return self.__context
+
+    @property
+    def plugins(self):
+        return self.__plugins
+
+    @property
+    def is_sub_app(self):
+        return self.__is_sub_app
+
+    @property
+    def suites(self):
+        return self.__suites
+
+    @property
+    def sub_apps(self):
+        return self.__sub_apps
 
     @staticmethod
     def shared_extension(name=None, cls=None, args=None, kwargs=None):
@@ -191,10 +253,6 @@ class NoseApp(object):
 
         return extensions.set(name, data, to_transport=False)
 
-    @property
-    def suites(self):
-        return self.__suites
-
     def register_suite(self, suite):
         """
         Add suite in application
@@ -202,9 +260,6 @@ class NoseApp(object):
         :type suite: noseapp.suite.base.Suite
         """
         logger.debug('Register suite "%s"', suite.name)
-
-        suite.current_app = self
-        suite.initialize()
 
         self.__suites.append(suite)
 
@@ -242,7 +297,10 @@ class NoseApp(object):
         """
         logger.debug('Run application')
 
-        self.__test_program.perform()
+        if self.__is_sub_app:
+            raise RuntimeError('Application can not be run. App is sub application.')
+        else:
+            self.__test_program.perform()
 
     def __repr__(self):
         return '<NoseApp: {}>'.format(self.__class__.__name__)

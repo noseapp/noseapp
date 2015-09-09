@@ -8,7 +8,7 @@ from example.app.suite import Suite
 suite = Suite(__name__, require=['random', 'settings'])
 
 
-@suite.add_handler
+@suite.case_handler
 def handler(case):
     case.prepare()
 

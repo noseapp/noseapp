@@ -5,6 +5,7 @@ import unittest
 from types import FunctionType
 
 from noseapp.case.base import TestCase
+from noseapp.suite.context import SuiteContext
 from noseapp.suite.mediator import SuiteMediator
 from noseapp.case.base import make_test_case_class_from_function
 
@@ -17,8 +18,8 @@ class Suite(object):
     Base Suite class for group or one TestCase.
     """
 
-    HANDLERS = None
     DEFAULT_REQUIRE = None
+    DEFAULT_HANDLERS = None
 
     test_case_class = TestCase
     mediator_class = SuiteMediator
@@ -32,22 +33,29 @@ class Suite(object):
         """
         self.__name = name
         self.__mediator = self.mediator_class(
-            require=list(self.DEFAULT_REQUIRE or []) + list(require or []),
+            SuiteContext(
+                list(self.DEFAULT_REQUIRE or []) + list(require or []),
+            ),
         )
 
-        self.__current_app = None
-
-        if self.HANDLERS:
-            for handler in self.HANDLERS:
-                self.add_handler(handler)
+        if self.DEFAULT_HANDLERS:
+            for handler in self.DEFAULT_HANDLERS:
+                self.case_handler(handler)
 
         self.before(lambda: self.setUp())
         self.after(lambda: self.tearDown())
 
-    def initialize(self):
+    @property
+    def TestCase(self):
         """
-        Callback. Will be called after registration on app.
+        :rtype: noseapp.case.base.TestCase
         """
+        return self.test_case_class
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
         pass
 
     @property
@@ -55,39 +63,11 @@ class Suite(object):
         return self.__name
 
     @property
-    def require(self):
-        """
-        List names of require extensions
-        """
-        return self.__mediator.require
-
-    @property
-    def handlers(self):
-        """
-        Handlers list
-        """
-        return self.__mediator.handlers
-
-    @property
     def test_cases(self):
         """
         Test cases list
         """
         return self.__mediator.test_cases
-
-    @property
-    def current_app(self):
-        """
-        :rtype: noseapp.app.NoseApp
-        """
-        if self.__current_app is None:
-            raise RuntimeError('Working outside app context')
-
-        return self.__current_app
-
-    @current_app.setter
-    def current_app(self, app):
-        self.__current_app = app
 
     @property
     def skip(self):
@@ -110,20 +90,7 @@ class Suite(object):
         """
         return unittest.skipUnless
 
-    @property
-    def TestCase(self):
-        """
-        :rtype: noseapp.case.base.TestCase
-        """
-        return self.test_case_class
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
-    def add_handler(self, f):
+    def case_handler(self, f):
         """
         Set test handler to run
         """

@@ -27,7 +27,7 @@ class Config(BaseConfig):
     """
 
     @classmethod
-    def try_for_path(cls, path=None):
+    def from_path(cls, path=None):
         """
         Create instance and try to parse config by path
 

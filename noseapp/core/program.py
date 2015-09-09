@@ -2,6 +2,7 @@
 
 import sys
 
+from noseapp.core.provider import FromNoseToApp
 from nose.core import TestProgram as BaseTestProgram
 
 
@@ -11,15 +12,8 @@ class ProgramData(object):
     """
 
     def __init__(self, program, app, argv=None):
-        from noseapp.app import config
-
-        # Push options from parser to application
-        app.options = app.config_class(
-            config.load(program.config.options),
-        )
-
-        # Initialize application
-        app.initialize()
+        # Init application is here
+        FromNoseToApp(app).initialize(program.config.options)
 
         self.__argv = argv or sys.argv
         self.__class_factory = app.class_factory(program.config.options)
@@ -48,10 +42,10 @@ class ProgramData(object):
         return self.__class_factory.runner_class
 
     def before_run_callback(self):
-        self.__app.before()
+        FromNoseToApp(self.__app).before()
 
     def after_run_callback(self):
-        self.__app.after()
+        FromNoseToApp(self.__app).after()
 
     def build_suite(self):
         """

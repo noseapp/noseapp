@@ -8,7 +8,7 @@ By Trifonov Mikhail
 For support, use the https://github.com/noseapp/noseapp/issues tracker
 """
 
-from noseapp.app import NoseApp
+from noseapp.app.base import NoseApp
 
 from noseapp.suite.base import Suite
 

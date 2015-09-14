@@ -11,3 +11,6 @@ class TestCase(BaseTestCase):
     @staticmethod
     def prepare():
         print 'Case is preparing'
+
+    def run(self, result=None):
+        super(TestCase, self).run(result)

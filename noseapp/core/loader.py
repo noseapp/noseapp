@@ -5,7 +5,11 @@ Auto load suites for register in noseapp.NoseApp
 """
 
 import os
+import logging
 from importlib import import_module
+
+
+logger = logging.getLogger(__name__)
 
 
 TEST_NAME_PREFIX = 'test'
@@ -16,7 +20,7 @@ class LoaderError(BaseException):
     pass
 
 
-def is_exist(path):
+def check_path_is_exist(path):
     """
     Check exist path
     """
@@ -26,11 +30,11 @@ def is_exist(path):
 
 def is_package(path):
     """
-    May be path is python package?
+    Maybe is path python package?
     """
-    if not os.path.isfile(os.path.join(path, '__init__.py')):
-        return False
-    return True
+    return os.path.isfile(
+        os.path.join(path, '__init__.py'),
+    )
 
 
 def load_suites_from_dir(path, import_base=None):
@@ -43,10 +47,12 @@ def load_suites_from_dir(path, import_base=None):
     """
     from noseapp.suite.base import Suite
 
-    if import_base and not is_package(path):
-        return []
+    logger.debug('Try to load suites from dir: "%s"', path)
 
     suites = []
+
+    if import_base and not is_package(path):
+        return suites
 
     py_files = filter(
         lambda f: f.endswith('.py') and not f.startswith('_'),
@@ -55,12 +61,12 @@ def load_suites_from_dir(path, import_base=None):
     modules = (m.rstrip('.py') for m in py_files)
 
     for module in modules:
-
         if import_base:
             module = '{}.{}'.format(import_base, module)
 
-        module = import_module(module)
+        logger.debug('Import python module: "%s"', module)
 
+        module = import_module(module)
         module_suites = (
             getattr(module, atr)
             for atr in dir(module)
@@ -83,10 +89,11 @@ def load_suites_from_path(path, import_base=None):
     :param import_base: base import path
     :type import_base: str
     """
-    is_exist(path)
+    logger.debug('Load suites from path: "%s"', path)
+
+    check_path_is_exist(path)
 
     suites = []
-
     copy_import_base = import_base
 
     suites.extend(
@@ -94,7 +101,6 @@ def load_suites_from_path(path, import_base=None):
     )
 
     for root, dirs, files in os.walk(path):
-
         for d in dirs:
             dir_abs_path = os.path.join(root, d)
 
@@ -123,6 +129,8 @@ def load_tests_from_test_case(
     """
     Create instances of test_case_class by test names
     """
+    logger.debug('Load test from test case: "%s"', test_case_class.__name__)
+
     cls_dir = dir(test_case_class)
 
     if method_name:
@@ -149,6 +157,8 @@ def load_suite_by_name(name, suites):
     :param name: suite name
     :param suites: suites list
     """
+    logger.debug('Load suite "%s" from list', name)
+
     for suite in suites:
         if suite.name == name:
             return suite
@@ -165,6 +175,8 @@ def load_case_from_suite(class_name, suite):
     :param class_name: class name
     :param suite: suite or suite mediator instance
     """
+    logger.debug('Load test case "%s" from suite "%s"', class_name, suite.name)
+
     for case in suite.test_cases:
         if case.__name__ == class_name:
             return case

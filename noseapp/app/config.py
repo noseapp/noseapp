@@ -39,10 +39,10 @@ class Config(BaseConfig):
         config = cls()
 
         def is_import_path(path):
-            is_dot = '.' in path
+            is_dot_in_path = '.' in path
             is_py_ex = path.endswith('.py')
 
-            return is_dot and not is_py_ex
+            return is_dot_in_path and not is_py_ex
 
         if path:
             if is_import_path(path):

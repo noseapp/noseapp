@@ -4,17 +4,26 @@ from nose.suite import ContextSuite
 
 
 def run_test(suite, test, orig):
-    for handler in suite.handlers:
+    for callback in suite.pre_run_handlers:
         try:
-            handler(test.test)
+            callback(test.test)
         except KeyboardInterrupt:
             raise
         except:
             suite.error_context = 'setup'
-            orig.addError(suite, suite.exc_info())
+            orig.addError(suite, suite._exc_info()())
             return
 
     test(orig)
+
+    for callback in suite.post_run_handlers:
+        try:
+            callback(test.test)
+        except KeyboardInterrupt:
+            raise
+        except:
+            suite.error_context = 'teardown'
+            orig.addError(suite, suite._exc_info()())
 
 
 def perform_chain(suite, result, orig, pool=None):
@@ -37,20 +46,22 @@ class BaseSuite(ContextSuite):
     perform_chain = perform_chain
 
     def __init__(self, *args, **kwargs):
-        self.__handlers = kwargs.pop('handlers', [])
+        self.__pre_run_handlers = kwargs.pop('pre_run_handlers', [])
+        self.__post_run_handlers = kwargs.pop('post_run_handlers', [])
 
         super(BaseSuite, self).__init__(*args, **kwargs)
 
     @property
     def tests(self):
-        return self._tests
+        return [t for t in self._tests]
 
     @property
-    def handlers(self):
-        return self.__handlers
+    def pre_run_handlers(self):
+        return self.__pre_run_handlers
 
-    def exc_info(self):
-        return self._exc_info()
+    @property
+    def post_run_handlers(self):
+        return self.__post_run_handlers
 
     def run(self, result, pool=None):
         if self.resultProxy:

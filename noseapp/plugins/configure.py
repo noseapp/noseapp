@@ -4,8 +4,8 @@ import time
 from optparse import OptionGroup
 
 from noseapp.plugins.base import AppPlugin
+from noseapp.app.context import app_callback
 from noseapp.core.constants import RunStrategy
-from noseapp.core.provider import FromNoseToApp
 
 
 class AppConfigurePlugin(AppPlugin):
@@ -84,4 +84,4 @@ class AppConfigurePlugin(AppPlugin):
         parser.add_option_group(group)
 
         if self.app:
-            FromNoseToApp(self.app).add_options(parser)
+            app_callback(self.app).addOptions(parser)

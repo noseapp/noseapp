@@ -8,6 +8,8 @@ from noseapp.core import extensions
 def make_test_case_class_from_function(
         func,
         base_class,
+        doc=None,
+        simple=False,
         class_name=None,
         class_name_creator=None):
     """
@@ -16,6 +18,7 @@ def make_test_case_class_from_function(
 
     :param func: test function. for example: my_test = lambda case: 'just do it something'
     :param base_class: base class for making class
+    :param simple: if true that not inject case instance
     :param class_name: name of new class. default function name
     :param class_name_creator: callable object for creating name of function object
     """
@@ -23,7 +26,12 @@ def make_test_case_class_from_function(
         class_name = class_name_creator(func)
 
     cls = type(class_name or func.__name__, (base_class, ), {})
-    cls.runTest = func  # bound this
+    cls.__doc__ = doc or func.__doc__
+
+    if simple:
+        cls.runTest = lambda s: func()
+    else:
+        cls.runTest = func
 
     return cls
 
@@ -34,21 +42,35 @@ class ToNoseAppTestCase(object):
     """
 
     @classmethod
-    def setup_extensions(cls, require):
+    def of_suite(cls, suite):
         """
-        Init require extensions
+        Create class of suite
 
-        :param require: extensions list
-        :type require: list or tuple
+        :type suite: noseapp.suite.base.Suite
         """
-        if require and hasattr(require, '__iter__'):
-            for ext_name in require:
-                setattr(cls, ext_name, extensions.get(ext_name))
+        if suite.require and isinstance(suite.require, (list, tuple)):
+            for ext_name in suite.require:
+                ext = extensions.get(ext_name)
+
+                suite.context.add_extension(ext_name, ext)
+
+                setattr(cls, ext_name, ext)
+                setattr(cls, 'of_suite', suite.name)
 
         return cls
 
+    def __str__(self):
+        if hasattr(self, 'of_suite'):
+            return '{} ({}:{})'.format(
+                self._testMethodName,
+                self.of_suite,
+                self.__class__.__name__,
+            )
 
-class TestCase(BaseTestCase, ToNoseAppTestCase):
+        return super(ToNoseAppTestCase, self).__str__()
+
+
+class TestCase(ToNoseAppTestCase, BaseTestCase):
     """
     Base case class
     """

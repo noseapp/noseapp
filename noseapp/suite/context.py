@@ -8,12 +8,20 @@ class SuiteContext(object):
 
         self.__setup = []
         self.__teardown = []
-        self.__handlers = []
+
+        self.__pre_run_handlers = []
+        self.__post_run_handlers = []
+
         self.__test_cases = []
+        self.__extensions = {}
 
     @property
-    def handlers(self):
-        return self.__handlers
+    def pre_run_handlers(self):
+        return self.__pre_run_handlers
+
+    @property
+    def post_run_handlers(self):
+        return self.__post_run_handlers
 
     @property
     def require(self):
@@ -23,11 +31,21 @@ class SuiteContext(object):
     def test_cases(self):
         return self.__test_cases
 
+    @property
+    def extensions(self):
+        return self.__extensions
+
     def add_test_case(self, case):
         self.__test_cases.append(case)
 
-    def add_handler(self, func):
-        self.__handlers.append(func)
+    def add_extension(self, name, ext):
+        self.__extensions[name] = ext
+
+    def add_pre_run_handler(self, func):
+        self.pre_run_handlers.append(func)
+
+    def add_post_run_handler(self, func):
+        self.__post_run_handlers.append(func)
 
     def add_setup(self, func):
         self.__setup.append(func)

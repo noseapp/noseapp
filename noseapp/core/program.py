@@ -1,9 +1,28 @@
 # -*- coding: utf8 -*-
 
+import os
 import sys
+from argparse import ArgumentError
 
-from noseapp.core.provider import FromNoseToApp
+from noseapp.app.context import app_callback
 from nose.core import TestProgram as BaseTestProgram
+
+
+def prepare_argv(argv, plugins):
+    """
+    :type argv: list
+    """
+    argv = sys.argv + (argv or [])
+
+    for arg in argv:
+        if '--processes' in arg:
+            raise ArgumentError(None, 'Option "--processes" is deprecated')
+        if arg == '--ls':
+            os.environ.setdefault('NOSE_NOCAPTURE', '1')
+
+    argv.extend(('--with-{}'.format(p.name) for p in plugins))
+
+    return argv
 
 
 class ProgramData(object):
@@ -12,8 +31,14 @@ class ProgramData(object):
     """
 
     def __init__(self, program, app, argv=None):
+        from noseapp.app import config
+
+        # Push options from parser to application
+        app.options = app.config_class(
+            config.load(program.config.options),
+        )
         # Init application is here
-        FromNoseToApp(app).initialize(program.config.options)
+        app_callback(app).setUpApp()
 
         self.__argv = argv or sys.argv
         self.__class_factory = app.class_factory(program.config.options)
@@ -41,12 +66,6 @@ class ProgramData(object):
     def runner_class(self):
         return self.__class_factory.runner_class
 
-    def before_run_callback(self):
-        FromNoseToApp(self.__app).before()
-
-    def after_run_callback(self):
-        FromNoseToApp(self.__app).after()
-
     def build_suite(self):
         """
         Collect and build suites
@@ -70,17 +89,13 @@ class ProgramData(object):
 
 class TestProgram(BaseTestProgram):
 
-    def __init__(self, *args, **kwargs):
-        app = kwargs.pop('app')
+    def __init__(self, app, argv=None, exit=True):
+        argv = prepare_argv(argv, app.plugins)
 
-        super(TestProgram, self).__init__(*args, **kwargs)
+        super(TestProgram, self).__init__(argv=argv, addplugins=app.plugins)
 
         self.testLoader = None  # We are not use that
-
-        self.data = ProgramData(
-            self, app,
-            argv=kwargs.get('argv', None),
-        )
+        self.data = ProgramData(self, app, argv=argv)
 
     # disarm base class
     def createTests(self):
@@ -109,12 +124,8 @@ class TestProgram(BaseTestProgram):
         if not suites:
             raise RuntimeError('No suites for running')
 
-        self.data.before_run_callback()
-
         result = self.testRunner.run(suites)
         self.success = result.wasSuccessful()
-
-        self.data.after_run_callback()
 
         if self.exit:
             sys.exit(not self.success)

@@ -8,17 +8,17 @@ from example.app.suite import Suite
 suite = Suite(__name__, require=['random', 'settings'])
 
 
-@suite.case_handler
+@suite.add_pre_run
 def handler(case):
     case.prepare()
 
 
-@suite.before
+@suite.add_before
 def setup():
     print 'Setup suite'
 
 
-@suite.after
+@suite.add_after
 def teardown():
     print 'Teardown suite'
 
@@ -35,9 +35,11 @@ def the_two_test(case):
     case.assertTrue(case.random.randint(1, 100) > 0 < 101)
 
 
+@suite.skip('skip')
 @suite.register
 class ExampleCase(suite.TestCase):
 
+    @suite.skip('skip')
     def test_one(self):
         if self.settings.get_fail:
             self.assertTrue(False)

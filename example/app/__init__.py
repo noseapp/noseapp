@@ -9,6 +9,14 @@ from noseapp.case import TestCaseSettings
 from example.ext.example import ExampleRandom
 
 
+class FakePlugin(object):
+    name = 'fake'
+
+
+class FakePlugin2(object):
+    name = 'fake2'
+
+
 PLUGINS = None
 
 CURRENT_CONFIG = os.getenv('NOSEAPP_CONFIG', 'base')
@@ -16,36 +24,40 @@ CONFIG_PATH = 'example.etc.{}'.format(CURRENT_CONFIG)
 
 
 def create_app():
-    path_to_suites = os.path.abspath(
+    path_to_suites = lambda folder: os.path.abspath(
         os.path.join(
             os.path.dirname(__file__),
             '..',
-            'suites',
+            folder,
         ),
     )
 
-    app1 = ExampleTestApp(
+    app1 = ExampleTestApp.as_sub_app(
+        'sub',
         config=CONFIG_PATH,
         plugins=PLUGINS,
-        is_sub_app=True,
     )
-    app1.load_suites(path_to_suites)
+    app1.load_suites(path_to_suites('suites2'))
 
-    app = ExampleTestApp(
+    app = ExampleTestApp.as_master_app(
+        'master',
+        # app1,
         config=CONFIG_PATH,
         plugins=PLUGINS,
-        sub_apps=[app1],
     )
-    app.load_suites(path_to_suites)
+    app.load_suites(path_to_suites('suites'))
     return app
 
 
 class ExampleTestApp(NoseApp):
 
-    def initialize(self):
-        if self.is_sub_app:
-            self.install_example_random()
-            self.install_test_case_settings()
+    def setUpApp(self):
+        # if self.is_sub_app:
+        self.install_example_random()
+        self.install_test_case_settings()
+
+    def tearDownApp(self):
+        print 'Hello Dolly'
 
     def install_example_random(self):
         ExampleRandom.install(self)
@@ -55,15 +67,22 @@ class ExampleTestApp(NoseApp):
             get_fail=self.options.get_fail,
         ).install(self)
 
-    def add_options(self, parser):
-        group = OptionGroup(parser, 'Example-test-app')
+    def addOptions(self, parser):
+        if self.is_master_app:
+            group = OptionGroup(parser, 'Example-test-app')
 
-        group.add_option(
-            '--get-fail',
-            dest='get_fail',
-            action='store_true',
-            default=False,
-            help='Get fail in result.'
-        )
+            group.add_option(
+                '--get-fail',
+                dest='get_fail',
+                action='store_true',
+                default=False,
+                help='Get fail in result.'
+            )
 
-        parser.add_option_group(group)
+            parser.add_option_group(group)
+
+    def setUp(self):
+        print 'It is before of {}'.format(self)
+
+    def tearDown(self):
+        print 'It is after of {}'.format(self)

@@ -36,7 +36,7 @@ class TestCaseSettings(_BaseCaseSettings):
         Auto install settings
 
         :param app: app instance
-        :type app: noseapp.app.NoseApp
+        :type app: noseapp.app.base.NoseApp
         """
         app.shared_data(self.name, self)
 

@@ -23,7 +23,7 @@ if __name__ == '__main__':
         zip_safe=False,
         platforms='any',
         install_requires=[
-            'nose==1.3.4',
+            'nose==1.3.7',
         ],
         entry_points={
             'console_scripts': [

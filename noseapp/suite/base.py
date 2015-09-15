@@ -14,6 +14,18 @@ from noseapp.case.base import make_test_case_class_from_function
 logger = logging.getLogger(__name__)
 
 
+def suite_is_mount(suite):
+    """
+    Return True if suite is mount else False
+
+    :param suite: suite instance
+    :type suite: Suite
+
+    :rtype: bool
+    """
+    return bool(suite.of_app)
+
+
 class Suite(object):
     """
     Base Suite class for group or one TestCase
@@ -34,10 +46,10 @@ class Suite(object):
         :param context: context instance
         :type context: noseapp.suite.context.SuiteContext
         """
-        # of app name
-        self.__of_app = None
         # Suite name. Must be str only
         self.__name = name
+        # of app name
+        self.__of_app = None
         # Was suite built? True or False
         self.__is_build = False
 
@@ -83,9 +95,9 @@ class Suite(object):
         """
         :type app: noseapp.app.base.NoseApp
         """
-        if self.__of_app:
+        if suite_is_mount(self):
             raise RuntimeError(
-                '{} already mount to "{}" app. '.format(self, self.__of_app),
+                '{} already mount to <NoseApp {}>. '.format(self, self.__of_app),
             )
 
         self.__of_app = app.name
@@ -180,7 +192,9 @@ class Suite(object):
         :rtype: cls
         """
         if not cls and not kwargs:
-            raise TypeError('Param cls or **kwargs is required')
+            raise TypeError('cls param or kwargs is required')
+        elif cls and kwargs:
+            raise TypeError('kwargs can not be used with cls param')
 
         def wrapped(_class, simple=False):
             if type(_class) == FunctionType:
@@ -266,7 +280,7 @@ class Suite(object):
             if case_name:
                 case = loader.load_case_from_suite(case_name, self)
                 tests = loader.load_tests_from_test_case(
-                    case.of_suite(self),
+                    case.mount_to_suite(self),
                     method_name=method_name,
                 )
 
@@ -282,7 +296,7 @@ class Suite(object):
             else:
                 for case in self.__context.test_cases:
                     tests = loader.load_tests_from_test_case(
-                        case.of_suite(self),
+                        case.mount_to_suite(self),
                     )
 
                     suites.append(

@@ -37,15 +37,16 @@ def create_app():
         config=CONFIG_PATH,
         plugins=PLUGINS,
     )
-    app1.load_suites(path_to_suites('suites2'))
 
     app = ExampleTestApp.as_master_app(
         'master',
-        # app1,
+        app1,
         config=CONFIG_PATH,
         plugins=PLUGINS,
     )
-    app.load_suites(path_to_suites('suites'))
+    app1.load_suites(path_to_suites('suites2'))
+    app.load_suites(path_to_suites('suites'), merge_suites=True)
+
     return app
 
 

@@ -53,7 +53,7 @@ class BaseSuite(ContextSuite):
 
     @property
     def tests(self):
-        return [t for t in self._tests]
+        return self._tests
 
     @property
     def pre_run_handlers(self):

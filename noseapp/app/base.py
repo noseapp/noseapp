@@ -261,7 +261,7 @@ class NoseApp(object):
         for suite in suites:
             self.register_suite(suite)
 
-    def load_suites(self, path, recursive=True):
+    def load_suites(self, path, recursive=True, merge_suites=False):
         """
         Auto load suites. Path can be package or simple dir.
 
@@ -279,6 +279,9 @@ class NoseApp(object):
             suites = loader.load_suites_from_dir(path)
 
         self.register_suites(suites)
+
+        if merge_suites:
+            merge_context(self, merge_suites=True)
 
     def run(self):
         """

@@ -18,15 +18,15 @@ def measure_time(result):
 
 
 class BaseTestRunner(_TextTestRunner):
-    pass
 
-    # def _makeResult(self):
-    #     result = super(BaseTestRunner, self)._makeResult()
-    #
-    #     if SkipTest not in result.errorClasses:
-    #         result.errorClasses[SkipTest] = (result.skipped, 'skipped', False)
-    #
-    #     return result
+    def _makeResult(self):
+        result = super(BaseTestRunner, self)._makeResult()
+
+        # XXX
+        if SkipTest not in result.errorClasses and not self.config.options.noSkip:
+            result.errorClasses[SkipTest] = (result.skipped, 'SKIP', False)
+
+        return result
 
 
 __all__ = (

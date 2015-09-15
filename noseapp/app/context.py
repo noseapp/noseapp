@@ -26,6 +26,13 @@ def merge_context(
     :param master_app: master app instance
     :type master_app: noseapp.app.base.NoseApp
     """
+    if master_app.is_sub_app:
+        raise RuntimeError(
+            'Can not marge context of {}. Application is sub application.'.format(
+                master_app,
+            ),
+        )
+
     # plugins
     if merge_plugins:
         plugins = []

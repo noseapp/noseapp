@@ -6,6 +6,7 @@ from functools import wraps
 from types import FunctionType
 
 from noseapp.core import loader
+from noseapp.core import extensions
 from noseapp.case.base import TestCase
 from noseapp.suite.context import SuiteContext
 from noseapp.case.base import make_test_case_class_from_function
@@ -174,10 +175,14 @@ class Suite(object):
         """
         Get extension by name.
         Extensions will be available after built suite.
-        Use setUp callback for this.
 
         :param name: extension name
         """
+        if name not in self.__context.require:
+            raise LookupError(
+                'Extension "{}" is not required'.format(name),
+            )
+
         return self.__context.extensions.get(name)
 
     def register(self, cls=None, **kwargs):
@@ -270,6 +275,10 @@ class Suite(object):
             raise RuntimeError('Suite can not be building, not mount to app')
 
         self.__is_build = True
+
+        for ext_name in self.context.require:
+            ext = extensions.get(ext_name)
+            self.context.add_extension(ext_name, ext)
 
         if callable(shuffle):
             shuffle(self.__context.test_cases)

@@ -60,13 +60,14 @@ def load_suites_from_dir(path, import_base=None):
     )
     modules = (m.rstrip('.py') for m in py_files)
 
-    for module in modules:
+    for module_name in modules:
         if import_base:
-            module = '{}.{}'.format(import_base, module)
+            module_name = '{}.{}'.format(import_base, module_name)
 
-        logger.debug('Import python module: "%s"', module)
+        logger.debug('Import python module: "%s"', module_name)
 
-        module = import_module(module)
+        module = import_module(module_name)
+
         module_suites = (
             getattr(module, atr)
             for atr in dir(module)

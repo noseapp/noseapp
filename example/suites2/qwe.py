@@ -25,21 +25,21 @@ def teardown():
 
 @suite.register
 def the_first_test(case):
-    if case.settings.get_fail:
+    if case.ext('settings').get_fail:
         case.assertTrue(False)
-    case.assertGreater(case.random.randint(1, 100), 0)
+    case.assertGreater(case.ext('random').randint(1, 100), 0)
 
 
 @suite.register
 def the_two_test(case):
-    case.assertTrue(case.random.randint(1, 100) > 0 < 101)
+    case.assertTrue(case.ext('random').randint(1, 100) > 0 < 101)
 
 
 @suite.register
 class ExampleCase(suite.TestCase):
 
     def test_one(self):
-        if self.settings.get_fail:
+        if self.ext('settings').get_fail:
             self.assertTrue(False)
         self.assertTrue(True)
 
@@ -51,7 +51,7 @@ class ExampleCase(suite.TestCase):
 class ExampleStepsImplementation(suite.TestCase):
 
     def begin(self):
-        self.num = self.random.randint(1, 100)
+        self.num = self.ext('random').randint(1, 100)
 
     @step(1, 'First step')
     def first(self):
@@ -59,6 +59,6 @@ class ExampleStepsImplementation(suite.TestCase):
 
     @step(2, 'Second step')
     def second(self):
-        if self.settings.get_fail:
+        if self.ext('settings').get_fail:
             self.assertTrue(False)
         self.assertTrue(True)

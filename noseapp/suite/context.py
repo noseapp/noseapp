@@ -42,7 +42,7 @@ class SuiteContext(object):
         self.__extensions[name] = ext
 
     def add_pre_run_handler(self, func):
-        self.pre_run_handlers.append(func)
+        self.__pre_run_handlers.append(func)
 
     def add_post_run_handler(self, func):
         self.__post_run_handlers.append(func)

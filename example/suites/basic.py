@@ -11,7 +11,7 @@ class ExampleCase(suite.TestCase):
 
     def test_one(self):
         # raise Exception('Fuck!')
-        if self.settings.get_fail:
+        if self.ext('settings').get_fail:
             self.assertTrue(False)
         self.assertTrue(True)
 

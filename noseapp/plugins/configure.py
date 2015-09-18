@@ -84,4 +84,4 @@ class AppConfigurePlugin(AppPlugin):
         parser.add_option_group(group)
 
         if self.app:
-            app_callback(self.app).addOptions(parser)
+            app_callback(self.app, 'addOptions', parser)

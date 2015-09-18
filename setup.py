@@ -4,7 +4,7 @@ from setuptools import setup
 from setuptools import find_packages
 
 
-__version__ = '1.4.1'
+__version__ = '2.0.0'
 
 
 if __name__ == '__main__':
@@ -12,7 +12,7 @@ if __name__ == '__main__':
         name='noseapp',
         version=__version__,
         url='https://github.com/trifonovmixail/noseapp',
-        packages=find_packages(include=('noseapp', )),
+        packages=find_packages(exclude=('example',)),
         author='Mikhail Trifonov',
         author_email='mikhail.trifonov@corp.mail.ru',
         license='GNU LGPL',

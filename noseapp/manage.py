@@ -45,7 +45,7 @@ def _get_create_app_func(path):
     try:
         module, func = path.split(':')
     except ValueError:
-        _error('incorrect path to importing of getting application function')
+        _error('incorrect import path to get application function')
     except IndexError:
         _error('import path is required as first argument of signature')
 
@@ -55,7 +55,7 @@ def _get_create_app_func(path):
     if callable(func):
         return func
 
-    _error('Function for getting application is not found')
+    _error('function for get application is not found')
 
 
 def _load_manage_py():
@@ -123,27 +123,6 @@ class DefaultCommands(object):
         app.run()
 
     @staticmethod
-    def run_many(*app_path):
-        """
-        Command for running many applications
-
-        :usage:
-            noseapp-manage run-many import.path.to:get_app_one import.path.to:get_app_two
-        """
-        exit_code = 0
-
-        for path in app_path:
-            try:
-                DefaultCommands.run_app(path)
-            except SystemExit as e:
-                if e.code > exit_code:
-                    exit_code = e.code
-            except KeyboardInterrupt:
-                raise
-
-        sys.exit(exit_code)
-
-    @staticmethod
     def create_project(name):  # TODO
         """
         Create base structure of project
@@ -154,7 +133,6 @@ class DefaultCommands(object):
 # Add commands here. Order is important.
 register_command('help', DefaultCommands.help)
 register_command('run', DefaultCommands.run_app)
-register_command('run_many', DefaultCommands.run_many)
 register_command('create_project', DefaultCommands.create_project)
 
 

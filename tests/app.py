@@ -4,15 +4,9 @@ import os
 from unittest import TestCase
 
 from noseapp import Suite
+from noseapp import NoseApp
 from noseapp.core import extensions
-from noseapp import TestCase as _TestCase
-from noseapp.app import NoseApp as _NoseApp
-
-
-class NoseApp(_NoseApp):
-
-    def initialize(self):
-        pass
+from noseapp import TestCase as NoseAppTestCase
 
 
 class TestDefaultClasses(TestCase):
@@ -41,10 +35,10 @@ class TestInitializeCallback(TestCase):
 
         class FakeApp(NoseApp):
 
-            def initialize(self):
+            def setUpApp(self):
                 self.initialize_data = 1
 
-        return FakeApp()
+        return FakeApp('fake')
 
     def runTest(self):
         fake_app = self.create_fake_app()

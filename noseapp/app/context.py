@@ -3,15 +3,29 @@
 from noseapp.plugins.base import AppPlugin
 
 
-def app_callback(app):
+def app_callback(app, name, *args, **kwargs):
     """
     Wrapper for call callback of application
 
     :type app: noseapp.app.base.NoseApp
+    :param name: callback name
 
-    :rtype: AppCallbacks
+    :params args, kwargs: args, kwargs of callback method
     """
-    return AppCallbacks(app)
+    if app.is_sub_app:
+        raise RuntimeError(
+            'Can not call callback "{}" of {}. Application is sub application.'.format(
+                name, app,
+            ),
+        )
+
+    apps = [app]
+    apps.extend(app.sub_apps)
+
+    callback = lambda a: getattr(a, name)
+
+    for application in apps:
+        callback(application)(*args, **kwargs)
 
 
 def merge_context(
@@ -129,51 +143,3 @@ class AppContext(object):
         """
         for callback in self.__teardown:
             callback()
-
-
-class AppCallbacks(object):
-    """
-    Application wrapper is supporting
-    call to callback for sub applications
-    """
-
-    def __init__(self, app):
-        """
-        :type app: noseapp.app.base.NoseApp
-        """
-        self.__app = app
-
-    def setUpApp(self):
-        """
-        Will be called with initialization test program
-        """
-        self.__app.setUpApp()
-
-        def init_sub_app(sub_app):
-            sub_app.options = self.__app.options
-            sub_app.setUpApp()
-
-        for sub_app in self.__app.sub_apps:
-            init_sub_app(sub_app)
-
-    def tearDownApp(self):
-        """
-        Will be called after test program perform
-        """
-        self.__app.tearDownApp()
-
-        def init_sub_app(sub_app):
-            sub_app.options = self.__app.options
-            sub_app.tearDownApp()
-
-        for sub_app in self.__app.sub_apps:
-            init_sub_app(sub_app)
-
-    def addOptions(self, parser):
-        """
-        Will be called with configure plugin
-        """
-        self.__app.addOptions(parser)
-
-        for sub_app in self.__app.sub_apps:
-            sub_app.addOptions(parser)

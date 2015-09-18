@@ -12,6 +12,8 @@ import sys
 import logging
 from contextlib import contextmanager
 
+from nose.plugins.errorclass import ErrorClassPlugin
+
 from noseapp.core import loader
 from noseapp.core import extensions
 from noseapp.core import TestProgram
@@ -52,6 +54,7 @@ class NoseApp(object):
                  plugins=None,
                  context=None,
                  sub_apps=None,
+                 suites_path=None,
                  is_sub_app=False):
         """
         :type name: str
@@ -65,7 +68,7 @@ class NoseApp(object):
         """
         if sub_apps and is_sub_app:
             raise RuntimeError(
-                '"{}" can not be maser app. it is sub app.'.format(self),
+                '"{}" can not be maser app. The application is sub app.'.format(self),
             )
 
         # Initialization config storage
@@ -96,7 +99,7 @@ class NoseApp(object):
         if self.is_master_app:
             # Default plugins for master app only
             self.__context.plugins.extend(DEFAULT_PLUGINS)
-            # Extend context of sub applications
+            # Merge context of sub applications
             merge_context(self,
                           merge_setup=True,
                           merge_suites=True,
@@ -105,8 +108,12 @@ class NoseApp(object):
             # Program object initialization. Will be run later.
             self.__test_program = self.program_class(self, argv=argv, exit=exit)
 
+            # If we are having path to suites dir then makes load suites
+            if suites_path is not None:
+                self.load_suites(suites_path)
+
     @classmethod
-    def as_master_app(cls, name=None, *sub_apps, **kwargs):
+    def as_master_app(cls, name, *sub_apps, **kwargs):
         """
         Create application as master application
         """
@@ -116,12 +123,14 @@ class NoseApp(object):
         return cls(name, **kwargs)
 
     @classmethod
-    def as_sub_app(cls, name=None, **kwargs):
+    def as_sub_app(cls, name, **kwargs):
         """
         Create application as sub application
         """
-        kwargs.update(sub_apps=None)
-        kwargs.update(is_sub_app=True)
+        kwargs.update(
+            sub_apps=None,
+            is_sub_app=True,
+        )
 
         return cls(name, **kwargs)
 
@@ -171,11 +180,15 @@ class NoseApp(object):
         return self.__options
 
     @options.setter
-    def options(self, value):
-        assert isinstance(value, self.config_class),\
+    def options(self, options):
+        assert isinstance(options, self.config_class),\
             'options is not instance of "{}"'.format(self.config_class.__name__)
 
-        self.__options = value
+        if self.is_master_app:
+            for sub_app in self.__sub_apps:
+                sub_app.options = options
+
+        self.__options = options
 
     @property
     def context(self):
@@ -200,6 +213,10 @@ class NoseApp(object):
     @property
     def sub_apps(self):
         return self.__sub_apps
+
+    @property
+    def status(self):
+        return 'sub' if self.__is_sub_app else 'master'
 
     @staticmethod
     def shared_extension(name=None, cls=None, args=None, kwargs=None):
@@ -299,10 +316,12 @@ class NoseApp(object):
             try:
                 yield
             finally:
-                app_callback(self).tearDownApp()
+                app_callback(self, 'tearDownApp')
 
         with teardown_app():
             self.__test_program.perform()
 
     def __repr__(self):
-        return '<NoseApp: {}>'.format(self.__name)
+        return '<NoseApp({}): {}>'.format(
+            self.status, self.__name,
+        )

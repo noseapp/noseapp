@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 def suite_is_mount(suite):
     """
-    Return True if suite is mount else False
+    If suite is mounting to app then True else False
 
     :param suite: suite instance
     :type suite: Suite
@@ -298,6 +298,7 @@ class Suite(object):
                         tests,
                         context=case,
                         config=program_data.config,
+                        resultProxy=program_data.result_proxy_factory,
                         pre_run_handlers=self.__context.pre_run_handlers,
                         post_run_handlers=self.__context.post_run_handlers,
                     ),
@@ -313,6 +314,7 @@ class Suite(object):
                             tests,
                             context=case,
                             config=program_data.config,
+                            resultProxy=program_data.result_proxy_factory,
                             pre_run_handlers=self.__context.pre_run_handlers,
                             post_run_handlers=self.__context.post_run_handlers,
                         ),

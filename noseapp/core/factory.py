@@ -49,28 +49,36 @@ class ClassFactory(object):
         """
         Create class for building suite
         """
-        from noseapp.suite.bases.simple import BaseSuite
+        from noseapp.core.suite.base import BaseSuite
+
+        self.__current_suite_class = BaseSuite
+
+        performer_class = BaseSuite.performer_class
 
         try:
             if self.__options.run_strategy == RunStrategy.GEVENT and self.__options.async_tests:
-                from noseapp.suite.bases.gevent_suite import GeventSuite
-                self.__current_suite_class = GeventSuite
+                from noseapp.core.suite.performers.gevent import GeventSuitePerformer
+                performer_class = GeventSuitePerformer
 
             elif self.__options.run_strategy in (RunStrategy.MULTIPROCESSING, RunStrategy.THREADING)\
                     and self.__options.async_tests:
-                from noseapp.suite.bases.threading_suite import ThreadSuite
-                self.__current_suite_class = ThreadSuite
+                from noseapp.core.suite.performers.threading import ThreadSuitePerformer
+                performer_class = ThreadSuitePerformer
 
             else:
                 if self.__options.async_tests:
-                    from noseapp.suite.bases.threading_suite import ThreadSuite
-                    self.__current_suite_class = ThreadSuite
-                else:
-                    self.__current_suite_class = BaseSuite
-        except AttributeError:
-            self.__current_suite_class = BaseSuite
+                    from noseapp.core.suite.performers.threading import ThreadSuitePerformer
+                    performer_class = ThreadSuitePerformer
 
-        logger.debug('Current suite class is "%s"', self.__current_suite_class.__name__)
+        except AttributeError:
+            pass
+
+        self.__current_suite_class.performer_class = performer_class
+
+        logger.debug(
+            'Current suite performer class is "%s"',
+            performer_class.__name__,
+        )
 
         return self.__current_suite_class
 
@@ -78,27 +86,31 @@ class ClassFactory(object):
         """
         Create test runner class
         """
-        from noseapp.runner.base import BaseTestRunner
+        from noseapp.core.runner.base import BaseTestRunner
+
+        self.__current_runner_class = BaseTestRunner
+
+        performer_class = BaseTestRunner.performer_class
 
         try:
             if self.__options.run_strategy == RunStrategy.MULTIPROCESSING\
                     or (self.__options.run_strategy == RunStrategy.SIMPLE and self.__options.async_suites):
-                from noseapp.runner.multiprocessing_runner import MultiprocessingTestRunner
-                self.__current_runner_class = MultiprocessingTestRunner
+                from noseapp.core.runner.performers.multiprocessing import MPRunPerformer
+                performer_class = MPRunPerformer
 
             elif self.__options.run_strategy == RunStrategy.GEVENT:
-                from noseapp.runner.gevent_runner import GeventTestRunner
-                self.__current_runner_class = GeventTestRunner
+                from noseapp.core.runner.performers.gevent import GeventRunPerformer
+                performer_class = GeventRunPerformer
 
             elif self.__options.run_strategy == RunStrategy.THREADING:
-                from noseapp.runner.threading_runner import ThreadingTestRunner
-                self.__current_runner_class = ThreadingTestRunner
+                from noseapp.core.runner.performers.threading import ThreadingRunPerformer
+                performer_class = ThreadingRunPerformer
 
-            else:
-                self.__current_runner_class = BaseTestRunner
         except AttributeError:
-            self.__current_runner_class = BaseTestRunner
+            pass
 
-        logger.debug('Current runner class is "%s"', self.__current_runner_class.__name__)
+        self.__current_runner_class.performer_class = performer_class
+
+        logger.debug('Current run performer class is "%s"', performer_class.__name__)
 
         return self.__current_runner_class

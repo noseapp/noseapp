@@ -36,13 +36,25 @@ def make_test_case_class_from_function(
 
 def case_is_mount(case):
     """
-    Return True if case is mount to suite else False
+    If case is mounting to suite then True else False
 
     :param case: test case class or instance
 
     :rtype: bool
     """
     return hasattr(case, '_of_suite')
+
+
+def get_case_master_id(case):
+    """
+    Get id of master process
+
+    :type case: ToNoseAppTestCase
+    """
+    if hasattr(case, 'test'):
+        case = case.test
+
+    return case._ToNoseAppTestCase__master_id
 
 
 class ExtensionStorage(object):
@@ -75,6 +87,11 @@ class ToNoseAppTestCase(object):
     This is mixin for NoseApp supporting
     """
 
+    def __init__(self, *args, **kwargs):
+        super(ToNoseAppTestCase, self).__init__(*args, **kwargs)
+
+        self.__master_id = id(self)
+
     @classmethod
     def mount_to_suite(cls, suite):
         """
@@ -98,6 +115,7 @@ class ToNoseAppTestCase(object):
     def of_suite(self):
         if case_is_mount(self):
             return self._of_suite
+
         return None
 
     def ext(self, name):

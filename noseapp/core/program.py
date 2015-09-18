@@ -4,8 +4,10 @@ import os
 import sys
 from argparse import ArgumentError
 
-from noseapp.app.context import app_callback
+from nose.proxy import ResultProxyFactory
 from nose.core import TestProgram as BaseTestProgram
+
+from noseapp.app.context import app_callback
 
 
 def prepare_argv(argv, plugins):
@@ -38,13 +40,17 @@ class ProgramData(object):
             config.load(program.config.options),
         )
         # Init application is here
-        app_callback(app).setUpApp()
+        app_callback(app, 'setUpApp')
 
         self.__argv = argv or sys.argv
         self.__class_factory = app.class_factory(program.config.options)
 
         self.__app = app
         self.__program = program
+
+        self.__result_proxy_factory = ResultProxyFactory(
+            config=self.__program.config,
+        )
 
     @property
     def argv(self):
@@ -59,12 +65,20 @@ class ProgramData(object):
         return self.__program.config
 
     @property
+    def context(self):
+        return self.__app.context
+
+    @property
     def suite_class(self):
         return self.__class_factory.suite_class
 
     @property
     def runner_class(self):
         return self.__class_factory.runner_class
+
+    @property
+    def result_proxy_factory(self):
+        return self.__result_proxy_factory
 
     def build_suite(self):
         """
@@ -80,11 +94,7 @@ class ProgramData(object):
 
         extensions.clear()
 
-        return self.suite_class(
-            suites,
-            config=self.config,
-            context=self.__app.context,
-        )
+        return suites
 
 
 class TestProgram(BaseTestProgram):
@@ -94,7 +104,7 @@ class TestProgram(BaseTestProgram):
 
         super(TestProgram, self).__init__(argv=argv, addplugins=app.plugins)
 
-        self.testLoader = None  # We are not use that
+        self.testLoader = None  # We are not using that
         self.data = ProgramData(self, app, argv=argv)
 
     # disarm base class

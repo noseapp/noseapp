@@ -58,7 +58,19 @@ class CollectSuite(object):
         self.__command = get_command(self.__program_data)
         self.__strategy = get_strategy(self.__command)
 
-    def __collect_by_basic_strategy__(self):
+    @property
+    def command(self):
+        return self.__command
+
+    @property
+    def strategy(self):
+        return self.__strategy
+
+    @property
+    def program_data(self):
+        return self.__program_data
+
+    def collect_by_basic_strategy(self):
         kwargs = {}
 
         if self.__program_data.config.options.random:
@@ -77,7 +89,7 @@ class CollectSuite(object):
             for suite in self.__program_data.suites
         ]
 
-    def __collect_by_suite_strategy__(self):
+    def collect_by_suite_strategy(self):
         suite = loader.load_suite_by_name(
             self.__command,
             self.__program_data.suites,
@@ -85,7 +97,7 @@ class CollectSuite(object):
 
         return [suite(self.__program_data)]
 
-    def __collect_by_case_strategy__(self):
+    def collect_by_case_strategy(self):
         suite_name, case_name = self.__command.split(':')
         suite = loader.load_suite_by_name(
             suite_name,
@@ -99,7 +111,7 @@ class CollectSuite(object):
             ),
         ]
 
-    def __collect_by_method_strategy__(self):
+    def collect_by_method_strategy(self):
         suite_name, case_info = self.__command.split(':')
         case_name, method_name = case_info.split('.')
         suite = loader.load_suite_by_name(
@@ -116,24 +128,12 @@ class CollectSuite(object):
         ]
 
     @property
-    def command(self):
-        return self.__command
-
-    @property
-    def strategy(self):
-        return self.__strategy
-
-    @property
-    def program_data(self):
-        return self.__program_data
-
-    @property
     def collect(self):
         strategy_to_method = {
-            CASE_COLLECT_STRATEGY: self.__collect_by_case_strategy__,
-            BASIC_COLLECT_STRATEGY: self.__collect_by_basic_strategy__,
-            SUITE_COLLECT_STRATEGY: self.__collect_by_suite_strategy__,
-            METHOD_COLLECT_STRATEGY: self.__collect_by_method_strategy__,
+            CASE_COLLECT_STRATEGY: self.collect_by_case_strategy,
+            BASIC_COLLECT_STRATEGY: self.collect_by_basic_strategy,
+            SUITE_COLLECT_STRATEGY: self.collect_by_suite_strategy,
+            METHOD_COLLECT_STRATEGY: self.collect_by_method_strategy,
         }
 
         logger.debug('Strategy for collect suites is "%s"', self.__strategy)
@@ -146,4 +146,9 @@ def collect(program_data, collector_class=CollectSuite):
     Function is wrapper for calling to collector class
     """
     collector = collector_class(program_data)
-    return collector.collect()
+
+    return program_data.suite_class(
+        collector.collect(),
+        config=program_data.config,
+        context=program_data.context,
+    )

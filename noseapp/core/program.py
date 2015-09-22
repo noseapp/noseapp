@@ -1,32 +1,58 @@
 # -*- coding: utf8 -*-
 
+import os
 import sys
+from argparse import ArgumentError
 
+from nose.proxy import ResultProxyFactory
 from nose.core import TestProgram as BaseTestProgram
 
-from noseapp.app import config
+from noseapp.core import collector
 from noseapp.core import extensions
+from noseapp.app.context import app_callback
+
+
+def prepare_argv(argv, plugins):
+    """
+    :type argv: list
+    """
+    argv = sys.argv + (argv or [])
+
+    for arg in argv:
+        if '--processes' in arg:
+            raise ArgumentError(None, 'Option "--processes" is deprecated')
+        if arg == '--ls':
+            os.environ.setdefault('NOSE_NOCAPTURE', '1')
+
+    argv.extend(('--with-{}'.format(p.name) for p in plugins))
+
+    return argv
 
 
 class ProgramData(object):
     """
-    Merging data of test program and application
+    Class is merging data of test program and application
     """
 
     def __init__(self, program, app, argv=None):
+        from noseapp.app import config
+
         # Push options from parser to application
         app.options = app.config_class(
             config.load(program.config.options),
         )
-
-        # Initialize application
-        app.initialize()
+        # Init application is here
+        app_callback(app, 'setUpApp')
 
         self.__argv = argv or sys.argv
         self.__class_factory = app.class_factory(program.config.options)
 
         self.__app = app
         self.__program = program
+
+        self.__result_proxy_factory = ResultProxyFactory(
+            config=self.__program.config,
+        )
 
     @property
     def argv(self):
@@ -37,12 +63,12 @@ class ProgramData(object):
         return self.__app.suites
 
     @property
-    def test_loader(self):
-        return self.__program.testLoader
-
-    @property
     def config(self):
         return self.__program.config
+
+    @property
+    def context(self):
+        return self.__app.context
 
     @property
     def suite_class(self):
@@ -52,33 +78,37 @@ class ProgramData(object):
     def runner_class(self):
         return self.__class_factory.runner_class
 
-    def before_run_callback(self):
-        self.__app.before()
+    @property
+    def result_proxy_factory(self):
+        return self.__result_proxy_factory
 
-    def after_run_callback(self):
-        self.__app.after()
-
-    def build_suites(self):
+    def build_suite(self):
         """
         Collect and build suites
         """
-        collector = self.__app.collector_class(self)
-        suites = collector.make_result()
+        suites = collector.collect(
+            self,
+            collector_class=self.__app.collector_class,
+        )
+
         extensions.clear()
+
         return suites
 
 
 class TestProgram(BaseTestProgram):
 
-    def __init__(self, *args, **kwargs):
-        app = kwargs.pop('app')
+    def __init__(self, app, argv=None, exit=True):
+        argv = prepare_argv(argv, app.plugins)
 
-        super(TestProgram, self).__init__(*args, **kwargs)
-
-        self.data = ProgramData(
-            self, app,
-            argv=kwargs.get('argv', None),
+        super(TestProgram, self).__init__(
+            argv=argv,
+            exit=exit,
+            addplugins=app.plugins,
         )
+
+        self.testLoader = None  # We are not using that
+        self.data = ProgramData(self, app, argv=argv)
 
     # disarm base class
     def createTests(self):
@@ -87,7 +117,7 @@ class TestProgram(BaseTestProgram):
     def runTests(self):
         pass
 
-    def perform(self):
+    def run(self):
         """
         Perform test program
         """
@@ -102,17 +132,13 @@ class TestProgram(BaseTestProgram):
         if plug_runner is not None:
             self.testRunner = plug_runner
 
-        suites = self.data.build_suites()
+        suites = self.data.build_suite()
 
         if not suites:
             raise RuntimeError('No suites for running')
 
-        self.data.before_run_callback()
-
         result = self.testRunner.run(suites)
         self.success = result.wasSuccessful()
-
-        self.data.after_run_callback()
 
         if self.exit:
             sys.exit(not self.success)

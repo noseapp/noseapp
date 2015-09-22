@@ -9,12 +9,12 @@ class TestPushApp(TestCase):
     """
 
     def runTest(self):
+        from noseapp import NoseApp
         from noseapp import AppPlugin
 
         plugin = AppPlugin()
-        self.assertFalse(hasattr(plugin, 'app'))
+        self.assertIsNone(plugin.app)
 
-        instance = plugin(object())
-        self.assertIsInstance(instance, AppPlugin)
-        self.assertTrue(hasattr(plugin, 'app'))
-        self.assertIsInstance(plugin.app, object)
+        plugin.init_app(NoseApp('test'))
+        self.assertIsInstance(plugin, AppPlugin)
+        self.assertIsInstance(plugin.app, NoseApp)

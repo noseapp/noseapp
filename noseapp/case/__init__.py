@@ -22,7 +22,22 @@ class TestCaseSettings(_BaseCaseSettings):
 
     name = 'settings'
 
+    @classmethod
+    def like(cls, name):
+        """
+        Use settings like ...
+
+        :param name: extension name
+        """
+        cls.name = name
+
     def install(self, app):
+        """
+        Auto install settings
+
+        :param app: app instance
+        :type app: noseapp.app.base.NoseApp
+        """
         app.shared_data(self.name, self)
 
 

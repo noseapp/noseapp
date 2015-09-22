@@ -1,8 +1,13 @@
 # -*- coding: utf8 -*-
 
+"""
+Core of framework.
+
+If you write modules of core and they're using other modules
+of library that make using import inside functions or methods.
+"""
+
 from noseapp.core.program import TestProgram
-from noseapp.core.collector import CollectSuite
-from noseapp.core.loader import load_suites_from_path
 
 
 class ExtensionInstaller(object):
@@ -24,7 +29,5 @@ class ExtensionInstaller(object):
 
 __all__ = (
     TestProgram,
-    CollectSuite,
     ExtensionInstaller,
-    load_suites_from_path,
 )

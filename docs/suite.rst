@@ -2,7 +2,7 @@
 Suite
 =====
 
-Suite class is provider for nose ContextSuite. Major task is collect test cases and construction suite for run.
+Suite class is provider for nose ContextSuite. Major task is collect test cases and construction suite to run.
 
 
 Simple example
@@ -43,22 +43,47 @@ If all suites must have common require, then you can create own base class and u
     suite = MySuite(__name__, require=['something_else'])
 
 
-Usage skip decorators from suite instance
------------------------------------------
+Example
+-------
+
+::
+
+    from noseapp import Suite
+
+
+    class MySuite(Suite):
+
+        DEFAULT_REQUIRE = ['example']
+
+        def setUp(self):
+            self.ext('example').do_something()
+
+        def tearDown(self):
+            self.ext('example').do_something()
+
+
+    suite = MySuite(__name__)
+
+
+Usage skip from suite instance
+------------------------------
 
 ::
 
     suite = Suite(__name__)
 
 
-    @suite.skip('TODO: ...')  # skipIf, skipUnless
-    @suite.register
+      # skipIf, skipUnless
+    @suite.register(skip='TODO: ...')
     class MyTestCase(TestCase):
-        pass
+
+        @suite.skip('TODO: ...')
+        def test(self):
+            pass
 
 
-Add handler for test cases
---------------------------
+Add pre-post run for test cases
+-------------------------------
 
 Handler will be called before run
 
@@ -67,8 +92,16 @@ Handler will be called before run
     suite = Suite(__name__)
 
 
-    @suite.add_handler
-    def run_test_handler(test):
+    @suite.add_pre_run
+    def pre_run_test(test):
+        """
+        :param test: instance of test case class
+        """
+        pass
+
+
+    @suite.add_post_run
+    def post_run_test(test):
         """
         :param test: instance of test case class
         """
@@ -78,22 +111,21 @@ Handler will be called before run
 them maybe more...
 
 
-Mediator class
---------------
+Add before, after
+-----------------
 
-If you want to change communication with nose library, so you can change mediator class.
-
+You may add setup, teardown callbacks
 
 ::
 
-    from noseapp.suite import TestCaseMediator
+    suite = Suite(__name__)
 
 
-    class MyTestCaseMediator(TestCaseMediator):
-        # your logic here
+    @suite.add_before
+    def setup():
         pass
 
 
-    class MySuite(Suite):
-
-        mediator_class = MyTestCaseMediator
+    @suite.add_after
+    def teardown():
+        pass

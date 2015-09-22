@@ -1,38 +1,7 @@
 # -*- coding: utf8 -*-
 
 """
-=================
 Step by step case
-=================
-
-Example::
-
-  class CaseExample(ScreenPlayCase):
-
-    USE_PROMPT = True  # usage interactive debug
-
-    @step(1, 'description')
-    def step_1(self):
-      self.assertTrue(True)
-
-    @step(2, 'description')
-    def step_2(self):
-      self.assertTrue(True)
-
-
-  class CaseParametrizeExample(ScreenPlayCase):
-
-    FLOWS = (
-      1, 2, 3
-    )
-
-    @step(1, u'Step 1')
-    def step_1(self, i):
-      self.assertGreater(i, 0)
-
-    @step(2, u'Step 2')
-    def step_2(self, i):
-      self.assertGreater(i, 0)
 """
 
 import re
@@ -53,7 +22,11 @@ SCREENPLAY_ATTRIBUTE_NAME = '__SCREENPLAY__'
 
 STEP_INFO_PATTERN = u'<{}.{}> Step {} "{}"'
 
-ERROR_INFO_PATTERN = u"""
+EXCLUDE_METHOD_PATTERN = re.compile(
+    r'^fail[A-Z]|^fail$|^assert[A-Z]|^assert_$',
+)
+
+ERROR_MESSAGE_FULL_TEMPLATE = u"""
 
 * {traceback}
 
@@ -73,17 +46,18 @@ ERROR_INFO_PATTERN = u"""
 {message}
 """
 
-EXCLUDE_METHOD_PATTERN = re.compile(
-    r'^fail[A-Z]|^fail$|^assert[A-Z]|^assert_$',
-)
+ERROR_MESSAGE_TEMPLATE = """{message}
 
+* History:
+{history}
 
-class StepError(BaseException):
-    pass
+* Point:
+{case}.{method} -> Step {step} "{step_doc}"
 
+* Flow:
+{flow}
 
-class StepFail(AssertionError):
-    pass
+"""
 
 
 def step(num, doc=''):
@@ -111,6 +85,18 @@ def step(num, doc=''):
         return wrapped
 
     return wrapper
+
+
+def render_error_message(template, **kwargs):
+    """
+    Render error message by template
+    """
+    message = template
+
+    for k, v in kwargs.items():
+        message = message.replace(u'{%s}' % k, unicode(v))
+
+    return message
 
 
 def get_step_info(case, method):
@@ -161,10 +147,9 @@ def error_handler(e, msg):
     """
     Handler for raised exception
     """
-    if isinstance(e, AssertionError):
-        raise StepFail(msg)
-
-    raise StepError(msg)
+    e.message = msg
+    e.args = e.args + (msg, )
+    raise
 
 
 def run_step(case, method, flow=None):
@@ -196,7 +181,8 @@ def run_step(case, method, flow=None):
         exc_cls_name = e.__class__.__name__
 
         try:
-            msg = case.EXCEPTION_MESSAGE_FORMAT.format(
+            msg = render_error_message(
+                case.ERROR_MESSAGE_TEMPLATE,
                 history=history,
                 case=case_name,
                 method=method_name,
@@ -208,7 +194,8 @@ def run_step(case, method, flow=None):
                 traceback=orig_tb,
             ).encode('utf-8', 'replace')
         except UnicodeDecodeError:
-            msg = case.EXCEPTION_MESSAGE_FORMAT.format(
+            msg = render_error_message(
+                case.ERROR_MESSAGE_TEMPLATE,
                 history=history,
                 case=case_name,
                 method=method_name,
@@ -296,13 +283,43 @@ class ScreenPlayCaseMeta(type):
 class ScreenPlayCase(TestCase):
     """
     Base TestCase class. Enjoy :)
+
+    Example:
+
+    class CaseExample(ScreenPlayCase):
+
+        USE_PROMPT = True  # usage interactive debug
+
+        @step(1, 'description')
+        def step_1(self):
+          self.assertTrue(True)
+
+        @step(2, 'description')
+        def step_2(self):
+          self.assertTrue(True)
+
+
+        class CaseParametrizeExample(ScreenPlayCase):
+
+        FLOWS = (
+          1, 2, 3
+        )
+
+        @step(1, u'Step 1')
+        def step_1(self, i):
+          self.assertGreater(i, 0)
+
+        @step(2, u'Step 2')
+        def step_2(self, i):
+          self.assertGreater(i, 0)
     """
 
     __metaclass__ = ScreenPlayCaseMeta
 
     FLOWS = None
     USE_PROMPT = False
-    EXCEPTION_MESSAGE_FORMAT = ERROR_INFO_PATTERN
+
+    ERROR_MESSAGE_TEMPLATE = ERROR_MESSAGE_TEMPLATE
 
     def begin(self):
         """

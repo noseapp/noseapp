@@ -74,7 +74,7 @@ def run_tests():
 
 
 def run_exapmle_app():
-    command = 'noseapp-manage run example.app:create_app'
+    command = 'noseapp-manage run testapp.app:create_app'
     os.environ['PYTHONPATH'] = SELF_PATH
     exit_code = call(command, env=os.environ)
 

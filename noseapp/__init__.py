@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-A powerful, extensible, and easy to use framework for test development
+A powerful, extensible and easy to use framework for test development
 
 By Trifonov Mikhail
 

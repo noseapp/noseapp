@@ -1,31 +1,47 @@
 # -*- coding: utf-8 -*-
 
+"""
+Work with context of application
+"""
+
 from noseapp.plugins.base import AppPlugin
 
 
-def app_callback(app, name, *args, **kwargs):
+def app_callback(master_app, name, *args, **kwargs):
     """
     Wrapper for call callback of application
 
-    :type app: noseapp.app.base.NoseApp
+    :type master_app: noseapp.app.base.NoseApp
     :param name: callback name
 
     :params args, kwargs: args, kwargs of callback method
     """
-    if app.is_sub_app:
+    if master_app.is_sub_app:
         raise RuntimeError(
             'Can not call callback "{}" of {}. Application is sub application.'.format(
-                name, app,
+                name, master_app,
             ),
         )
 
-    apps = [app]
-    apps.extend(app.sub_apps)
+    apps = [master_app]
+    apps.extend(master_app.sub_apps)
 
     callback = lambda a: getattr(a, name)
 
-    for application in apps:
-        callback(application)(*args, **kwargs)
+    for app in apps:
+        callback(app)(*args, **kwargs)
+
+
+def prepare_plugins(plugins, app):
+    """
+    Prepare plugins to run
+
+    :param plugins: plugin list
+    :tyep app: noseapp.app.base.NoseApp
+\    """
+    for plugin in plugins:
+        if isinstance(plugin, AppPlugin):
+            plugin.init_app(app)
 
 
 def merge_context(
@@ -62,10 +78,7 @@ def merge_context(
                     plugin_names.append(plugin.name)
 
         master_app.context.plugins.extend(plugins)
-
-        for plugin in master_app.context.plugins:
-            if isinstance(plugin, AppPlugin):
-                plugin.init_app(master_app)
+        prepare_plugins(master_app.context.plugins, master_app)
 
     for sub_app in master_app.sub_apps:
         # suites
@@ -89,7 +102,10 @@ def merge_context(
 
 class AppContext(object):
     """
-    Context of NoseApp instance
+    Context of NoseApp instance.
+
+    Class is storage for application data.
+    Callback functions is here.
     """
 
     def __init__(self):
@@ -105,28 +121,49 @@ class AppContext(object):
 
     @property
     def suites(self):
+        """
+        Suite list
+        """
         return self.__suites
 
     @property
     def plugins(self):
+        """
+        Plugin list
+        """
         return self.__plugins
 
     @property
     def setup_callbacks(self):
+        """
+        Setup callback list
+        """
         return self.__setup
 
     @property
     def teardown_callbacks(self):
+        """
+        Teardown callback list
+        """
         return self.__teardown
 
     def add_suite(self, suite):
+        """
+        Add suite to suite list
+        """
         self.__suites.append(suite)
 
-    def add_setup(self, f):
-        self.__setup.append(f)
+    def add_setup(self, func):
+        """
+        Add setup callback to callback list
+        """
+        self.__setup.append(func)
 
-    def add_teardown(self, f):
-        self.__teardown.append(f)
+    def add_teardown(self, func):
+        """
+        Add teardown callback to callback list
+        """
+        self.__teardown.append(func)
 
     def setup(self):
         """

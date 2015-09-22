@@ -6,6 +6,9 @@ from nose.suite import ContextSuite
 
 
 def get_suite_master_id(suite):
+    """
+    Get id of master process
+    """
     return suite._BaseSuite__master_id
 
 

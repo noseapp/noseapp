@@ -3,18 +3,18 @@
 from __future__ import absolute_import
 
 from contextlib import contextmanager
+from multiprocessing import cpu_count
 
 from noseapp.utils.common import waiting_for
 from noseapp.core.suite.base import BaseSuite
 from noseapp.case.base import get_case_master_id
 from noseapp.utils.common import TimeoutException
 from noseapp.core.runner.base import RunPerformer
-from noseapp.core.runner.base import setup_teardown
 from noseapp.core.suite.base import get_suite_master_id
 
 
-DEFAULT_MAX_PROCESSES = 4  # default max processes num to run in a moment
 DEFAULT_RELEASE_TIMEOUT = 180  # default timeout for release processes list
+DEFAULT_MAX_PROCESSES = cpu_count()  # default max processes num to run in a moment
 
 
 @contextmanager
@@ -143,7 +143,6 @@ class MasterProcess(object):
                  max_processes=DEFAULT_MAX_PROCESSES,
                  release_timeout=DEFAULT_RELEASE_TIMEOUT):
         from multiprocessing import Process
-        from multiprocessing import cpu_count
 
         # Timeout for release stack
         self.release_timeout = release_timeout
@@ -213,51 +212,48 @@ class MasterProcess(object):
         """
         Terminate processes from stack
         """
-        for worker in self.stack:
-            worker.terminate()
+        for process in self.stack:
+            process.terminate()
 
     def join(self):
         """
         Join processes from stack
         """
-        for worker in self.stack:
-            worker.join()
+        for process in self.stack:
+            process.join(timeout=self.release_timeout)
 
     def run(self):
         """
         Run suites
         """
         while self.queue:
-            worker = self.queue.pop()
-            worker.start()
-            self.stack.append(worker)
+            process = self.queue.pop()
+            process.start()
+            self.stack.append(process)
             self.wait_release()
 
-        while self.stack:
-            self.wait_release()
-
+        self.join()
         self.mp_result.make_result()
 
 
 class MPRunPerformer(RunPerformer):
 
     def __call__(self, suites, result):
-        with setup_teardown(suites):
-            max_size = self.runner.config.options.async_suites
-            timeout = self.runner.config.options.multiprocessing_timeout
+        max_size = self.runner.config.options.async_suites
+        timeout = self.runner.config.options.multiprocessing_timeout
 
-            # XXX:
-            # We must prepare test result here for correct finalize.
-            # Plugins chain still will be called with run suite
-            # on resultProxy, but master process don't know about this
-            self.runner.config.plugins.prepareTestResult(result)
+        # XXX:
+        # We must prepare test result here for correct finalize.
+        # Plugins chain will be still called with run suite
+        # on resultProxy, but master process don't know about this
+        self.runner.config.plugins.prepareTestResult(result)
 
-            process = MasterProcess(
-                result,
-                max_processes=max_size,
-                release_timeout=timeout,
-            )
-            process.add_suites(suites)
+        process = MasterProcess(
+            result,
+            max_processes=max_size,
+            release_timeout=timeout,
+        )
+        process.add_suites(suites)
 
-            with terminate_processes(process):
+        with terminate_processes(process):
                 process.run()

@@ -26,8 +26,10 @@ Where "myproject.app:create_app" is path to import of callable object
 Run strategy
 ------------
 
-* multiprocessing:
+* multiprocessing(default async):
 noseapp-manage run myproject.app:create_app --run-strategy multiprocessing --async-suites 4 --async-tests 2
+or
+noseapp-manage run myproject.app:create_app --async-suites 4 --async-tests 2
 
 * threading:
 noseapp-manage run myproject.app:create_app --run-strategy threading --async-suites 4 --async-tests 2

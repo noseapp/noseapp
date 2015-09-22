@@ -5,7 +5,7 @@ import logging
 from random import Random
 
 from noseapp.core import loader
-from noseapp.core.collector import console
+from noseapp.core.collector import output
 
 
 logger = logging.getLogger(__name__)
@@ -22,6 +22,11 @@ COLLECT_METHOD_COMMAND_PATTERN = re.compile(r'^.*\:.*\..*')
 
 
 def get_command(program_data):
+    """
+    Get command to collect of program data
+
+    :type program_data: noseapp.core.program.ProgramData
+    """
     if program_data.config.options.run_test:
         return program_data.config.options.run_test
 
@@ -32,6 +37,12 @@ def get_command(program_data):
 
 
 def get_strategy(command):
+    """
+    Get strategy by command
+
+    :param command: command to collect
+    :type command: str or None
+    """
     if command and COLLECTOR_COMMAND_PATTERN.search(command) is not None:
 
         if COLLECT_METHOD_COMMAND_PATTERN.search(command) is not None:
@@ -47,12 +58,15 @@ def get_strategy(command):
 
 class CollectSuite(object):
     """
-    Collect suite for test runner
+    Collect suite to run
     """
 
     def __init__(self, program_data):
+        """
+        :type program_data: noseapp.core.program.ProgramData
+        """
         if program_data.config.options.ls:
-            console.tree(program_data.suites, show_docs=program_data.config.options.doc)
+            output.tree(program_data.suites, show_docs=program_data.config.options.doc)
 
         self.__program_data = program_data
         self.__command = get_command(self.__program_data)
@@ -60,17 +74,29 @@ class CollectSuite(object):
 
     @property
     def command(self):
+        """
+        Command to collect
+        """
         return self.__command
 
     @property
     def strategy(self):
+        """
+        Strategy to collect
+        """
         return self.__strategy
 
     @property
     def program_data(self):
+        """
+        :rtype: noseapp.core.program.ProgramData
+        """
         return self.__program_data
 
     def collect_by_basic_strategy(self):
+        """
+        Basic collect without rules
+        """
         kwargs = {}
 
         if self.__program_data.config.options.random:
@@ -90,6 +116,9 @@ class CollectSuite(object):
         ]
 
     def collect_by_suite_strategy(self):
+        """
+        Collect suite from command
+        """
         suite = loader.load_suite_by_name(
             self.__command,
             self.__program_data.suites,
@@ -98,6 +127,9 @@ class CollectSuite(object):
         return [suite(self.__program_data)]
 
     def collect_by_case_strategy(self):
+        """
+        Collect case of suite from command
+        """
         suite_name, case_name = self.__command.split(':')
         suite = loader.load_suite_by_name(
             suite_name,
@@ -112,6 +144,9 @@ class CollectSuite(object):
         ]
 
     def collect_by_method_strategy(self):
+        """
+        Collect case method of suite from command
+        """
         suite_name, case_info = self.__command.split(':')
         case_name, method_name = case_info.split('.')
         suite = loader.load_suite_by_name(
@@ -129,6 +164,9 @@ class CollectSuite(object):
 
     @property
     def collect(self):
+        """
+        Main collect
+        """
         strategy_to_method = {
             CASE_COLLECT_STRATEGY: self.collect_by_case_strategy,
             BASIC_COLLECT_STRATEGY: self.collect_by_basic_strategy,

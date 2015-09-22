@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Auto load suites for register in noseapp.NoseApp
+Auto load suites for register in noseapp.base.NoseApp
 """
 
 import os
@@ -58,7 +58,7 @@ def load_suites_from_dir(path, import_base=None):
         lambda f: f.endswith('.py') and not f.startswith('_'),
         os.listdir(path),
     )
-    modules = (m.rstrip('.py') for m in py_files)
+    modules = (m.replace('.py', '') for m in py_files)
 
     for module_name in modules:
         if import_base:

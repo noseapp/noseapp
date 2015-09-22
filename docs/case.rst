@@ -25,6 +25,16 @@ Simple Example
             pass
 
 
+    @suite.register
+    def my_test_case(case):
+        case.assertTrue(True)
+
+
+    @suite.register(simple=True)
+    def my_simple_test_case():
+        assert True
+
+
 Implement step by step
 ----------------------
 
@@ -116,8 +126,8 @@ Debug for steps.
             self.USE_PROMPT = True
 
 
-Exception message format. You can change it. Use ScreenPlayCase.EXCEPTION_MESSAGE_FORMAT.
-This is default template.
+Exception message format. You can change it. Use ScreenPlayCase.ERROR_MESSAGE_TEMPLATE.
+This is full template.
 
 ::
 

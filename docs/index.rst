@@ -37,6 +37,8 @@ Why noseapp? What i can take from usage?
 Background Initialization
 -------------------------
 
+Object model. Real suites!
+
 application -> extensions -> suites -> test cases
 
 

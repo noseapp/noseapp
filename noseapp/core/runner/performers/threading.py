@@ -6,7 +6,6 @@ from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 
 from noseapp.core.runner.base import RunPerformer
-from noseapp.core.runner.base import setup_teardown
 
 
 class ThreadingRunPerformer(RunPerformer):
@@ -15,16 +14,15 @@ class ThreadingRunPerformer(RunPerformer):
     """
 
     def __call__(self, suites, result):
-        with setup_teardown(suites):
-            size = self.runner.config.options.async_suites
+        size = self.runner.config.options.async_suites
 
-            if size < 0:
-                size = cpu_count()
+        if size < 0:
+            size = cpu_count()
 
-            pool = ThreadPool(size)
+        pool = ThreadPool(size)
 
-            for suite in suites:
-                pool.apply_async(suite, args=(result,))
+        for suite in suites:
+            pool.apply_async(suite, args=(result,))
 
-            pool.close()
-            pool.join()
+        pool.close()
+        pool.join()

@@ -61,11 +61,11 @@ class BaseTestRunner(_TextTestRunner):
             self.stream = wrapped
 
         result = self._makeResult()
-
         performer = self._makePerformer()
 
         start = time.time()
-        performer(suites, result)
+        with setup_teardown(suites):
+            performer(suites, result)
         stop = time.time()
 
         result.printErrors()

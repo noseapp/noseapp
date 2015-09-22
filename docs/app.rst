@@ -2,14 +2,17 @@
 Application
 ===========
 
-Application is only one initialization point of collect suites prepare infrastructure. And so...
+Application is entry point to your test program. And so...
 
 
-Initialization
---------------
+Callbacks
+---------
 
-You must implemented initialization method on you application class. This is will be your constructor. Original method is busy other job.
-I would like to save usage __init__ method, but it's not easy.
+* NoseApp.setUpApp: setup application callback, will be called after create instance
+* NoseApp.tearDownApp: callback will be called after performing test program
+* NoseApp.setUp: will be called before run suites
+* NoseApp.tearDown: will be called after run suites
+* NoseApp.addOptions: add options to OptionParser
 
 
 ::
@@ -19,7 +22,7 @@ I would like to save usage __init__ method, but it's not easy.
 
     class MyTestApplication(NoseApp):
 
-        def initialize(self):
+        def setUpApp(self):
             # my script here...
 
 
@@ -38,9 +41,11 @@ You may use python module as configuration storage
 
 ::
 
-    app = MyTestApplication(config='etc.base')
+    app = MyTestApplication('name', config='etc.base')
     # or by file path
-    app = MyTestApplication(config='/home/user/project/etc/base.py')
+    app = MyTestApplication('name', config='/home/user/project/etc/base.py')
+
+    app.config.DEBUG
 
 
 Config property will be have data from python file.
@@ -49,7 +54,7 @@ Config property will be have data from python file.
 Shared extensions
 -----------------
 
-You may expand test cases from application. Extension must be callable object. Extension will be available by name as property.
+You may expand test cases from application. Extension must be callable object.
 
 ::
 
@@ -72,7 +77,7 @@ You may expand test cases from application. Extension must be callable object. E
 
     class MyTestApplication(NoseApp):
 
-        def initialize(self):
+        def setUpApp(self):
             self.setup_example_ex()
 
         def setup_example_ex(self):
@@ -85,7 +90,7 @@ You may expand test cases from application. Extension must be callable object. E
 Shared data
 -----------
 
-Sometimes, may be needed to create configuration for test cases. You can this from application. Data will be copied during installation.
+Sometimes, may be needed to create configuration for test cases. You can that from application. Data will be copied during installation.
 
 ::
 
@@ -94,7 +99,7 @@ Sometimes, may be needed to create configuration for test cases. You can this fr
 
     class MyTestApplication(NoseApp):
 
-        def initialize(self):
+        def setUpApp(self):
             self.setup_case_settings()
 
         def setup_case_settings(self):
@@ -125,7 +130,7 @@ NoseApp class have callback method for this.
 ::
 
 
-    def add_options(self, parser):
+    def addOptions(self, parser):
         parser.add_option(
             '--project-url',
             dest='project_url',
@@ -146,11 +151,11 @@ You would like use this, i'm sure... :)
 
     class MyTestApplication(NoseApp):
 
-        def before(self):
+        def setUp(self):
             # This callback will be called before run tests
             pass
 
-        def after(self):
+        def tearDown(self):
             # This callback will be called after run tests
             pass
 
@@ -183,5 +188,20 @@ We do recommend to create application instance with wrapper function. This is a 
 
     def create_app(config=None, argv=None, plugins=None):
         return MyTestApplication(
+            'name',
             config=config, argv=argv, plugins=plugins,
         )
+
+
+Master and sub application
+--------------------------
+
+You can use application as sub application
+
+::
+
+    sub_app = NoseApp.as_sub_app('hello')
+    master_app = NoseApp.as_master_app('world', sub_app)
+
+    sub_app.load_suites('...')
+    master_app.load_suites('...', merge_suites=True)

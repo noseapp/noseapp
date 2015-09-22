@@ -1,18 +1,14 @@
 # -*- coding: utf-8 -*-
 
 """
-Base application for your test program.
-
-If you want add option to command line so use addOptions method on base your application class.
-When you have wish to run application, use noseapp-manage run command for that.
+Application is entry point to your test program.
+You can configure and expand your program from application.
 """
 
 import os
 import sys
 import logging
 from contextlib import contextmanager
-
-from nose.plugins.errorclass import ErrorClassPlugin
 
 from noseapp.core import loader
 from noseapp.core import extensions
@@ -23,6 +19,7 @@ from noseapp.app.context import merge_context
 from noseapp.core.factory import ClassFactory
 from noseapp.core.collector import CollectSuite
 from noseapp.app.config import Config as AppConfig
+from noseapp.core.constants import CONFIG_CHECKOUT_ENV
 from noseapp.plugins.configure import AppConfigurePlugin
 
 
@@ -33,12 +30,27 @@ DEFAULT_PLUGINS = [
     AppConfigurePlugin(),
 ]
 
-APP_CONFIG = os.getenv('NOSEAPP_CONFIG', None)
+APP_CONFIG = os.getenv(CONFIG_CHECKOUT_ENV, None)
 
 
 class NoseApp(object):
     """
-    Base app class
+    Base application class
+
+    Simple example:
+        app = NoseApp('my_app')
+        app.load_suites('/path/to/suites')
+        app.run()
+
+    Application can be master and sub application:
+
+        sub_app = NoseApp.as_sub_app('sub')
+        master_app = NoseApp.as_master_app('master', sub_app)
+
+        sub_app.load_suites('/path/to/suites')
+        master_app.load_suites('/path/to/suites', merge_suites=True)
+
+        master_app.run()
     """
 
     config_class = AppConfig
@@ -108,7 +120,7 @@ class NoseApp(object):
             # Program object initialization. Will be run later.
             self.__test_program = self.program_class(self, argv=argv, exit=exit)
 
-            # If we are having path to suites dir then makes load suites
+            # If we are having path to suites dir then make load suites
             if suites_path is not None:
                 self.load_suites(suites_path)
 
@@ -136,13 +148,15 @@ class NoseApp(object):
 
     def setUpApp(self):
         """
-        Callback for initialize application
+        Callback for initialize application.
+        Will be call after initialize instance.
         """
         pass
 
     def tearDownApp(self):
         """
-        Callback for destruct application
+        Callback for destruct application.
+        Will be called after exit from test program.
         """
         pass
 
@@ -168,10 +182,16 @@ class NoseApp(object):
 
     @property
     def name(self):
+        """
+        Application name
+        """
         return self.__name
 
     @property
     def options(self):
+        """
+        Command line options
+        """
         if self.__options is None:
             raise RuntimeError(
                 'Options not found. Working outside initialize callback.',
@@ -192,42 +212,81 @@ class NoseApp(object):
 
     @property
     def context(self):
+        """
+        Application context instance
+
+        :rtype: noseapp.app.context.AppContext
+        """
         return self.__context
 
     @property
     def plugins(self):
+        """
+        Plugins list
+        """
         return self.__context.plugins
 
     @property
     def is_sub_app(self):
+        """
+        Flag to definition: that's sub application?
+        """
         return self.__is_sub_app
 
     @property
     def is_master_app(self):
+        """
+        Flag to definition: that's master application?
+        """
         return not self.__is_sub_app
 
     @property
     def suites(self):
+        """
+        Suites list
+        """
         return self.__context.suites
 
     @property
     def sub_apps(self):
+        """
+        Sub application list
+        """
         return self.__sub_apps
 
     @property
     def status(self):
+        """
+        Status of application
+        """
         return 'sub' if self.__is_sub_app else 'master'
+
+    def add_before(self, func):
+        """
+        Add callback to setup
+        """
+        self.__context.add_setup(func)
+        return func
+
+    def add_after(self, func):
+        """
+        Add callback to teardown
+        """
+        self.__context.add_teardown(func)
+        return func
 
     @staticmethod
     def shared_extension(name=None, cls=None, args=None, kwargs=None):
         """
-        Shared extension to TestCase classes.
-        Use require param in noseapp.suite.Suite class for connect.
+        Shared extension to Suites and TestCases.
+        Use require param on noseapp.suite.Suite class for connect.
 
-        :param name: extension name. this is property name in case class.
+        :param name: extension name
         :type name: str
+
         :param cls: extension class
         :param args, kwargs: class init arguments
+
         :type args: tuple
         :type kwargs: dict
         """
@@ -253,6 +312,7 @@ class NoseApp(object):
 
         :param name: this is property name of case class
         :type name: str
+
         :param data: any object
         """
         logger.debug('Shared data "%s"', name)
@@ -273,7 +333,7 @@ class NoseApp(object):
         """
         App suite list in application
 
-        :type suites: list, tuple
+        :type suites: iter
         """
         for suite in suites:
             self.register_suite(suite)
@@ -284,8 +344,13 @@ class NoseApp(object):
 
         :param path: dir path
         :type path: str
+
         :param recursive: recursive load from path or load from simple dir
         :type recursive: bool
+
+        :param merge_suites: merge suites from sub application
+         to self context. For master application only.
+        :type merge_suites: bool
         """
         if path not in sys.path:
             sys.path.append(path)
@@ -308,7 +373,7 @@ class NoseApp(object):
 
         if self.__is_sub_app:
             raise RuntimeError(
-                'Application can not be run. Application is sub application.',
+                'Application {} can not be run. Application is sub application.'.format(self),
             )
 
         @contextmanager
@@ -319,7 +384,9 @@ class NoseApp(object):
                 app_callback(self, 'tearDownApp')
 
         with teardown_app():
-            self.__test_program.perform()
+            success = self.__test_program.run()
+
+        return success
 
     def __repr__(self):
         return '<NoseApp({}): {}>'.format(

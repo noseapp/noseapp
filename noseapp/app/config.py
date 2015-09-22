@@ -5,7 +5,7 @@ import imp
 import logging
 from importlib import import_module
 
-from noseapp.datastructures import ModifyDict as BaseConfig
+from noseapp.datastructures import ModifyDict
 
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ class ConfigError(BaseException):
     pass
 
 
-class Config(BaseConfig):
+class Config(ModifyDict):
     """
     App config storage
     """

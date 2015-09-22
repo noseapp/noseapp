@@ -7,7 +7,6 @@ from multiprocessing import cpu_count
 from gevent.pool import Pool
 
 from noseapp.core.runner.base import RunPerformer
-from noseapp.core.runner.base import setup_teardown
 
 
 class GeventRunPerformer(RunPerformer):
@@ -16,15 +15,14 @@ class GeventRunPerformer(RunPerformer):
     """
 
     def __call__(self, suites, result):
-        with setup_teardown(suites):
-            size = self.runner.config.options.async_suites
+        size = self.runner.config.options.async_suites
 
-            if size < 0:
-                size = cpu_count()
+        if size < 0:
+            size = cpu_count()
 
-            pool = Pool(size)
+        pool = Pool(size)
 
-            for suite in suites:
-                pool.spawn(suite, result)
+        for suite in suites:
+            pool.spawn(suite, result)
 
-            pool.join()
+        pool.join()

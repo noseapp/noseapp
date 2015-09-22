@@ -2,7 +2,6 @@
 
 import logging
 import unittest
-from functools import wraps
 from types import FunctionType
 
 from noseapp.core import loader
@@ -29,7 +28,15 @@ def suite_is_mount(suite):
 
 class Suite(object):
     """
-    Base Suite class for group or one TestCase
+    Base Suite class for group or one TestCase.
+
+    Simple example:
+
+        suite = Suite(__name__)
+
+        suite.register
+        def my_test_case(case):
+            case.assertTrue(True)
     """
 
     # Constant is pre set for require param
@@ -113,9 +120,15 @@ class Suite(object):
         return self.test_case_class
 
     def setUp(self):
+        """
+        Callback. Will be called run before run suite.
+        """
         pass
 
     def tearDown(self):
+        """
+        Callback. Will be called run after run suite.
+        """
         pass
 
     @property
@@ -143,33 +156,39 @@ class Suite(object):
     skipIf = skip_if
     skipUnless = skip_unless
 
-    def add_pre_run(self, f):
+    def add_pre_run(self, func):
         """
-        Set function for pre run test case
-        """
-        self.__context.add_pre_run_handler(f)
-        return wraps(f)
+        Set function for pre run test case.
 
-    def add_post_run(self, f):
+        example:
+            suite.add_pre_run(lambda case: case.do_something())
         """
-        Set function for post run test case
-        """
-        self.__context.add_post_run_handler(f)
-        return wraps(f)
+        self.__context.add_pre_run_handler(func)
+        return func
 
-    def add_before(self, f):
+    def add_post_run(self, func):
+        """
+        Set function for post run test case.
+
+        example:
+            suite.add_post_run(lambda case: case.do_something())
+        """
+        self.__context.add_post_run_handler(func)
+        return func
+
+    def add_before(self, func):
         """
         Set setup callback for suite prepare
         """
-        self.__context.add_setup(f)
-        return wraps(f)
+        self.__context.add_setup(func)
+        return func
 
-    def add_after(self, f):
+    def add_after(self, func):
         """
         Set teardown callback for suite prepare
         """
-        self.__context.add_teardown(f)
-        return wraps(f)
+        self.__context.add_teardown(func)
+        return func
 
     def ext(self, name):
         """
@@ -178,6 +197,11 @@ class Suite(object):
 
         :param name: extension name
         """
+        if not self.__is_build:
+            raise RuntimeError(
+                'Extension is not allow. Suite is not building.',
+            )
+
         if name not in self.__context.require:
             raise LookupError(
                 'Extension "{}" is not required'.format(name),
@@ -191,23 +215,31 @@ class Suite(object):
 
         :param cls: test case class
         :type cls: noseapp.case.TestCase or function
+
         :param simple: use for simple test function
         :type simple: bool
+
+        :param skip: if to set then skip case
+        :type skip: str
 
         :rtype: cls
         """
         if not cls and not kwargs:
-            raise TypeError('cls param or kwargs is required')
+            raise TypeError('cls param or **kwargs is required')
         elif cls and kwargs:
-            raise TypeError('kwargs can not be used with cls param')
+            raise TypeError('**kwargs can not be used with cls param')
 
-        def wrapped(_class, simple=False):
+        def wrapped(_class, simple=False, skip=None):
             if type(_class) == FunctionType:
                 _class = make_test_case_class_from_function(
                     _class,
                     simple=simple,
                     base_class=self.test_case_class,
                 )
+
+            if skip:
+                unittest.skip(skip)(_class)
+
             self.__context.add_test_case(_class)
 
             logger.debug(

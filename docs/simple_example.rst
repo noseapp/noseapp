@@ -64,6 +64,7 @@ Application
 
     def create_app(config=None, argv=None, plugins=None):
         return MyTestApplication(
+            'name',
             config=config, argv=argv, plugins=plugins,
         )
 
@@ -90,26 +91,33 @@ TestCase
 
 
     @suite.register
+    def my_test_case(case):
+        rand_int = case.ext('rend').get_random()
+        case.assertGreater(rand_int, 0)
+
+    @suite.register(simple=True)
+    def my_simple_test_case():
+        rand_int = suite.ext('rend').get_random()
+        assert rand_int > 0
+
+
+    @suite.register
     class BasicExampleCase(TestCase):
 
-        rand = None  # from MyTestApplication.setup_example_ex
-
         def test(self):
-            rand_int = self.rend.get_random()
+            rand_int = self.ext('rend').get_random()
             self.assertGreater(rand_int, 0)
 
 
     @suite.register
     class StepByStepCase(ScreenPlayCase):
 
-        settings = None  # from MyTestApplication.setup_case_settings
-
         def setUp(self):
-            self.USE_PROMPT = self.settings['debug_mode']
+            self.USE_PROMPT = self.ext('settings')['debug_mode']
 
         @step(1, 'step description')
         def step_one(self):
-            rand_int = self.rend.get_random()
+            rand_int = self.ext('rend').get_random()
             self.assertGreater(rand_int, 0)
 
         # @step(2, 'description')

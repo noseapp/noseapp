@@ -4,7 +4,7 @@
 Core of framework.
 
 If you write modules of core and they're using other modules
-of library that make using import into functions or methods.
+of library that make using import inside functions or methods.
 """
 
 from noseapp.core.program import TestProgram

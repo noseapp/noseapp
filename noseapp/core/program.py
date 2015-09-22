@@ -7,6 +7,8 @@ from argparse import ArgumentError
 from nose.proxy import ResultProxyFactory
 from nose.core import TestProgram as BaseTestProgram
 
+from noseapp.core import collector
+from noseapp.core import extensions
 from noseapp.app.context import app_callback
 
 
@@ -84,9 +86,6 @@ class ProgramData(object):
         """
         Collect and build suites
         """
-        from noseapp.core import collector
-        from noseapp.core import extensions
-
         suites = collector.collect(
             self,
             collector_class=self.__app.collector_class,
@@ -102,7 +101,11 @@ class TestProgram(BaseTestProgram):
     def __init__(self, app, argv=None, exit=True):
         argv = prepare_argv(argv, app.plugins)
 
-        super(TestProgram, self).__init__(argv=argv, addplugins=app.plugins)
+        super(TestProgram, self).__init__(
+            argv=argv,
+            exit=exit,
+            addplugins=app.plugins,
+        )
 
         self.testLoader = None  # We are not using that
         self.data = ProgramData(self, app, argv=argv)
@@ -114,7 +117,7 @@ class TestProgram(BaseTestProgram):
     def runTests(self):
         pass
 
-    def perform(self):
+    def run(self):
         """
         Perform test program
         """

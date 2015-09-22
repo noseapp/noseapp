@@ -23,8 +23,13 @@ def make_test_case_class_from_function(
     if callable(class_name_creator):
         class_name = class_name_creator(func)
 
-    cls = type(class_name or func.__name__, (base_class, ), {})
-    cls.__doc__ = doc or func.__doc__
+    cls = type(
+        class_name or func.__name__,
+        (base_class, ),
+        {
+            '__doc__': doc or func.__doc__,
+        },
+    )
 
     if simple:
         cls.runTest = lambda s: func()

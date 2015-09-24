@@ -30,4 +30,20 @@ class ModifyDict(dict):
 
 
 class Context(ModifyDict):
+    """
+    Class for creating context object.
+
+    Usage:
+
+        >>> ctx = Context(a=1, b=2)
+        >>> ctx.a
+        >>> 1
+        >>> ctx.ab = 3
+        >>> ctx.ab
+        >>> 3
+        >>> ctx['a']
+        >>> 1
+        >>> ctx.get('c')
+        >>> None
+    """
     pass

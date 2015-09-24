@@ -1,70 +1,83 @@
-=======
-NoseApp
-=======
+Welcome to noseapp's documentation
+==================================
 
 .. toctree::
     :maxdepth: 2
 
-    app
-    suite
-    case
-    runner
-    manage
-    extensions
-    simple_example
-
-
-About
-=====
-
-This is framework for test development with complex logic around, well, based on nose library.
-You will can to build your regression testing on base noseapp library and will create your own extensions.
+    api
+    example
+    common
 
 Installation
 ------------
 
 ::
 
-  pip install noseapp
+    pip install noseapp
 
 
-Motivation
-==========
-
-Why noseapp? What i can take from usage?
-
-
-Background Initialization
--------------------------
-
-Object model. Real suites!
-
-application -> extensions -> suites -> test cases
-
-
-Flexibility and control
------------------------
-
-* application is only one service point
-* connect extensions, you can require extension by name for suite initialization.
-* support original nose plugins (and noseapp.AppPlugin)
-* you will can create common configuration of your application
-* NoseApp class is implemented before, after callbacks methods
-* you may create constructor of application(this is required procedure in reality). use initialize callback method for this.
-
-
-Implementation by steps on test case class
-------------------------------------------
-
-* comfortable error messages in traceback
-* before, finalize callback methods on base test case class
-* interactive debug mode
-* parametrize for flow of steps
-
-
-Async
+About
 -----
+
+This is framework for test development with complex logic around and based on nose library.
+
+
+Async run
+---------
 
 * multiprocessing
 * threading
 * gevent
+
+
+Quick start
+===========
+
+::
+
+    import noseapp
+
+
+    suite = noseapp.Suite('first_suite')
+
+
+    @suite.register
+    class TestCase(noseapp.TestCase):
+
+        def test(self):
+            # do something
+            self.assertTrue(True)
+
+
+    @suite.register
+    class StepByStepCase(noseapp.ScreenPlayCase):
+
+        def begin(self):
+            pass
+
+        @noseapp.step(1, 'comment to step')
+        def step_one(self):
+            self.assertTrue(True)
+
+        @noseapp.step(2, 'comment to step')
+        def step_two(self):
+            self.assertTrue(True)
+
+        def finalize(self):
+            pass
+
+
+    @suite.register
+    def test_case(case):
+        case.assertTrue(True)
+
+
+    @suite.register(simple=True)
+    def simple_test_case():
+        assert True
+
+
+    app = noseapp.NoseApp('example')
+    app.register_suite(suite)
+
+    app.run()

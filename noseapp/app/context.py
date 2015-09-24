@@ -51,10 +51,24 @@ def merge_context(
         merge_plugins=False,
         merge_teardown=False):
     """
-    Merge context from sub apps to master app
+    Merge context from sub apps to master app.
 
     :param master_app: master app instance
     :type master_app: noseapp.app.base.NoseApp
+
+    :param merge_setup: merge setup callbacks?
+    :type merge_setup: bool
+
+    :param merge_suites: merge suites?
+    :type merge_suites: bool
+
+    :param merge_plugins: merge plugins?
+    :type merge_plugins: bool
+
+    :param merge_teardown: merge teardown callbacks?
+    :type merge_teardown: bool
+
+    :raises: RuntimeError
     """
     if master_app.is_sub_app:
         raise RuntimeError(
@@ -102,10 +116,16 @@ def merge_context(
 
 class AppContext(object):
     """
-    Context of NoseApp instance.
+    Context storage of NoseApp instance.
 
     Class is storage for application data.
     Callback functions is here.
+
+    Usage:
+
+        >>> context = AppContext()
+        >>> context.add_setup(lambda: print 'Hello World!')
+        >>> ...
     """
 
     def __init__(self):
@@ -122,61 +142,72 @@ class AppContext(object):
     @property
     def suites(self):
         """
-        Suite list
+        Suites storage.
+        After register on application suite will be here.
         """
         return self.__suites
 
     @property
     def plugins(self):
         """
-        Plugin list
+        Plugins storage.
+        After add plugin to application he will be here.
         """
         return self.__plugins
 
     @property
     def setup_callbacks(self):
         """
-        Setup callback list
+        Setup callback storage
         """
         return self.__setup
 
     @property
     def teardown_callbacks(self):
         """
-        Teardown callback list
+        Teardown callback storage
         """
         return self.__teardown
 
     def add_suite(self, suite):
         """
-        Add suite to suite list
+        Add suite to suite storage
+
+        :param suite: suite instance
+        :type suite: noseapp.suite.base.Suite
         """
         self.__suites.append(suite)
 
     def add_setup(self, func):
         """
-        Add setup callback to callback list
+        Add setup callback to setup callback storage
+
+        :param func: function to call
+        :type func: callable
         """
         self.__setup.append(func)
 
     def add_teardown(self, func):
         """
-        Add teardown callback to callback list
+        Add teardown callback to teardown callback storage
+
+        :param func: function to call
+        :type func: callable
         """
         self.__teardown.append(func)
 
     def setup(self):
         """
-        Method do call to callback list before run application.
-        Will be use for nose suite.
+        Method make call to chain of setup callback storage before run suites.
+        For nose.suite.ContextSuite.
         """
         for callback in self.__setup:
             callback()
 
     def teardown(self):
         """
-        Method do call to callback list after run application.
-        Will be use for nose suite.
+        Method make call to chain of teardown callback storage after run suites.
+        For nose.suite.ContextSuite.
         """
         for callback in self.__teardown:
             callback()

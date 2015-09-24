@@ -7,12 +7,12 @@ from testapp.case import MyTestCase
 suite = MySuite(__name__)
 
 
-@suite.add_before
+@suite.add_setup
 def before():
     suite.ext('self_test').suite_before_called = True
 
 
-@suite.add_after
+@suite.add_teardown
 def after():
     suite.ext('self_test').suite_after_called = True
 
@@ -31,6 +31,9 @@ def post_run(case):
 
 @suite.register
 class CaseLikeClass(MyTestCase):
+
+    def test(self):
+        pass
 
     def runTest(self):
         self.ext('self_test').worked_cases.append(self)

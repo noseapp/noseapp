@@ -5,15 +5,42 @@ Tmp storage for extensions
 """
 
 from copy import deepcopy
+from contextlib import contextmanager
 
 from noseapp.datastructures import ModifyDict as Transport
 
 
 _EXTENSIONS = {}
 
+WAS_INSTALLATION = False
 
-class ExtensionNotFound(BaseException):
+
+class ExtensionNotFound(LookupError):
     pass
+
+
+class ExtensionNotRequired(BaseException):
+    pass
+
+
+class InstallationError(BaseException):
+    pass
+
+
+@contextmanager
+def installation():
+    """
+    Extensions must be installed only once.
+    """
+    global WAS_INSTALLATION
+
+    if WAS_INSTALLATION:
+        raise InstallationError('Extensions is already installed')
+
+    yield
+
+    clear()
+    WAS_INSTALLATION = True
 
 
 def get(name):

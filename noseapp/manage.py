@@ -4,7 +4,7 @@
 NoseApp management.
 
 Command line interface:
-    noseapp-manage [command, command args, command kwargs]
+    noseapp-manage <command name>, <command args>, <command kwargs> [options]
 
 Example:
     noseapp-manage command argument1 argument2 argument3=value
@@ -73,6 +73,22 @@ def _load_manage_py():
 
 
 def register_command(name, command):
+    """
+    Register command to run.
+
+    Usage::
+
+        def say_hello():
+            "Help here"
+            print 'Hello world!'
+
+        register_command('hello', say_hello)
+        # to run: noseapp-manage hello
+        # help: noseapp-manage help hello
+
+    :param name: command name
+    :param command: callable object
+    """
     assert callable(command), 'command is not callable'
     assert isinstance(name, basestring), 'name of command must be string only'
 
@@ -82,16 +98,16 @@ def register_command(name, command):
 class DefaultCommands(object):
 
     @staticmethod
-    def help(command=None, **kw):
+    def help(command_name=None):
         """
-        :app_path: path to importing of getting application function
+        :param command_name: command name
         """
         sys.stdout.write(__doc__)
 
-        if command:
-            command_func = _get_command(command)
+        if command_name:
+            command_func = _get_command(command_name)
 
-            sys.stdout.write('\nCommand: {} ({}):\n'.format(command, inspect.getfile(command_func)))
+            sys.stdout.write('\nCommand: {} ({}):\n'.format(command_name, inspect.getfile(command_func)))
 
             sys.stdout.write('{}\n'.format(command_func.__doc__))
         else:
@@ -105,7 +121,7 @@ class DefaultCommands(object):
     @staticmethod
     def run_app(app_path, **kwargs):
         """
-        Command for running application.
+        Command for run application.
 
         :usage:
             noseapp-manage run import.path.to:get_app_function
@@ -122,18 +138,18 @@ class DefaultCommands(object):
         app = _get_create_app_func(app_path)(**kwargs)
         app.run()
 
-    @staticmethod
-    def create_project(name):  # TODO
-        """
-        Create base structure of project
-        """
-        pass
+    # TODO:
+    # @staticmethod
+    # def create_project(name):
+    #     """
+    #     Create base structure of project
+    #     """
+    #     pass
 
 
 # Add commands here. Order is important.
 register_command('help', DefaultCommands.help)
 register_command('run', DefaultCommands.run_app)
-register_command('create_project', DefaultCommands.create_project)
 
 
 def run():
@@ -165,7 +181,7 @@ def run():
         command(*args, **kwargs)
     except TypeError:
         _error(
-            'signature of command is invalid.\n\n{}'.format(
+            'Is invalid signature of command, may be?\n\n{}'.format(
                 traceback.format_exc(),
             ),
         )

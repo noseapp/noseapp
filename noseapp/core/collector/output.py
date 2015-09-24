@@ -39,7 +39,7 @@ def _doc(string, is_end):
     return '| - {}{}'.format(string, '...' if is_end else '')
 
 
-def tree(suites, show_docs=True, doc_lines=1):
+def tree(suites, show_docs=True, doc_lines=1, exit=True):
     """
     Print suites tree from application
 
@@ -143,4 +143,5 @@ def tree(suites, show_docs=True, doc_lines=1):
 
     _print_total_info(suite_counter, case_counter, method_counter)
 
-    sys.exit(0)
+    if exit:
+        sys.exit(0)

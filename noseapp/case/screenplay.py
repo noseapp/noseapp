@@ -282,36 +282,42 @@ class ScreenPlayCaseMeta(type):
 
 class ScreenPlayCase(TestCase):
     """
-    Base TestCase class. Enjoy :)
+    Test case for implementation by step script
 
-    Example:
+    Usage::
 
-    class CaseExample(ScreenPlayCase):
+        class CaseExample(ScreenPlayCase):
 
-        USE_PROMPT = True  # usage interactive debug
+            USE_PROMPT = True  # usage interactive debug
 
-        @step(1, 'description')
-        def step_1(self):
-          self.assertTrue(True)
+            @step(1, 'description')
+            def step_1(self):
+                self.assertTrue(True)
 
-        @step(2, 'description')
-        def step_2(self):
-          self.assertTrue(True)
+            @step(2, 'description')
+            def step_2(self):
+                self.assertTrue(True)
 
 
         class CaseParametrizeExample(ScreenPlayCase):
 
-        FLOWS = (
-          1, 2, 3
-        )
+            FLOWS = (
+              1, 2, 3
+            )
 
-        @step(1, u'Step 1')
-        def step_1(self, i):
-          self.assertGreater(i, 0)
+            @step(1, u'Step 1')
+            def step_1(self, i):
+                self.assertGreater(i, 0)
 
-        @step(2, u'Step 2')
-        def step_2(self, i):
-          self.assertGreater(i, 0)
+            @step(2, u'Step 2')
+            def step_2(self, i):
+                self.assertGreater(i, 0)
+
+
+        class SimpleCaseClass(ScreenPlayCase):
+
+            def test(self):
+                pass
     """
 
     __metaclass__ = ScreenPlayCaseMeta
@@ -323,14 +329,14 @@ class ScreenPlayCase(TestCase):
 
     def begin(self):
         """
-        Call before run steps
+        Callback. Will be called before run steps.
         """
         pass
 
     def finalize(self):
         """
-        Call after run steps.
-        If exception in step method be raised,
-        this method can not be called.
+        Callback. Will be called after run steps.
+        If exception at step method will be raised then
+        method can't to be called.
         """
         pass

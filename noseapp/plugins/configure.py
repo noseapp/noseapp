@@ -29,21 +29,21 @@ class AppConfigurePlugin(AppPlugin):
             dest='async_suites',
             default=0,
             type=int,
-            help='Num of suites to async run.',
+            help='Number of suites to async run.',
         )
         group.add_option(
             '--async-tests',
             dest='async_tests',
             default=0,
             type=int,
-            help='Num of tests to async run. Sets limit inside suite.',
+            help='Number of tests to async run. Limit to tests within suite.',
         )
         group.add_option(
             '--multiprocessing-timeout',
             dest='multiprocessing_timeout',
             default=1800,
             type=int,
-            help='Process timeout. With multiprocessing strategy only.',
+            help='Process timeout. To multiprocessing strategy only.',
         )
         group.add_option(
             '--ls',
@@ -57,28 +57,28 @@ class AppConfigurePlugin(AppPlugin):
             dest='doc',
             action='store_true',
             default=False,
-            help='Show docstring of test cases.',
+            help='Show docstring of test cases. To --ls option only.',
         )
         group.add_option(
             '-t', '--test',
             dest='run_test',
             default='',
             type=str,
-            help='Test case or suite name for running.',
+            help='Run test case or suite by name.',
         )
         group.add_option(
             '--random',
             dest='random',
             action='store_true',
             default=False,
-            help='Random shuffle for cases',
+            help='Get running within random shuffle',
         )
         group.add_option(
             '--random-seed',
             dest='random_seed',
             default=int(time.time()),
             type=int,
-            help='Seed of random shuffle. Using with random option only.',
+            help='Seed of random shuffle. To --random option only.',
         )
 
         parser.add_option_group(group)

@@ -86,12 +86,11 @@ class ProgramData(object):
         """
         Collect and build suites
         """
-        suites = collector.collect(
-            self,
-            collector_class=self.__app.collector_class,
-        )
-
-        extensions.clear()
+        with extensions.installation():
+            suites = collector.collect(
+                self,
+                collector_class=self.__app.collector_class,
+            )
 
         return suites
 

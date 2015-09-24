@@ -58,7 +58,7 @@ def get_strategy(command):
 
 class CollectSuite(object):
     """
-    Collect suite to run
+    Collect suite to run.
     """
 
     def __init__(self, program_data):

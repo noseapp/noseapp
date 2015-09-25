@@ -5,7 +5,10 @@ Auto load suites for register in noseapp.base.NoseApp
 """
 
 import os
+import sys
+import time
 import logging
+from random import randint
 from importlib import import_module
 
 
@@ -37,6 +40,21 @@ def is_package(path):
     )
 
 
+def save_loaded_module(module, module_name):
+    """
+    Substitute module name in sys.modules with
+    new name for exclude conflict at another load
+
+    :param module: module instance
+    :param module_name: module name in sys.modules
+    """
+    load_session = str(time.time() + randint(0, 1000))
+    system_name = '{}_{}'.format(module_name, load_session)
+
+    del sys.modules[module_name]
+    sys.modules[system_name] = module
+
+
 def load_suites_from_dir(path, import_base=None):
     """
     Load suites from dir
@@ -66,7 +84,17 @@ def load_suites_from_dir(path, import_base=None):
 
         logger.debug('Import python module: "%s"', module_name)
 
+        # Can be conflict with global name
+        # We're obliged to talk about this
+        if module_name in sys.modules:
+            raise LoaderError(
+                'Module "{}" already exit in program context. {}.'.format(
+                    module_name, sys.modules[module_name],
+                ),
+            )
+
         module = import_module(module_name)
+        save_loaded_module(module, module_name)
 
         module_suites = (
             getattr(module, atr)

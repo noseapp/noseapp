@@ -13,10 +13,30 @@ class TimeoutException(BaseException):
 
 def waiting_for(func, timeout=None, sleep=None, args=None, kwargs=None):
     """
+    Wait for good result of callback function.
+
+    Example::
+
+        flag = 0
+
+        def target_1():
+            if flag > 0:
+                return 'greater'
+            return ''
+
+        def target_2():
+            return flag > 0
+
+        waiting_for(target_1)
+        waiting_for(target_2, timeout=10)
+
     :param func: callback function
     :param timeout: number of seconds for timeout
     :param sleep: number of second for sleep after call function
-    :param args, kwargs: callback arguments
+    :param args: callback args
+    :param kwargs: callback kwargs
+
+    :raises: TimeoutException
     """
     args = args or tuple()
     kwargs = kwargs or {}

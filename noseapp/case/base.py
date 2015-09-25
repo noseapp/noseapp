@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 
+from nose.case import Test as NoseTestWrapper
 from unittest import TestCase as BaseTestCase
+
+from noseapp.case.context import TestCaseContext
+from noseapp.datastructures import ModifyDict as MountData
 
 
 def make_test_case_class_from_function(
@@ -47,7 +51,9 @@ def case_is_mount(case):
 
     :rtype: bool
     """
-    return hasattr(case, '_of_suite')
+    return hasattr(case, '__mount_data__') \
+        and \
+        isinstance(case.__mount_data__, MountData)
 
 
 def get_case_master_id(case):
@@ -56,88 +62,102 @@ def get_case_master_id(case):
 
     :type case: ToNoseAppTestCase
     """
-    if hasattr(case, 'test'):
+    if isinstance(case, NoseTestWrapper):
         case = case.test
 
     return case._ToNoseAppTestCase__master_id
 
 
-class ExtensionStorage(object):
-    """
-    Storage for extensions of test case
-    """
-
-    def __init__(self, suite):
-        """
-        :type suite: noseapp.suite.base.Suite
-        """
-        self.__require = []
-        self.__require.extend(suite.require)
-
-        self.__extensions = dict(
-            (k, v) for k, v in suite.context.extensions.items()
-        )
-
-    def __call__(self, name):
-        if name in self.__require:
-            return self.__extensions[name]
-
-        raise LookupError(
-            'Extension "{}" is not required'.format(name),
-        )
-
-
 class ToNoseAppTestCase(object):
     """
-    This is mixin for NoseApp supporting
+    This is mixin for noseapp supporting.
+    Class must be first in inheritance chain!
+
+    Usage::
+
+        class MyTestCase(ToNoseAppTestCase, unittest.TestCase):
+            pass
     """
 
     def __init__(self, *args, **kwargs):
+        if not case_is_mount(self):
+            raise RuntimeError(
+                'Test case "{}" can not be created without mounting to suite'.format(
+                    self.__class__,
+                ),
+            )
+
         super(ToNoseAppTestCase, self).__init__(*args, **kwargs)
 
         self.__master_id = id(self)
 
+        if hasattr(self, 'REQUIRE'):
+            self.__mount_data__.context.update_by_require(self.REQUIRE)
+
     @classmethod
     def mount_to_suite(cls, suite):
         """
-        Create class of suite
+        Mount class to suite.
+        If this procedure will be ignored then class can't be instantiate.
 
         :type suite: noseapp.suite.base.Suite
+
+        :raises: RuntimeError
+        :rtype: cls
         """
         if case_is_mount(cls):
             raise RuntimeError(
                 '"{}" already mount to {}'.format(
-                    cls.__name__, cls._of_suite,
+                    cls.__name__, cls.__mount_data__.of_suite,
                 ),
             )
 
-        setattr(cls, '_of_suite', suite.name)
-        setattr(cls, '_ext_storage', ExtensionStorage(suite))
+        setattr(
+            cls,
+            '__mount_data__',
+            MountData(
+                of_suite=suite.name,
+                context=TestCaseContext(suite),
+            ),
+        )
 
         return cls
 
     @property
     def of_suite(self):
-        if case_is_mount(self):
-            return self._of_suite
-
-        return None
+        """
+        This is suite name after mounting.
+        """
+        return self.__mount_data__.of_suite
 
     def ext(self, name):
-        if case_is_mount(self):
-            return self._ext_storage(name)
+        """
+        Get extension by name.
+        Extension must be required.
 
-        return None
+        Example::
+
+            suite = Suite(__name__, require=['extension'])
+
+            @suite.register
+            class Test(TestCase):
+
+                def test(self):
+                    ext = self.ext('extension')
+
+        :param name: extension name
+        :type name: str
+
+        :raises: noseapp.core.extensions.ExtensionNotRequired
+        """
+        return self.__mount_data__.context.ext(name)
 
     def __str__(self):
-        if case_is_mount(self):
-            return '{} ({}:{})'.format(
-                self._testMethodName,
-                self._of_suite,
-                self.__class__.__name__,
-            )
-
-        return super(ToNoseAppTestCase, self).__str__()
+        return '{} ({}:{})'.format(
+            self._testMethodName,
+            self.__mount_data__.of_suite,
+            self.__class__.__name__,
+        )
 
 
 class TestCase(ToNoseAppTestCase, BaseTestCase):

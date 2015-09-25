@@ -147,7 +147,7 @@ class MasterProcess(object):
         # Timeout for release stack
         self.release_timeout = release_timeout
         # Max processes to run
-        self.max_processes = max_processes if max_processes > 0 else cpu_count()
+        self.max_processes = max_processes if max_processes > 0 else DEFAULT_MAX_PROCESSES
 
         # Tasks queue
         self.queue = []

@@ -24,15 +24,29 @@ class ConfigError(BaseException):
 class Config(ModifyDict):
     """
     App config storage
+
+    Usage:
+
+        >>> config = Config()
+        >>> config.from_module('etc.base')
+        >>> # or config.from_py_file('/home/user/project/etc/base.py')
+        >>> config.DEBUG
+        >>> False
+        >>> ...
     """
 
     @classmethod
     def from_path(cls, path=None):
         """
-        Create instance and try to parse config by path
+        Alternative constructor.
+        Create instance and try to parse config by path.
+
+        Example:
+
+            >>> config = Config.from_path('etc.base')
 
         :param path: import path or file path
-        :type path: str
+        :type path: str, None
 
         :rtype: Config
         """
@@ -58,6 +72,8 @@ class Config(ModifyDict):
 
         :param module: import path
         :type module: str
+
+        :raises: ImportError
         """
         logger.debug('Init config from module "%s"', module)
 
@@ -76,6 +92,8 @@ class Config(ModifyDict):
 
         :param file_path: absolute file path
         :type file_path: str
+
+        :raises: ConfigError, IOError
         """
         logger.debug('Init config from py file "%s"', file_path)
 

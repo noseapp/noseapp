@@ -37,20 +37,12 @@ class NoseApp(object):
     """
     Base application class
 
-    Simple example:
-        app = NoseApp('my_app')
-        app.load_suites('/path/to/suites')
-        app.run()
+    Usage:
 
-    Application can be master and sub application:
+        >>> app = NoseApp('my_app')
+        >>> app.load_suites('/path/to/suites')
+        >>> app.run()
 
-        sub_app = NoseApp.as_sub_app('sub')
-        master_app = NoseApp.as_master_app('master', sub_app)
-
-        sub_app.load_suites('/path/to/suites')
-        master_app.load_suites('/path/to/suites', merge_suites=True)
-
-        master_app.run()
     """
 
     config_class = AppConfig
@@ -69,13 +61,51 @@ class NoseApp(object):
                  suites_path=None,
                  is_sub_app=False):
         """
+        :param name: application name.
+        application name is prefix to suite name.
+         namespace pattern: <application_name>.<suite_name>:<test_case_name>
+
+        for example:
+
+            >>> from noseapp import Suite
+
+            >>> app = NoseApp('my_app')
+            >>> suite = Suite('my_suite')
+            >>> suite.name
+            >>> 'my_suite'
+
+            >>> app.register_suite(suite)
+            >>> suite.name
+            >>> 'my_app.my_suite'
+
         :type name: str
+
+        :param argv: argv to sys.argv
         :type argv: list
+
+        :param exit: do exit after run?
         :type exit: bool
+
+        :param config: import path or absolute file path
+        for example:
+            * config='project.etc.config'
+            * config='/home/user/project/etc/config.py'
         :type config: str
+
+        :param plugins: plugins instances
         :type plugins: list or tuple
+
+        :param context: inctance of AppContext.
+         you can create own context instance to run.
         :type context: noseapp.app.context.AppContext
+
+        :param suites_path: path to directory where contains suites
+        :type suites_path: str
+
+        :param is_sub_app: is application a sub application?
         :type is_sub_app: bool
+
+        :param sub_apps: sub application instances. for master application only.
         :type sub_apps: list or tuple
         """
         if sub_apps and is_sub_app:
@@ -127,7 +157,16 @@ class NoseApp(object):
     @classmethod
     def as_master_app(cls, name, *sub_apps, **kwargs):
         """
-        Create application as master application
+        Alternative constructor.
+        Create application as master application.
+
+        Example::
+
+            sub_app = NoseApp.as_sub_app('my_sub_app')
+            app = NoseApp.as_master_app('my_app', sub_app, config='etc.config')
+
+            sub_app.load_suites('/path/to/suites')
+            app.load_suites('/path/to/suites', merge_suites=True)
         """
         kwargs.update(is_sub_app=False)
         kwargs.setdefault('sub_apps', sub_apps)
@@ -137,7 +176,8 @@ class NoseApp(object):
     @classmethod
     def as_sub_app(cls, name, **kwargs):
         """
-        Create application as sub application
+        Alternative constructor.
+        Create application as sub application. See as_master_app.
         """
         kwargs.update(
             sub_apps=None,
@@ -148,8 +188,8 @@ class NoseApp(object):
 
     def setUpApp(self):
         """
-        Callback for initialize application.
-        Will be call after initialize instance.
+        For setup extensions end prepare program.
+        Will be called after creating instance.
         """
         pass
 
@@ -162,20 +202,42 @@ class NoseApp(object):
 
     def setUp(self):
         """
-        Callback will be called before run application
+        Do it something before run suites.
+        Callback will be called before run application.
         """
         pass
 
     def tearDown(self):
         """
+        Do it something after run suites.
         Callback will be called after run application
         """
         pass
 
     def addOptions(self, parser):
         """
-        Add options to command line interface
+        Add options to command line interface.
 
+        Example::
+
+            from optparse import OptionGroup
+
+
+            class MyApp(NoseApp):
+
+                def addOptions(parser):
+                    group = OptionGroup(parser, 'My Application options')
+
+                    group.add_option(
+                        '--project-url',
+                        dest='project_url',
+                        default=None,
+                        help='Web URL',
+                    )
+
+                    parser.add_option_group(group)
+
+        :param parser: options parser
         :type parser: optparse.OptionParser
         """
         pass
@@ -190,11 +252,13 @@ class NoseApp(object):
     @property
     def options(self):
         """
-        Command line options
+        Command line options. Will be available after create instance.
+
+        :raises: RuntimeError
         """
         if self.__options is None:
             raise RuntimeError(
-                'Options not found. Working outside initialize callback.',
+                'Options not found. Working outside app context.',
             )
 
         return self.__options
@@ -213,7 +277,7 @@ class NoseApp(object):
     @property
     def context(self):
         """
-        Application context instance
+        Context of application instance
 
         :rtype: noseapp.app.context.AppContext
         """
@@ -222,55 +286,102 @@ class NoseApp(object):
     @property
     def plugins(self):
         """
-        Plugins list
+        Plugins storage of context
+
+        :rtype: list
         """
         return self.__context.plugins
 
     @property
     def is_sub_app(self):
         """
-        Flag to definition: that's sub application?
+        Flag to definition: is it sub application?
+
+        :rtype: bool
         """
         return self.__is_sub_app
 
     @property
     def is_master_app(self):
         """
-        Flag to definition: that's master application?
+        Flag to definition: is it master application?
+
+        :rtype: bool
         """
         return not self.__is_sub_app
 
     @property
     def suites(self):
         """
-        Suites list
+        Suites storage of context
+
+        :rtype: list
         """
         return self.__context.suites
 
     @property
     def sub_apps(self):
         """
-        Sub application list
+        Sub application storage
+
+        :rtype: list
         """
         return self.__sub_apps
 
     @property
     def status(self):
         """
-        Status of application
+        Status of application.
+
+        Example::
+
+            >>> app = NoseApp.as_master_app('my_app')
+            >>> app.status
+            >>> 'master'
+
+            >>> app = NoseApp.as_sub_app('my_app')
+            >>> app.status
+            >>> 'sub'
         """
         return 'sub' if self.__is_sub_app else 'master'
 
-    def add_before(self, func):
+    def add_setup(self, func):
         """
-        Add callback to setup
+        Add setup callback to context.
+
+        Example::
+
+            app = NoseApp('my_app')
+
+            @app.add_setup
+            def setup():
+                # do something
+                pass
+
+            # or
+
+            app.add_setup(lambda: None)
+
         """
         self.__context.add_setup(func)
         return func
 
-    def add_after(self, func):
+    def add_teardown(self, func):
         """
-        Add callback to teardown
+        Add teardown callback to context.
+
+        Example::
+
+            app = NoseApp('my_app')
+
+            @app.add_teardown
+            def teardown():
+                # do something
+                pass
+
+            # or
+
+            app.add_teardown(lambda: None)
         """
         self.__context.add_teardown(func)
         return func
@@ -278,17 +389,29 @@ class NoseApp(object):
     @staticmethod
     def shared_extension(name=None, cls=None, args=None, kwargs=None):
         """
-        Shared extension to Suites and TestCases.
-        Use require param on noseapp.suite.Suite class for connect.
+        Shared extension to Suite and TestCase instances.
+        Use require param on noseapp.Suite class for connect.
+
+        Example::
+
+            import random
+
+            app = NoseApp('my_app')
+            app.shared_extension(name='random_int', cls=random.randint, args=(0, 100))
 
         :param name: extension name
         :type name: str
 
-        :param cls: extension class
-        :param args, kwargs: class init arguments
+        :param cls: extension class or callable object
+        :type cls: object, callable
 
+        :param args: cls init args
         :type args: tuple
+
+        :param kwargs: cls init kwargs
         :type kwargs: dict
+
+        :raises: ValueError, AttributeError
         """
         if cls is None:
             raise ValueError('cls param is required')
@@ -307,10 +430,20 @@ class NoseApp(object):
     @staticmethod
     def shared_data(name, data):
         """
-        Shared extension to TestCase classes.
+        Shared data to Suite and TestCase instances.
         Data will be copied during installation.
 
-        :param name: this is property name of case class
+        Example::
+
+            data = {
+                'a': 1,
+                'b': 2,
+                'c': 3,
+            }
+            app = NoseApp('my_app')
+            add.shared_data('data', data)
+
+        :param name: extension name
         :type name: str
 
         :param data: any object
@@ -321,7 +454,7 @@ class NoseApp(object):
 
     def register_suite(self, suite, add_prefix=True):
         """
-        Add suite in application
+        Add suite to application
 
         :type suite: noseapp.suite.base.Suite
         """
@@ -331,7 +464,7 @@ class NoseApp(object):
 
     def register_suites(self, suites):
         """
-        App suite list in application
+        App suite list to application
 
         :type suites: iter
         """
@@ -342,14 +475,14 @@ class NoseApp(object):
         """
         Auto load suites. Path can be package or simple dir.
 
-        :param path: dir path
+        :param path: path to suites dir
         :type path: str
 
         :param recursive: recursive load from path or load from simple dir
         :type recursive: bool
 
         :param merge_suites: merge suites from sub application
-         to self context. For master application only.
+         to self context. for master application only.
         :type merge_suites: bool
         """
         if path not in sys.path:
@@ -365,9 +498,31 @@ class NoseApp(object):
         if merge_suites:
             merge_context(self, merge_suites=True)
 
+    def show_tree(self, show_docs=False, doc_lines=1):
+        """
+        Show tree of suites.
+
+        :param show_docs: print or not print docs
+        :type show_docs: bool
+
+        :param doc_lines: number lines of doc
+        :type doc_lines: int
+        """
+        from noseapp.core.collector.output import tree
+
+        tree(self.suites, show_docs=show_docs, doc_lines=doc_lines, exit=False)
+
     def run(self):
         """
-        To perform run suites
+        To perform run suites.
+        If was success after run and not exit param is False then return True.
+
+        Make run from command line::
+
+            noseapp-manage run project.app:create_app
+
+        :rtype: bool
+        :raises: RuntimeError
         """
         logger.debug('Run application %s', repr(self))
 

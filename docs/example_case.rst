@@ -1,6 +1,5 @@
-========
-TestCase
-========
+Test case
+=========
 
 noseapp is supporting own test case class only!
 In order to your test case class will be have support of noseapp, you are must to inherit mixin class noseapp.case.base.ToNoseAppTestCase
@@ -9,7 +8,7 @@ In order to your test case class will be have support of noseapp, you are must t
 Simple Example
 --------------
 
-::
+.. code-block:: python
 
     from noseapp import Suite
     from noseapp import TestCase
@@ -22,7 +21,7 @@ Simple Example
     class MyTestCase(TestCase):
 
         def runTest(self):
-            pass
+            self.assertTrue(True)
 
 
     @suite.register
@@ -35,13 +34,37 @@ Simple Example
         assert True
 
 
+Require extension
+-----------------
+
+.. code-block:: python
+
+    suite = Suite(__name__, require=['extension_name'])
+
+
+    @suite.register
+    class MyTestCase(TestCase):
+
+        def setUp(self):
+            extension = self.ext('extension_name')
+            extension.do_something()
+
+
+    suite2 = Suite(__name__)
+
+
+    @suite.register(require=['extension_name'])
+    def my_test(case):
+        extension = case.ext('extension_name')
+        extension.do_something()
+
+
 Implement step by step
 ----------------------
 
-::
+.. code-block:: python
 
-    from noseapp import Suite
-    from noseapp.case import step
+    from noseapp import step
     from noseapp import ScreenPlayCase
 
 
@@ -60,10 +83,10 @@ Implement step by step
             print 'Just saying hi'
 
 
-Base class give you callback method.
+Base class give you callbacks methods.
 If exception in step method will be raised, finalize method can not be called!
 
-::
+.. code-block:: python
 
     @suite.register
     class MyTestCase(ScreenPlayCase):
@@ -85,7 +108,7 @@ If exception in step method will be raised, finalize method can not be called!
 
 You can parametrize flow step.
 
-::
+.. code-block:: python
 
     from noseapp.datastructures import Context
 
@@ -108,12 +131,12 @@ You can parametrize flow step.
 
         @step(2, 'step 2 description')
         def step_two(self, ctx):
-            print 'Just saying hi, {}'.format(ctx.name)
+            print 'Just say hi, {}'.format(ctx.name)
 
 
 Debug for steps.
 
-::
+.. code-block:: python
 
     @suite.register
     class MyTestCase(ScreenPlayCase):
@@ -126,8 +149,8 @@ Debug for steps.
             self.USE_PROMPT = True
 
 
-Exception message format. You can change it. Use ScreenPlayCase.ERROR_MESSAGE_TEMPLATE.
-This is full template.
+Exception message template. You can change it. Use ScreenPlayCase.ERROR_MESSAGE_TEMPLATE for that. Parameters in template isn't necessarily required.
+ This is full template:
 
 ::
 

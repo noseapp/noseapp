@@ -88,11 +88,22 @@ def upload_to_pip():
     assert exit_code == 0, 'Upload to pip error'
 
 
+def rebuild_docs():
+    exit_code = subprocess.call(
+        'make html',
+        shell=True,
+        cwd=os.path.join(SELF_PATH, 'docs'),
+    )
+
+    assert exit_code == 0, 'Rebuild docs error'
+
+
 def main():
     check_git_branch()
     delete_old_files()
     run_tests()
     run_exapmle_app()
+    rebuild_docs()
     upload_to_pip()
 
 

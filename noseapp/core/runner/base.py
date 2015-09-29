@@ -30,9 +30,8 @@ class RunPerformer(object):
         :type suites: noseapp.core.suite.base.BaseSuite
         :type result: noseapp.core.runner.base.TextTestResult
         """
-        with setup_teardown(suites):
-            for suite in suites:
-                suite(result)
+        for suite in suites:
+            suite(result)
 
 
 class BaseTestRunner(_TextTestRunner):

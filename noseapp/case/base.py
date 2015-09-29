@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from nose.case import Test as NoseTestWrapper
 from unittest import TestCase as BaseTestCase
+
+from nose.case import Test as NoseTestWrapper
 
 from noseapp.case.context import TestCaseContext
 from noseapp.datastructures import ModifyDict as MountData

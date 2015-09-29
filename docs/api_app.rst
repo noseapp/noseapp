@@ -21,6 +21,8 @@ Config
     :private-members:
     :special-members:
 
+.. autofunction:: noseapp.app.config.get_config_path_by_env
+
 
 Context
 -------

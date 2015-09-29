@@ -5,7 +5,6 @@ Application is entry point to your test program.
 You can configure and expand your program from application.
 """
 
-import os
 import sys
 import logging
 from contextlib import contextmanager
@@ -19,6 +18,7 @@ from noseapp.app.context import merge_context
 from noseapp.core.factory import ClassFactory
 from noseapp.core.collector import CollectSuite
 from noseapp.app.config import Config as AppConfig
+from noseapp.app.config import get_config_path_by_env
 from noseapp.core.constants import CONFIG_CHECKOUT_ENV
 from noseapp.plugins.configure import AppConfigurePlugin
 
@@ -29,8 +29,6 @@ logger = logging.getLogger(__name__)
 DEFAULT_PLUGINS = [
     AppConfigurePlugin(),
 ]
-
-APP_CONFIG = os.getenv(CONFIG_CHECKOUT_ENV, None)
 
 
 class NoseApp(object):
@@ -114,7 +112,9 @@ class NoseApp(object):
             )
 
         # Initialization config storage
-        self.config = self.config_class.from_path(APP_CONFIG or config)
+        self.config = self.config_class.from_path(
+            get_config_path_by_env(CONFIG_CHECKOUT_ENV, config),
+        )
 
         # Application name. Must be str only.
         self.__name = name
@@ -150,7 +150,7 @@ class NoseApp(object):
             # Program object initialization. Will be run later.
             self.__test_program = self.program_class(self, argv=argv, exit=exit)
 
-            # If we are having path to suites dir then make load suites
+            # If we are having path to suites then make load suites
             if suites_path is not None:
                 self.load_suites(suites_path)
 

@@ -117,7 +117,7 @@ class Suite(object):
     @property
     def is_build(self):
         """
-        If suite is build return True else False.
+        If suite is building return True else False.
 
         :rtype: bool
         """

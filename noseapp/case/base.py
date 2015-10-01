@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
+from unittest import TestCase as _TestCase
+
 from nose.case import Test as NoseTestWrapper
-from unittest import TestCase as BaseTestCase
 
 from noseapp.case.context import TestCaseContext
 from noseapp.datastructures import ModifyDict as MountData
@@ -160,7 +161,7 @@ class ToNoseAppTestCase(object):
         )
 
 
-class TestCase(ToNoseAppTestCase, BaseTestCase):
+class TestCase(ToNoseAppTestCase, _TestCase):
     """
     Base case class
     """

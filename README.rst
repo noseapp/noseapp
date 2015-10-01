@@ -22,7 +22,7 @@ Features
 --------
 
 * application is entry point to test program
-* Real suite objects. Yes? It's true! :)
+* Real suite objects. Yes, it's true! :)
 * Installing extensions to expand test program
 * Several strategies for async run
 * Chain of callbacks to setup, teardown (app, suite, test case)

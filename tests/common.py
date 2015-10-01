@@ -21,7 +21,6 @@ class SelfTest(TestCase):
         from testapp.app import create_app
 
         self.app = create_app(exit=False)
-        self.assertTrue(self.app.run())
 
     def check_config(self):
         self.assertEqual(self.app.config.DEFAULT, 1)
@@ -55,5 +54,8 @@ class SelfTest(TestCase):
 
     def runTest(self):
         self.check_config()
+
+        self.assertTrue(self.app.run())
+
         self.check_callbacks()
         self.check_was_worked()

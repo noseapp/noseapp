@@ -5,7 +5,7 @@ import logging
 from random import Random
 
 from noseapp.core import loader
-from noseapp.core.collector import output
+from noseapp.tools import output
 
 
 logger = logging.getLogger(__name__)
@@ -165,7 +165,7 @@ class CollectSuite(object):
     @property
     def collect(self):
         """
-        Main collect
+        Collect main
         """
         strategy_to_method = {
             CASE_COLLECT_STRATEGY: self.collect_by_case_strategy,

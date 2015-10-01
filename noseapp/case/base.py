@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from unittest import TestCase as BaseTestCase
+from unittest import TestCase as _TestCase
 
 from nose.case import Test as NoseTestWrapper
 
@@ -161,7 +161,7 @@ class ToNoseAppTestCase(object):
         )
 
 
-class TestCase(ToNoseAppTestCase, BaseTestCase):
+class TestCase(ToNoseAppTestCase, _TestCase):
     """
     Base case class
     """

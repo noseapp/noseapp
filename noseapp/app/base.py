@@ -452,7 +452,7 @@ class NoseApp(object):
 
         return extensions.set(name, data, to_transport=False)
 
-    def register_suite(self, suite, add_prefix=True):
+    def register_suite(self, suite):
         """
         Add suite to application
 
@@ -508,9 +508,9 @@ class NoseApp(object):
         :param doc_lines: number lines of doc
         :type doc_lines: int
         """
-        from noseapp.core.collector.output import tree
+        from noseapp.tools import output
 
-        tree(self.suites, show_docs=show_docs, doc_lines=doc_lines, exit=False)
+        output.tree(self.suites, show_docs=show_docs, doc_lines=doc_lines, exit=False)
 
     def run(self):
         """

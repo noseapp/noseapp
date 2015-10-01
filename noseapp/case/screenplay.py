@@ -87,6 +87,13 @@ def step(num, doc=''):
     return wrapper
 
 
+def unicode_string(m):
+    try:
+        return unicode(m)
+    except UnicodeDecodeError:
+        return unicode(m.decode('utf-8'))
+
+
 def render_error_message(template, **kwargs):
     """
     Render error message by template
@@ -94,7 +101,7 @@ def render_error_message(template, **kwargs):
     message = template
 
     for k, v in kwargs.items():
-        message = message.replace(u'{%s}' % k, unicode(v))
+        message = message.replace(u'{%s}' % k, v)
 
     return message
 
@@ -180,32 +187,18 @@ def run_step(case, method, flow=None):
         history = u'\n'.join(case.__history)
         exc_cls_name = e.__class__.__name__
 
-        try:
-            msg = render_error_message(
-                case.ERROR_MESSAGE_TEMPLATE,
-                history=history,
-                case=case_name,
-                method=method_name,
-                step=weight,
-                step_doc=doc,
-                flow=flow,
-                raised=exc_cls_name,
-                message=e.message,
-                traceback=orig_tb,
-            ).encode('utf-8', 'replace')
-        except UnicodeDecodeError:
-            msg = render_error_message(
-                case.ERROR_MESSAGE_TEMPLATE,
-                history=history,
-                case=case_name,
-                method=method_name,
-                step=weight,
-                step_doc=doc,
-                flow=flow,
-                raised=exc_cls_name,
-                message=e.message,
-                traceback=orig_tb.decode('utf8'),
-            ).encode('utf-8', 'replace')
+        msg = render_error_message(
+            case.ERROR_MESSAGE_TEMPLATE,
+            history=unicode_string(history),
+            case=unicode_string(case_name),
+            method=unicode_string(method_name),
+            step=unicode_string(weight),
+            step_doc=unicode_string(doc),
+            flow=unicode_string(flow),
+            raised=unicode_string(exc_cls_name),
+            message=unicode_string(e.message),
+            traceback=unicode_string(orig_tb),
+        ).encode('utf-8', 'replace')
 
         error_handler(e, msg)
 

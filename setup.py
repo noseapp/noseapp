@@ -4,7 +4,7 @@ from setuptools import setup
 from setuptools import find_packages
 
 
-__version__ = '2.1.2'
+__version__ = '2.2.0'
 
 
 if __name__ == '__main__':

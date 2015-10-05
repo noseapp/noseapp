@@ -7,7 +7,7 @@ If you write modules of core and they're using other modules
 of library that make using import inside functions or methods.
 """
 
-from noseapp.core.program import TestProgram
+from .program import TestProgram
 
 
 class ExtensionInstaller(object):

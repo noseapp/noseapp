@@ -26,4 +26,4 @@ Example::
         * run
 
 
-.. autofunction:: noseapp.manage.register_command
+.. autofunction:: noseapp.manage.funcs.register_command

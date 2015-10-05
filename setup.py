@@ -28,7 +28,7 @@ if __name__ == '__main__':
         ],
         entry_points={
             'console_scripts': [
-                'noseapp-manage = noseapp.manage:run',
+                'noseapp-manage = noseapp.manage.__main__:run',
             ],
         },
         test_suite='tests',

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from noseapp.case.base import TestCase
-from noseapp.case.screenplay import step
-from noseapp.case.screenplay import ScreenPlayCase
+from .base import TestCase
+from .screenplay import step
+from .screenplay import ScreenPlayCase
 from noseapp.datastructures import ModifyDict as _BaseCaseSettings
 
 

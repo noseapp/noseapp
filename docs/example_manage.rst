@@ -20,7 +20,7 @@ Create and register command
 
 .. code-block:: python
 
-    from noseapp import manage
+    from noseapp.manage import register_command
 
 
     def my_command():
@@ -30,7 +30,7 @@ Create and register command
         print 'Hello World!'
 
 
-    manage.register_command('hello_world', my_command)
+    register_command('hello_world', my_command)
 
 
 To run:
@@ -38,6 +38,8 @@ To run:
 ::
 
     noseapp-manage hello_world
+    # or
+    python2.7 -m noseapp.manage hello_world
 
 
 Command arguments

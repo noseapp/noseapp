@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from noseapp.plugins.base import AppPlugin
+from .base import AppPlugin
 
 
 __all__ = (

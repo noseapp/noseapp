@@ -2,7 +2,7 @@
 
 from unittest import TestCase
 
-from noseapp import manage
+from noseapp.manage import funcs
 
 
 class TestRegisterCommand(TestCase):
@@ -10,6 +10,6 @@ class TestRegisterCommand(TestCase):
     def runTest(self):
         fake_command = lambda: None
 
-        manage.register_command('fake_command', fake_command)
+        funcs.register_command('fake_command', fake_command)
 
-        self.assertIn(fake_command, manage._COMMANDS.values())
+        self.assertIn(fake_command, funcs.get_commands().values())

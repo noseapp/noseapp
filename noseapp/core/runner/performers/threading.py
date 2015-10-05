@@ -16,7 +16,7 @@ class ThreadingRunPerformer(RunPerformer):
     def __call__(self, suites, result):
         size = self.runner.config.options.async_suites
 
-        if size < 0:
+        if size <= 0:
             size = cpu_count()
 
         pool = ThreadPool(size)

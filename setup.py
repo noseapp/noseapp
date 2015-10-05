@@ -23,6 +23,7 @@ if __name__ == '__main__':
         zip_safe=False,
         platforms='any',
         install_requires=[
+            'six',
             'nose==1.3.7',
         ],
         entry_points={
@@ -37,6 +38,7 @@ if __name__ == '__main__':
             'Operating System :: OS Independent',
             'Programming Language :: Python',
             'Programming Language :: Python :: 2.7',
+            'Programming Language :: Python :: 3',
             'Topic :: Software Development :: Testing',
         ],
     )

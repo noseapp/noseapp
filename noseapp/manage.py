@@ -18,6 +18,8 @@ import traceback
 from importlib import import_module
 from collections import OrderedDict
 
+from noseapp.utils import pyv
+
 
 _COMMANDS = OrderedDict()
 
@@ -90,7 +92,7 @@ def register_command(name, command):
     :param command: callable object
     """
     assert callable(command), 'command is not callable'
-    assert isinstance(name, basestring), 'name of command must be string only'
+    assert isinstance(name, pyv.basestring), 'name of command must be string only'
 
     _COMMANDS[name] = command
 
@@ -131,8 +133,17 @@ class DefaultCommands(object):
         """
         for argv in sys.argv:
             if 'gevent' in argv:
-                from gevent.monkey import patch_all
-                patch_all()
+                if pyv.IS_PYTHON_3:
+                    raise pyv.UnSupportedError('gevent lib unsupported with python 3')
+
+                try:
+                    from gevent.monkey import patch_all
+                    patch_all()
+                except ImportError as e:
+                    raise ImportError(
+                        '{}. {}.'.format(e.message, 'Please install gevent'),
+                    )
+
                 break
 
         app = _get_create_app_func(app_path)(**kwargs)

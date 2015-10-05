@@ -2,6 +2,7 @@
 
 import logging
 
+from noseapp.utils import pyv
 from noseapp.core.constants import RunStrategy
 
 
@@ -57,6 +58,9 @@ class ClassFactory(object):
 
         try:
             if self.__options.run_strategy == RunStrategy.GEVENT and self.__options.async_tests:
+                if pyv.IS_PYTHON_3:
+                    raise pyv.UnSupportedError('gevent lib unsupported with python 3')
+
                 from noseapp.core.suite.performers.gevent import GeventSuitePerformer
                 performer_class = GeventSuitePerformer
 

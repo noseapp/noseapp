@@ -9,7 +9,9 @@ import sys
 import logging
 import traceback
 from functools import wraps
+from six import with_metaclass
 
+from noseapp.utils import pyv
 from noseapp.case.base import TestCase
 
 
@@ -28,7 +30,8 @@ EXCLUDE_METHOD_PATTERN = re.compile(
 
 ERROR_MESSAGE_FULL_TEMPLATE = u"""
 
-* {traceback}
+* Traceback:
+{traceback}
 
 * History:
 {history}
@@ -46,18 +49,32 @@ ERROR_MESSAGE_FULL_TEMPLATE = u"""
 {message}
 """
 
-ERROR_MESSAGE_TEMPLATE = """{message}
 
-* History:
-{history}
+class StepFail(AssertionError):
+    pass
 
-* Point:
-{case}.{method} -> Step {step} "{step_doc}"
 
-* Flow:
-{flow}
+class StepError(Exception):
+    pass
 
-"""
+
+def re_raise_exc(e, msg):
+    """
+    Re raise exception with new message
+
+    :param e: exception instance
+    :param msg: exception message
+    """
+    def error(m):
+        if isinstance(e, AssertionError):
+            return StepFail(m)
+        return StepError(m)
+
+    if pyv.IS_PYTHON_2:
+        raise error(msg)
+
+    _, _, tb = sys.exc_info()
+    raise error(msg).with_traceback(tb)
 
 
 def step(num, doc=''):
@@ -69,7 +86,6 @@ def step(num, doc=''):
     :param doc: step description
     :type doc: str, unicode
     """
-
     def wrapper(f):
         if not isinstance(num, int):
             raise ValueError('step num mast be int only')
@@ -87,23 +103,23 @@ def step(num, doc=''):
     return wrapper
 
 
-def unicode_string(m):
+def format_traceback(tb):
+    """
+    Delete first line of traceback.
+
+    :param tb: traceback message
+    """
+    return u'\n'.join(tb.splitlines()[1:])
+
+
+def unicode_string(s):
     try:
-        return unicode(m)
-    except UnicodeDecodeError:
-        return unicode(m.decode('utf-8'))
-
-
-def render_error_message(template, **kwargs):
-    """
-    Render error message by template
-    """
-    message = template
-
-    for k, v in kwargs.items():
-        message = message.replace(u'{%s}' % k, v)
-
-    return message
+        return pyv.unicode(s)
+    except UnicodeDecodeError as e:
+        try:
+            return pyv.unicode(s.decode('utf-8'))
+        except AttributeError:  # for py 3 only
+            raise e
 
 
 def get_step_info(case, method):
@@ -114,11 +130,25 @@ def get_step_info(case, method):
     :return: tuple
     """
     case_name = case.__class__.__name__
-    method_name = method.__func__.__name__
+    try:
+        method_name = method.__func__.__name__
+    except AttributeError:
+        method_name = method.__name__
     weight = getattr(method, WEIGHT_ATTRIBUTE_NAME)
     doc = getattr(method, DOC_ATTRIBUTE_NAME)
 
     return case_name, method_name, weight, doc
+
+
+def get_exception_message(e):
+    """
+    Get message from exception instance
+
+    :param e: exception instance
+    """
+    if hasattr(e, 'message'):
+        return e.message
+    return u''.join(e.args)
 
 
 def perform_prompt(case_name, method_name, exit_code=0):
@@ -150,15 +180,6 @@ def perform_prompt(case_name, method_name, exit_code=0):
         pdb.set_trace()
 
 
-def error_handler(e, msg):
-    """
-    Handler for raised exception
-    """
-    e.message = msg
-    e.args = e.args + (msg, )
-    raise
-
-
 def run_step(case, method, flow=None):
     """
     Run step
@@ -183,24 +204,38 @@ def run_step(case, method, flow=None):
         else:
             method(case)
     except BaseException as e:
+        if not case.ERROR_MESSAGE_TEMPLATE:
+            raise
+
         orig_tb = traceback.format_exc()
         history = u'\n'.join(case.__history)
         exc_cls_name = e.__class__.__name__
 
-        msg = render_error_message(
-            case.ERROR_MESSAGE_TEMPLATE,
-            history=unicode_string(history),
-            case=unicode_string(case_name),
-            method=unicode_string(method_name),
-            step=unicode_string(weight),
-            step_doc=unicode_string(doc),
-            flow=unicode_string(flow),
-            raised=unicode_string(exc_cls_name),
-            message=unicode_string(e.message),
-            traceback=unicode_string(orig_tb),
-        ).encode('utf-8', 'replace')
+        if case.RENDER_ERROR_MESSAGE and pyv.IS_PYTHON_2:  # feature for python 2 only
+            msg = case.render_error_message(
+                history=unicode_string(history),
+                case=unicode_string(case_name),
+                method=unicode_string(method_name),
+                step=unicode_string(weight),
+                step_doc=unicode_string(doc),
+                flow=unicode_string(flow),
+                raised=unicode_string(exc_cls_name),
+                traceback=unicode_string(format_traceback(orig_tb)),
+                message=unicode_string(get_exception_message(e)),
+            )
+        else:
+            msg = '<{}.{}(num={}, doc={}, flow={})> {}'.format(
+                unicode_string(case_name),
+                unicode_string(method_name),
+                unicode_string(weight),
+                unicode_string(doc),
+                unicode_string(flow),
+                unicode_string(
+                    get_exception_message(e),
+                ),
+            )
 
-        error_handler(e, msg)
+        re_raise_exc(e, msg)
 
 
 def make_run_test(steps):
@@ -242,25 +277,52 @@ def make_run_test(steps):
     return run_test
 
 
+def build_class(cls):
+    """
+    Collect step methods and build class
+    """
+    steps = []
+
+    attributes = (
+        a for a in dir(cls)
+        if not a.startswith('_')
+        and
+        EXCLUDE_METHOD_PATTERN.search(a) is None
+    )
+
+    for atr in attributes:
+        method = getattr(cls, atr, None)
+        if hasattr(method, SCREENPLAY_ATTRIBUTE_NAME):
+            steps.append(method)
+
+    if steps:
+        steps.sort(
+            key=lambda m: getattr(m, WEIGHT_ATTRIBUTE_NAME),
+        )
+        cls.runTest = make_run_test(steps)
+
+    return cls
+
+
 class ScreenPlayCaseMeta(type):
     """
     Build step methods and create runTest
     """
 
-    def __new__(cls, name, bases, dct):
-        new_cls = type.__new__(cls, name, bases, dct)
-
+    def __new__(mcs, name, bases, dct):
         steps = []
 
+        cls = type.__new__(mcs, name, bases, dct)
+
         attributes = (
-            a for a in dir(new_cls)
+            a for a in dir(cls)
             if not a.startswith('_')
             and
             EXCLUDE_METHOD_PATTERN.search(a) is None
         )
 
         for atr in attributes:
-            method = getattr(new_cls, atr, None)
+            method = getattr(cls, atr, None)
             if hasattr(method, SCREENPLAY_ATTRIBUTE_NAME):
                 steps.append(method)
 
@@ -268,12 +330,12 @@ class ScreenPlayCaseMeta(type):
             steps.sort(
                 key=lambda m: getattr(m, WEIGHT_ATTRIBUTE_NAME),
             )
-            new_cls.runTest = make_run_test(steps)
+            cls.runTest = make_run_test(steps)
 
-        return new_cls
+        return cls
 
 
-class ScreenPlayCase(TestCase):
+class ScreenPlayCase(with_metaclass(ScreenPlayCaseMeta, TestCase)):
     """
     Test case for implementation by step script
 
@@ -313,12 +375,20 @@ class ScreenPlayCase(TestCase):
                 pass
     """
 
-    __metaclass__ = ScreenPlayCaseMeta
-
     FLOWS = None
     USE_PROMPT = False
 
-    ERROR_MESSAGE_TEMPLATE = ERROR_MESSAGE_TEMPLATE
+    RENDER_ERROR_MESSAGE = False
+    ERROR_MESSAGE_TEMPLATE = ERROR_MESSAGE_FULL_TEMPLATE
+
+    @property
+    def error_template_params(self):
+        """
+        Params for ERROR_MESSAGE_TEMPLATE render.
+
+        :rtype: dict
+        """
+        return {}
 
     def begin(self):
         """
@@ -333,3 +403,15 @@ class ScreenPlayCase(TestCase):
         method can't to be called.
         """
         pass
+
+    def render_error_message(self, **kwargs):
+        """
+        Render error message by template.
+        """
+        kwargs.update(self.error_template_params)
+        message = unicode_string(self.ERROR_MESSAGE_TEMPLATE)
+
+        for k, v in kwargs.items():
+            message = message.replace(u'{%s}' % k, v)
+
+        return message.encode('utf-8', 'replace')

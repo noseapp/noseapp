@@ -19,8 +19,8 @@ class GeventSuitePerformer(SuitePerformer):
         self_pool = not bool(pool)
         size = self.suite.config.options.async_tests
 
-        if size < 0:
-            size = cpu_count() - 1
+        if size <= 0:
+            size = cpu_count() / 2
 
         pool = pool or Pool(int(round(size)) or 2)
 

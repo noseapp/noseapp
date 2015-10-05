@@ -27,3 +27,10 @@ __all__ = (
     AppPlugin,
     ScreenPlayCase,
 )
+
+
+from noseapp.utils import pyv
+
+pyv.check_py_version()
+
+del pyv

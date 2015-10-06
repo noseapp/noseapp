@@ -11,15 +11,6 @@ class TextTestResult(_TextTestResult):
     pass
 
 
-@contextmanager
-def setup_teardown(suites):
-    suites.setUp()
-    try:
-        yield
-    finally:
-        suites.tearDown()
-
-
 class RunPerformer(object):
 
     def __init__(self, runner):
@@ -61,6 +52,14 @@ class BaseTestRunner(_TextTestRunner):
 
         result = self._makeResult()
         performer = self._makePerformer()
+
+        @contextmanager
+        def setup_teardown(suites):
+            suites.setUp()
+            try:
+                yield
+            finally:
+                suites.tearDown()
 
         start = time.time()
         with setup_teardown(suites):

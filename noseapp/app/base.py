@@ -12,12 +12,12 @@ from contextlib import contextmanager
 from noseapp.core import loader
 from noseapp.core import extensions
 from noseapp.core import TestProgram
+from noseapp.app.config import AppConfig
 from noseapp.app.context import AppContext
 from noseapp.app.context import app_callback
 from noseapp.app.context import merge_context
 from noseapp.core.factory import ClassFactory
 from noseapp.core.collector import CollectSuite
-from noseapp.app.config import Config as AppConfig
 from noseapp.app.config import get_config_path_by_env
 from noseapp.core.constants import CONFIG_CHECKOUT_ENV
 from noseapp.plugins.configure import AppConfigurePlugin

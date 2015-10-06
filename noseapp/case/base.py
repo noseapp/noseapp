@@ -37,7 +37,7 @@ def make_test_case_class_from_function(
     )
 
     if simple:
-        cls.runTest = lambda s: func()
+        cls.runTest = lambda s, *args, **kwargs: func(*args, **kwargs)
     else:
         cls.runTest = func
 

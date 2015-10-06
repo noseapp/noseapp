@@ -83,6 +83,7 @@ def step(num, doc=''):
 
     :param num: step num
     :type num: int
+
     :param doc: step description
     :type doc: str, unicode
     """
@@ -103,21 +104,41 @@ def step(num, doc=''):
     return wrapper
 
 
-def format_traceback(tb):
+def format_traceback(tb, step_info=None):
     """
     Delete first line of traceback.
+    Add step info to last line of traceback message.
 
     :param tb: traceback message
     """
-    return u'\n'.join(tb.splitlines()[1:])
+    tb = tb.splitlines()[1:]
+
+    if step_info:
+        last_line = tb[-1:][0]
+        tb = tb[:-1]
+
+        try:
+            exc_name, exc_message = last_line.split(':')
+        except ValueError:
+            exc_message = None
+            exc_name = last_line.split(':')[0]
+
+        if exc_message:
+            last_line = '{} on {}: {}'.format(exc_name, step_info, exc_message)
+        else:
+            last_line = '{} on {}'.format(exc_name, step_info)
+
+        tb.append(last_line)
+
+    return '\n'.join(tb)
 
 
-def unicode_string(s):
+def unicode_string(string):
     try:
-        return pyv.unicode(s)
+        return pyv.unicode(string)
     except UnicodeDecodeError as e:
         try:
-            return pyv.unicode(s.decode('utf-8'))
+            return pyv.unicode(string.decode('utf-8'))
         except AttributeError:  # for py 3 only
             raise e
 
@@ -224,14 +245,16 @@ def run_step(case, method, flow=None):
                 message=unicode_string(get_exception_message(e)),
             )
         else:
-            msg = '<{}.{}(num={}, doc={}, flow={})> {}'.format(
-                unicode_string(case_name),
-                unicode_string(method_name),
-                unicode_string(weight),
-                unicode_string(doc),
-                unicode_string(flow),
-                unicode_string(
-                    get_exception_message(e),
+            msg = '\n' + unicode_string(
+                format_traceback(
+                    orig_tb,
+                    step_info='<{case}.{method}(num={step}, doc={doc}, flow={flow})>'.format(
+                        case=unicode_string(case_name),
+                        method=unicode_string(method_name),
+                        step=unicode_string(weight),
+                        doc=unicode_string(doc),
+                        flow=unicode_string(flow),
+                    ),
                 ),
             )
 
@@ -275,33 +298,6 @@ def make_run_test(steps):
         self.finalize()
 
     return run_test
-
-
-def build_class(cls):
-    """
-    Collect step methods and build class
-    """
-    steps = []
-
-    attributes = (
-        a for a in dir(cls)
-        if not a.startswith('_')
-        and
-        EXCLUDE_METHOD_PATTERN.search(a) is None
-    )
-
-    for atr in attributes:
-        method = getattr(cls, atr, None)
-        if hasattr(method, SCREENPLAY_ATTRIBUTE_NAME):
-            steps.append(method)
-
-    if steps:
-        steps.sort(
-            key=lambda m: getattr(m, WEIGHT_ATTRIBUTE_NAME),
-        )
-        cls.runTest = make_run_test(steps)
-
-    return cls
 
 
 class ScreenPlayCaseMeta(type):

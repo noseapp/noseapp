@@ -150,6 +150,29 @@ def load_suites_from_path(path, import_base=None):
     return suites
 
 
+def load_test_names_from_test_case(
+        cls,
+        test_name_prefix=TEST_NAME_PREFIX,
+        default_test_name=DEFAULT_TEST_NAME):
+    """
+    Load test names from test case
+
+    :param cls: test case class
+    :param test_name_prefix: prefix of test method
+    :param default_test_name: default test method name
+
+    :rtype: list
+    """
+    cls_dir = dir(cls)
+
+    def is_test_name(name):
+        return name.startswith(test_name_prefix) \
+            or \
+            name == default_test_name
+
+    return filter(is_test_name, cls_dir)
+
+
 def load_tests_from_test_case(
         test_case_class,
         method_name=None,
@@ -160,10 +183,8 @@ def load_tests_from_test_case(
     """
     logger.debug('Load test from test case: "%s"', test_case_class.__name__)
 
-    cls_dir = dir(test_case_class)
-
     if method_name:
-        if method_name not in cls_dir:
+        if method_name not in dir(test_case_class):
             raise LoaderError(
                 'Method "{}" of "{}" class is not found'.format(
                     method_name, test_case_class.__name__,
@@ -171,12 +192,14 @@ def load_tests_from_test_case(
             )
         return map(test_case_class, [method_name])
 
-    def is_test_name(name):
-        return name.startswith(test_name_prefix) \
-            or \
-            name == default_test_name
-
-    return map(test_case_class, filter(is_test_name, cls_dir))
+    return map(
+        test_case_class,
+        load_test_names_from_test_case(
+            test_case_class,
+            test_name_prefix=test_name_prefix,
+            default_test_name=default_test_name,
+        ),
+    )
 
 
 def load_suite_by_name(name, suites):

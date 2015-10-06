@@ -53,13 +53,13 @@ class ConfigError(BaseException):
     pass
 
 
-class Config(ModifyDict):
+class AppConfig(ModifyDict):
     """
     App config storage
 
     Usage:
 
-        >>> config = Config()
+        >>> config = AppConfig()
         >>> config.from_module('etc.base')
         >>> # or config.from_py_file('/home/user/project/etc/base.py')
         >>> config.DEBUG

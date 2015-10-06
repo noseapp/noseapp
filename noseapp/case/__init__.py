@@ -2,6 +2,7 @@
 
 from .base import TestCase
 from .screenplay import step
+from .decorators import flows
 from .screenplay import ScreenPlayCase
 from noseapp.datastructures import ModifyDict as _BaseCaseSettings
 
@@ -43,6 +44,7 @@ class TestCaseSettings(_BaseCaseSettings):
 
 __all__ = (
     step,
+    flows,
     TestCase,
     ScreenPlayCase,
     TestCaseSettings,

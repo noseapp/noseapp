@@ -8,6 +8,7 @@ from noseapp.core import loader
 from noseapp.core import extensions
 from noseapp.suite.context import SuiteContext
 from noseapp.case.screenplay import ScreenPlayCase
+from noseapp.case.decorators import flows as _flows
 from noseapp.case.base import make_test_case_class_from_function
 
 
@@ -363,6 +364,9 @@ class Suite(object):
         :param require: extensions names
         :type require: list
 
+        :param flows: flows list
+        :type flows: list, tuple
+
         :raises: TypeError, RuntimeError
         :rtype: cls
         """
@@ -371,13 +375,17 @@ class Suite(object):
         elif cls and kwargs:
             raise TypeError('**kwargs can not be used with cls param')
 
-        def wrapped(_class, simple=False, skip=None, require=None):
+        def wrapped(_class, simple=False, skip=None, require=None, flows=None):
             if type(_class) == FunctionType:
                 _class = make_test_case_class_from_function(
                     _class,
                     simple=simple,
                     base_class=self.TestCase,
                 )
+
+            if flows:
+                for method_name in loader.load_test_names_from_test_case(_class):
+                    setattr(_class, method_name, _flows(*flows)(getattr(_class, method_name)))
 
             if skip:
                 unittest.skip(skip)(_class)

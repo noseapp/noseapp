@@ -15,12 +15,14 @@ from noseapp.suite.base import Suite
 from noseapp.case import step
 from noseapp.case import TestCase
 from noseapp.case import ScreenPlayCase
+from noseapp.case.decorators import flows
 
 from noseapp.plugins import AppPlugin
 
 
 __all__ = (
     step,
+    flows,
     Suite,
     NoseApp,
     TestCase,
